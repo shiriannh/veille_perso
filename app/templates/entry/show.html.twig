@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ entry.title }} - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>{{ entry.title }}</h1>
+            <p>{{ entry.mediaType.label() }} · {{ entry.status.label() }} · intérêt {{ entry.interestLevel }}/5</p>
+        </div>
+        <div class="actions">
+            <a class="button" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
+            {% if entry.review %}
+                <a class="button button-secondary" href="{{ path('app_review_show', {id: entry.review.id}) }}">Voir la fiche</a>
+            {% else %}
+                <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Créer une fiche</a>
+            {% endif %}
+        </div>
+    </section>
+
+    <dl class="details">
+        <dt>Source</dt>
+        <dd><a href="{{ path('app_source_show', {id: entry.source.id}) }}">{{ entry.source.name }}</a></dd>
+        <dt>Auteur / studio</dt>
+        <dd>{{ entry.authorOrStudio|default('Non renseigné') }}</dd>
+        <dt>URL originale</dt>
+        <dd>
+            {% if entry.originalUrl %}
+                <a href="{{ entry.originalUrl }}" rel="noreferrer">{{ entry.originalUrl }}</a>
+            {% else %}
+                <span class="muted">Non renseignée</span>
+            {% endif %}
+        </dd>
+        <dt>Tags</dt>
+        <dd>
+            {% if entry.personalTags is empty %}
+                <span class="muted">Aucun tag</span>
+            {% else %}
+                {{ entry.personalTags|join(', ') }}
+            {% endif %}
+        </dd>
+        <dt>Repéré le</dt>
+        <dd>{{ entry.spottedAt|date('d/m/Y H:i') }}</dd>
+        <dt>Contenu brut</dt>
+        <dd>{{ entry.rawContent|default('Aucun contenu brut')|nl2br }}</dd>
+    </dl>
+
+    <div class="actions">
+        <a class="button button-secondary" href="{{ path('app_entry_index') }}">Retour</a>
+        {{ include('entry/_delete_form.html.twig') }}
+    </div>
+{% endblock %}

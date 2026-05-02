@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Fiche {{ review.entry.title }} - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>{{ review.entry.title }}</h1>
+            <p>{{ review.verdict.label() }}{% if review.score is not null %} · {{ review.score }}/100{% endif %}</p>
+        </div>
+        <div class="actions">
+            <a class="button" href="{{ path('app_review_edit', {id: review.id}) }}">Modifier</a>
+            <a class="button button-secondary" href="{{ path('app_entry_show', {id: review.entry.id}) }}">Voir l'entrée</a>
+        </div>
+    </section>
+
+    <dl class="details">
+        <dt>Résumé</dt>
+        <dd>{{ review.summary|default('Aucun résumé')|nl2br }}</dd>
+        <dt>Points forts</dt>
+        <dd>{{ review.strengths|default('Non renseignés')|nl2br }}</dd>
+        <dt>Points faibles</dt>
+        <dd>{{ review.weaknesses|default('Non renseignés')|nl2br }}</dd>
+        <dt>Note personnelle</dt>
+        <dd>{{ review.personalNote|default('Aucune note')|nl2br }}</dd>
+        <dt>Créée le</dt>
+        <dd>{{ review.createdAt|date('d/m/Y H:i') }}</dd>
+        <dt>Mise à jour le</dt>
+        <dd>{{ review.updatedAt|date('d/m/Y H:i') }}</dd>
+    </dl>
+
+    <div class="actions">
+        <a class="button button-secondary" href="{{ path('app_review_index') }}">Retour</a>
+        {{ include('review/_delete_form.html.twig') }}
+    </div>
+{% endblock %}

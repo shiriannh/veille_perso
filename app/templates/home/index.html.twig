@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de bord - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Tableau de bord</h1>
+            <p>Repérer, trier et retrouver les œuvres qui méritent ton attention.</p>
+        </div>
+        <div class="actions">
+            <a class="button" href="{{ path('app_entry_new') }}">Nouvelle entrée</a>
+            <a class="button button-secondary" href="{{ path('app_review_new') }}">Nouvelle fiche</a>
+        </div>
+    </section>
+
+    <section class="metric-grid" aria-label="Indicateurs">
+        <article class="metric">
+            <span>Sources</span>
+            <strong>{{ source_count }}</strong>
+        </article>
+        <article class="metric">
+            <span>Entrées</span>
+            <strong>{{ entry_count }}</strong>
+        </article>
+        <article class="metric">
+            <span>À ficher</span>
+            <strong>{{ unreviewed_entry_count }}</strong>
+        </article>
+        <article class="metric">
+            <span>Fiches</span>
+            <strong>{{ review_count }}</strong>
+        </article>
+    </section>
+
+    <section class="two-columns">
+        <div>
+            <div class="section-title">
+                <h2>Dernières entrées</h2>
+                <a href="{{ path('app_entry_index') }}">Tout voir</a>
+            </div>
+            {% if latest_entries is empty %}
+                <p class="empty">Aucune entrée pour le moment.</p>
+            {% else %}
+                <div class="list">
+                    {% for entry in latest_entries %}
+                        <a class="list-row" href="{{ path('app_entry_show', {id: entry.id}) }}">
+                            <span>
+                                <strong>{{ entry.title }}</strong>
+                                <small>{{ entry.mediaType.label() }} · {{ entry.source.name }}</small>
+                            </span>
+                            <span class="badge">{{ entry.status.label() }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="section-title">
+                <h2>Fiches modifiées</h2>
+                <a href="{{ path('app_review_index') }}">Tout voir</a>
+            </div>
+            {% if latest_reviews is empty %}
+                <p class="empty">Aucune fiche pour le moment.</p>
+            {% else %}
+                <div class="list">
+                    {% for review in latest_reviews %}
+                        <a class="list-row" href="{{ path('app_review_show', {id: review.id}) }}">
+                            <span>
+                                <strong>{{ review.entry.title }}</strong>
+                                <small>{{ review.verdict.label() }} · modifiée le {{ review.updatedAt|date('d/m/Y') }}</small>
+                            </span>
+                            {% if review.score is not null %}
+                                <span class="score">{{ review.score }}/100</span>
+                            {% endif %}
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

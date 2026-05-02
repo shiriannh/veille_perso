@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Fiches - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Fiches</h1>
+            <p>Synthèses enrichies et jugement personnel.</p>
+        </div>
+        <a class="button" href="{{ path('app_review_new') }}">Nouvelle fiche</a>
+    </section>
+
+    {% if reviews is empty %}
+        <p class="empty">Aucune fiche enregistrée.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Œuvre</th>
+                    <th>Verdict</th>
+                    <th>Score</th>
+                    <th>Mise à jour</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review in reviews %}
+                    <tr>
+                        <td><a href="{{ path('app_review_show', {id: review.id}) }}">{{ review.entry.title }}</a></td>
+                        <td><span class="badge">{{ review.verdict.label() }}</span></td>
+                        <td>{{ review.score is not null ? review.score ~ '/100' : '-' }}</td>
+                        <td>{{ review.updatedAt|date('d/m/Y H:i') }}</td>
+                        <td class="table-actions">
+                            <a href="{{ path('app_review_edit', {id: review.id}) }}">Modifier</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

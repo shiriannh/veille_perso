@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>{% block title %}Veille perso{% endblock %}</title>
+        <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+    </head>
+    <body>
+        <header class="app-header">
+            <a class="brand" href="{{ path('app_home') }}">Veille perso</a>
+            <nav class="main-nav" aria-label="Navigation principale">
+                <a href="{{ path('app_home') }}">Accueil</a>
+                <a href="{{ path('app_source_index') }}">Sources</a>
+                <a href="{{ path('app_entry_index') }}">Entrées</a>
+                <a href="{{ path('app_review_index') }}">Fiches</a>
+            </nav>
+        </header>
+
+        <main class="page">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+
+            {% block body %}{% endblock %}
+        </main>
+    </body>
+</html>

@@ -1,0 +1,52 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Entrées - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Entrées</h1>
+            <p>Contenus bruts repérés avant synthèse personnelle.</p>
+        </div>
+        <a class="button" href="{{ path('app_entry_new') }}">Nouvelle entrée</a>
+    </section>
+
+    {% if entries is empty %}
+        <p class="empty">Aucune entrée enregistrée.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Type</th>
+                    <th>Source</th>
+                    <th>Statut</th>
+                    <th>Intérêt</th>
+                    <th>Fiche</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                    <tr>
+                        <td><a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a></td>
+                        <td>{{ entry.mediaType.label() }}</td>
+                        <td>{{ entry.source.name }}</td>
+                        <td><span class="badge">{{ entry.status.label() }}</span></td>
+                        <td>{{ entry.interestLevel }}/5</td>
+                        <td>
+                            {% if entry.review %}
+                                <a href="{{ path('app_review_show', {id: entry.review.id}) }}">Voir</a>
+                            {% else %}
+                                <a href="{{ path('app_review_new', {entry: entry.id}) }}">Créer</a>
+                            {% endif %}
+                        </td>
+                        <td class="table-actions">
+                            <a href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

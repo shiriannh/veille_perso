@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ entry.title }} - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <h1>Modifier une entrée</h1>
+    </section>
+
+    {{ include('entry/_form.html.twig', {button_label: 'Mettre à jour'}) }}
+{% endblock %}

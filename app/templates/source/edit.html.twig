@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier {{ source.name }} - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <h1>Modifier une source</h1>
+    </section>
+
+    {{ include('source/_form.html.twig', {button_label: 'Mettre à jour'}) }}
+{% endblock %}

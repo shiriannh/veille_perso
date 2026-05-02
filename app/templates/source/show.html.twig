@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ source.name }} - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>{{ source.name }}</h1>
+            <p>{{ source.type.label() }} · {{ source.active ? 'active' : 'inactive' }}</p>
+        </div>
+        <div class="actions">
+            <a class="button" href="{{ path('app_source_edit', {id: source.id}) }}">Modifier</a>
+            <a class="button button-secondary" href="{{ path('app_source_index') }}">Retour</a>
+        </div>
+    </section>
+
+    <dl class="details">
+        <dt>URL</dt>
+        <dd>
+            {% if source.url %}
+                <a href="{{ source.url }}" rel="noreferrer">{{ source.url }}</a>
+            {% else %}
+                <span class="muted">Non renseignée</span>
+            {% endif %}
+        </dd>
+        <dt>Notes</dt>
+        <dd>{{ source.notes|default('Aucune note')|nl2br }}</dd>
+        <dt>Créée le</dt>
+        <dd>{{ source.createdAt|date('d/m/Y H:i') }}</dd>
+        <dt>Mise à jour le</dt>
+        <dd>{{ source.updatedAt|date('d/m/Y H:i') }}</dd>
+    </dl>
+
+    <div class="actions">
+        {{ include('source/_delete_form.html.twig') }}
+    </div>
+{% endblock %}

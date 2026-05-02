@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Sources - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Sources</h1>
+            <p>Origines de veille à consulter ou à alimenter manuellement.</p>
+        </div>
+        <a class="button" href="{{ path('app_source_new') }}">Nouvelle source</a>
+    </section>
+
+    {% if sources is empty %}
+        <p class="empty">Aucune source enregistrée.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Type</th>
+                    <th>Active</th>
+                    <th>Entrées</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for source in sources %}
+                    <tr>
+                        <td><a href="{{ path('app_source_show', {id: source.id}) }}">{{ source.name }}</a></td>
+                        <td>{{ source.type.label() }}</td>
+                        <td>{{ source.active ? 'Oui' : 'Non' }}</td>
+                        <td>{{ source.entries|length }}</td>
+                        <td class="table-actions">
+                            <a href="{{ path('app_source_edit', {id: source.id}) }}">Modifier</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}
