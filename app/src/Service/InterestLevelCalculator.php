@@ -24,11 +24,11 @@ class InterestLevelCalculator
         $score += min(12, count($entry->getMatchedPositiveKeywords()) * 2);
         $score -= min(20, count($entry->getMatchedNegativeKeywords()) * 5);
 
-        if ($entry->getDetectedMediaType() !== null && $entry->getDetectedMediaType() !== MediaType::Other) {
+        if ($entry->getFinalMediaType() !== MediaType::Other) {
             $score += 5;
         }
 
-        if ($entry->getMediaType() !== MediaType::Other && $entry->getDetectedMediaType() === $entry->getMediaType()) {
+        if ($entry->getDetectedMediaType() !== null && $entry->getDetectedMediaType() === $entry->getFinalMediaType()) {
             $score += 3;
         }
 

@@ -72,8 +72,9 @@ class ReviewRepository extends ServiceEntityRepository
 
         if (($filters['mediaType'] ?? null) instanceof MediaType) {
             $queryBuilder
-                ->andWhere('entry.mediaType = :mediaType')
-                ->setParameter('mediaType', $filters['mediaType']);
+                ->andWhere('entry.mediaType = :mediaType OR (entry.mediaType = :otherMediaType AND entry.detectedMediaType = :mediaType)')
+                ->setParameter('mediaType', $filters['mediaType'])
+                ->setParameter('otherMediaType', MediaType::Other);
         }
 
         match ($filters['sort'] ?? null) {

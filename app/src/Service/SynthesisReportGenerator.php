@@ -54,7 +54,7 @@ class SynthesisReportGenerator
         $groups = [];
 
         foreach ($entries as $entry) {
-            $mediaType = $entry->getDetectedMediaType() ?? $entry->getMediaType();
+            $mediaType = $entry->getFinalMediaType();
             $label = $mediaType->label();
             $groups[$label] ??= [];
             $groups[$label][] = $entry;

@@ -69,6 +69,7 @@ class RssImporter
                     ->setSource($source)
                     ->setTitle($item['title'])
                     ->setMediaType(MediaType::Other)
+                    ->setMediaTypeOrigin('imported')
                     ->setOriginalUrl($item['canonicalUrl'])
                     ->setCanonicalUrl($item['canonicalUrl'])
                     ->setExternalId($item['externalId'])

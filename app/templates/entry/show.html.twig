@@ -6,7 +6,7 @@
     <section class="page-heading">
         <div>
             <h1>{{ entry.title }}</h1>
-            <p>{{ entry.mediaType.label() }} · {{ entry.status.label() }} · intérêt {{ entry.interestLevel }}/5</p>
+            <p>{{ entry.finalMediaType.label() }} · {{ entry.status.label() }} · intérêt {{ entry.interestLevel }}/5</p>
         </div>
         <div class="actions">
             <a class="button" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
@@ -64,6 +64,11 @@
             {% if entry.mediaDetectionConfidence is not null %}
                 <span class="score">Confiance {{ entry.mediaDetectionConfidence }}/100</span>
             {% endif %}
+        </dd>
+        <dt>Média final</dt>
+        <dd>
+            <span class="badge">{{ entry.finalMediaType.label() }}</span>
+            {% if entry.mediaTypeOrigin %}<span class="score">Origine {{ entry.mediaTypeOrigin }}</span>{% endif %}
         </dd>
         <dt>Catégories RSS</dt>
         <dd>

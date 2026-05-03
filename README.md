@@ -65,6 +65,55 @@ docker compose exec app php bin/console app:seed-reference-data
 docker compose exec app php bin/console app:generate-draft-reviews
 ```
 
+## Media final 1.6
+
+La V1.6 recentre l'application sur un media final exploitable.
+
+Champs utilises sur `Entry` :
+
+- `mediaType` / colonne `media_type` : media final utilise par les filtres, le scoring, les syntheses et les fiches ;
+- `detectedMediaType` / colonne `detected_media_type` : media detecte automatiquement ;
+- `mediaDetectionConfidence` : confiance de detection ;
+- `mediaTypeOrigin` / colonne `media_type_origin` : origine du media final (`manual`, `rss_category`, `detected_tags`, `detected_media_type`, `source_profile`, `title_content`, `imported`, `unknown`).
+
+Strategie retenue : l'ancien champ `media_type` n'est pas supprime. Il devient la valeur finale. S'il vaut `other` ou provient d'une origine automatique, l'analyse peut le promouvoir. S'il est defini manuellement depuis un formulaire, il est marque `manual` et n'est pas ecrase automatiquement.
+
+Hierarchie des signaux pour determiner le media :
+
+1. categories RSS explicites ;
+2. `detectedTags` et mappings metier maintenables ;
+3. `detectedMediaType` deja calcule ;
+4. profil de source ;
+5. titre, contenu brut et URL.
+
+Mappings principaux tags -> media final :
+
+- `jeu-video`, `video_game`, `video-game`, `gaming`, `fps`, `jrpg` => `video_game` ;
+- `manga` => `manga` ;
+- `anime` => `anime` ;
+- `bd`, `bande-dessinee` => `bd` ;
+- `comics`, `comic` => `comics` ;
+- `livre`, `roman`, `romans`, `novel`, `books` => `book` ;
+- `jdr`, `jeu-de-role`, `ttrpg` => `ttrpg` ;
+- `figurines`, `miniatures`, `wargame` => `figurines`.
+
+Usages migrés vers le media final :
+
+- listes et pages detail Entry ;
+- filtres Entry et Review ;
+- scoring de pertinence ;
+- calcul de `interestLevel` ;
+- syntheses et regroupement par media ;
+- creation automatique de fiches brouillon ;
+- imports RSS et commandes de reanalyse.
+
+Pour migrer l'existant :
+
+```bash
+docker compose exec app php bin/console doctrine:migrations:migrate
+docker compose exec app php bin/console app:reanalyze-entries --all
+```
+
 ## Structure
 
 ```text

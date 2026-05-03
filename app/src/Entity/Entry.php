@@ -35,6 +35,9 @@ class Entry
     #[ORM\Column(enumType: MediaType::class)]
     private MediaType $mediaType = MediaType::VideoGame;
 
+    #[ORM\Column(length: 30, nullable: true)]
+    private ?string $mediaTypeOrigin = null;
+
     #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Length(max: 255)]
     private ?string $authorOrStudio = null;
@@ -234,6 +237,27 @@ class Entry
     public function setMediaType(MediaType $mediaType): self
     {
         $this->mediaType = $mediaType;
+
+        return $this;
+    }
+
+    public function getFinalMediaType(): MediaType
+    {
+        if ($this->mediaType !== MediaType::Other) {
+            return $this->mediaType;
+        }
+
+        return $this->detectedMediaType ?? $this->mediaType;
+    }
+
+    public function getMediaTypeOrigin(): ?string
+    {
+        return $this->mediaTypeOrigin;
+    }
+
+    public function setMediaTypeOrigin(?string $mediaTypeOrigin): self
+    {
+        $this->mediaTypeOrigin = $mediaTypeOrigin;
 
         return $this;
     }

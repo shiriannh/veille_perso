@@ -10,7 +10,7 @@ use App\Enum\MediaType;
 
 class EntryAnalyzer
 {
-    public const VERSION = 'rules-v3';
+    public const VERSION = 'rules-v4';
 
     /**
      * Dictionnaire metier centralise. Les blocs restent explicites pour eviter
@@ -113,6 +113,7 @@ class EntryAnalyzer
         private readonly OptionalAiEntryAnalyzer $aiAnalyzer,
         private readonly EntryTagDetector $entryTagDetector,
         private readonly RssCategoryMapper $rssCategoryMapper,
+        private readonly MediaTypeResolver $mediaTypeResolver,
         private readonly AutoTagEnricher $autoTagEnricher,
         private readonly InterestLevelCalculator $interestLevelCalculator,
         private readonly DraftReviewCreator $draftReviewCreator,
@@ -126,6 +127,8 @@ class EntryAnalyzer
         $this->rssCategoryMapper->enrich($entry, $categories);
         $sourceProfile = $this->sourceProfile($entry);
         $this->promoteReliableSourceMedia($entry, $sourceProfile, $categories);
+        $mediaResolution = $this->mediaTypeResolver->resolve($entry, $categories);
+        $this->promoteFinalMediaType($entry, $mediaResolution);
 
         $normalizedTitle = $this->normalize($entry->getTitle());
         $normalizedContent = $this->normalize((string) $entry->getRawContent());
@@ -155,6 +158,7 @@ class EntryAnalyzer
             ['langue: '.$language],
             $categories === [] ? [] : ['categories RSS exploitees: '.implode(', ', $categorySlugs)],
             $mediaSignals,
+            $mediaResolution['signals'],
             $themeSignals,
             $editorialSignals,
             array_map(static fn (string $signal): string => 'putaclic: '.$signal, $clickbaitSignals),
@@ -230,14 +234,21 @@ class EntryAnalyzer
     {
         $tags = $entry->getDetectedTags();
         $detectedMediaType = $entry->getDetectedMediaType();
+        $finalMediaType = $entry->getFinalMediaType();
         $signals = [];
         $score = 18;
         $confidence = 0;
 
+        if ($finalMediaType !== MediaType::Other) {
+            $signals[] = 'media final: '.$finalMediaType->label();
+            $score += 42;
+            $confidence += max(35, (int) ($entry->getMediaDetectionConfidence() ?? 0));
+        }
+
         if ($detectedMediaType instanceof MediaType) {
             $signals[] = 'media detecte: '.$detectedMediaType->label();
-            $score += 34;
-            $confidence += 52;
+            $score += $detectedMediaType === $finalMediaType ? 14 : 8;
+            $confidence += $detectedMediaType === $finalMediaType ? 18 : 10;
         }
 
         foreach ($categories as $category) {
@@ -263,8 +274,8 @@ class EntryAnalyzer
             }
         }
 
-        if ($entry->getMediaType() !== MediaType::Other && $detectedMediaType === $entry->getMediaType()) {
-            $signals[] = 'media manuel coherent';
+        if ($entry->getMediaTypeOrigin() === 'manual') {
+            $signals[] = 'media final manuel';
             $score += 12;
             $confidence += 12;
         }
@@ -582,6 +593,33 @@ class EntryAnalyzer
             if ($detected instanceof MediaType) {
                 $entry->setDetectedMediaType($detected);
             }
+        }
+    }
+
+    /**
+     * @param array{media: ?MediaType, confidence: int, origin: ?string, signals: array<int, string>} $mediaResolution
+     */
+    private function promoteFinalMediaType(Entry $entry, array $mediaResolution): void
+    {
+        $media = $mediaResolution['media'];
+        if (!$media instanceof MediaType || $media === MediaType::Other || $mediaResolution['confidence'] < 35) {
+            return;
+        }
+
+        if ($entry->getDetectedMediaType() === null || $mediaResolution['confidence'] >= (int) ($entry->getMediaDetectionConfidence() ?? 0)) {
+            $entry
+                ->setDetectedMediaType($media)
+                ->setMediaDetectionConfidence($mediaResolution['confidence']);
+        }
+
+        if ($entry->getMediaType() !== MediaType::Other && $entry->getMediaTypeOrigin() === 'manual') {
+            return;
+        }
+
+        if ($entry->getMediaType() === MediaType::Other || in_array($entry->getMediaTypeOrigin(), [null, 'unknown', 'imported', 'detected', 'auto'], true)) {
+            $entry
+                ->setMediaType($media)
+                ->setMediaTypeOrigin($mediaResolution['origin'] ?? 'detected');
         }
     }
 

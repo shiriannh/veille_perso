@@ -145,7 +145,10 @@
                 {% for entry in entries %}
                     <tr>
                         <td><a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a></td>
-                        <td>{{ entry.mediaType.label() }}</td>
+                        <td>
+                            {{ entry.finalMediaType.label() }}
+                            {% if entry.mediaTypeOrigin %}<small>{{ entry.mediaTypeOrigin }}</small>{% endif %}
+                        </td>
                         <td>
                             {% if entry.detectedMediaType %}
                                 <span class="badge {{ entry.detectedMediaType.value == 'other' ? 'badge-muted' : '' }}">{{ entry.detectedMediaType.label() }}</span>

@@ -87,8 +87,9 @@ class EntryRepository extends ServiceEntityRepository
 
         if (($filters['mediaType'] ?? null) instanceof MediaType) {
             $queryBuilder
-                ->andWhere('entry.mediaType = :mediaType')
-                ->setParameter('mediaType', $filters['mediaType']);
+                ->andWhere('entry.mediaType = :mediaType OR (entry.mediaType = :otherMediaType AND entry.detectedMediaType = :mediaType)')
+                ->setParameter('mediaType', $filters['mediaType'])
+                ->setParameter('otherMediaType', MediaType::Other);
         }
 
         if (($filters['detectedMediaType'] ?? null) instanceof MediaType) {
@@ -291,7 +292,8 @@ class EntryRepository extends ServiceEntityRepository
             ->andWhere('entry.decision IN (:decisions)')
             ->andWhere('entry.lastSynthesizedAt IS NULL')
             ->setParameter('decisions', $decisions)
-            ->orderBy('entry.detectedMediaType', 'ASC')
+            ->orderBy('entry.mediaType', 'ASC')
+            ->addOrderBy('entry.detectedMediaType', 'ASC')
             ->addOrderBy('entry.publishedAt', 'DESC')
             ->addOrderBy('entry.importedAt', 'DESC')
             ->getQuery()

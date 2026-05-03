@@ -134,6 +134,7 @@ class EntryController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $entry->setMediaTypeOrigin('manual');
             $entityManager->persist($entry);
             $entityManager->flush();
 
@@ -163,6 +164,7 @@ class EntryController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $entry->setMediaTypeOrigin('manual');
             $entityManager->flush();
 
             $this->addFlash('success', 'Entrée mise à jour.');

@@ -43,7 +43,7 @@
                                     <small>
                                         {{ entry.source.name }}
                                         · {{ entry.publishedAt ? entry.publishedAt|date('d/m/Y') : (entry.importedAt ? entry.importedAt|date('d/m/Y') : entry.createdAt|date('d/m/Y')) }}
-                                        · {{ entry.detectedMediaType ? entry.detectedMediaType.label() : entry.mediaType.label() }}
+                                        · {{ entry.finalMediaType.label() }}
                                     </small>
                                     {% if entry.rawContent %}
                                         <p>{{ entry.rawContent|striptags|slice(0, 260) }}{{ entry.rawContent|length > 260 ? '…' : '' }}</p>
