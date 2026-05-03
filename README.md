@@ -60,6 +60,7 @@ docker compose exec app php bin/console app:import-source 1
 docker compose exec app php bin/console app:import-sources
 docker compose exec app php bin/console app:analyze-new-entries
 docker compose exec app php bin/console app:reanalyze-entries --all
+docker compose exec app php bin/console app:detect-entry-tags
 ```
 
 ## Structure
@@ -240,6 +241,36 @@ OPENAI_API_KEY=
 ```
 
 Si `OPENAI_ANALYSIS_ENABLED=1` et `OPENAI_API_KEY` est renseignee, le service IA peut etre appele seulement quand le score de pertinence ou le score putaclic est ambigu, ou avec l'option `--force-ai`. Le resultat brut est conserve dans `aiRawResult`, avec le modele et la date d'analyse.
+
+## Tags detectes automatiquement
+
+Les tags personnels restent dans `personalTags`. Les tags deduits par l'application sont stockes separement dans `detectedTags`, avec une proposition prudente de type dans `detectedMediaType`. Le type manuel `mediaType` n'est jamais ecrase automatiquement.
+
+La detection est lancee :
+
+- a la creation d'une Entry depuis un flux RSS ;
+- manuellement depuis la fiche Entry avec le bouton `Recalculer les tags` ;
+- en console avec les commandes ci-dessous.
+
+```bash
+docker compose exec app php bin/console app:detect-entry-tags
+docker compose exec app php bin/console app:detect-entry-tags --limit=50
+docker compose exec app php bin/console app:detect-entry-tags <entryId>
+docker compose exec app php bin/console app:detect-entry-tags --all
+docker compose exec app php bin/console app:rebuild-entry-tags --all
+```
+
+La liste des Entry propose aussi un filtre simple par tag detecte exact.
+
+Les dictionnaires sont centralises dans `app/src/Service/EntryTagDetector.php`. Exemple de structure :
+
+```php
+'battlefield' => ['battlefield'],
+'battlefield-6' => ['battlefield 6', 'battlefield vi'],
+'monetisation' => ['monetisation', 'microtransaction', 'loot box'],
+```
+
+Pour enrichir la detection, ajouter un tag canonique et ses variantes dans `TAG_DICTIONARY`. Pour proposer un type d'oeuvre quand le signal est fort, ajouter le tag dans `MEDIA_TYPE_BY_TAG`. Les regles restent deterministes : pas d'IA, pas de NLP avance, pas de taxonomie multi-entites.
 
 ## Consultation quotidienne
 

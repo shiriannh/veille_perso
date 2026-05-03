@@ -11,6 +11,7 @@ use App\Form\EntryType;
 use App\Repository\EntryRepository;
 use App\Repository\SourceRepository;
 use App\Service\EntryAnalyzer;
+use App\Service\EntryTagDetector;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -50,6 +51,7 @@ class EntryController extends AbstractController
             'decision' => $decision,
             'clickbaitLevel' => $clickbaitLevel,
             'keyword' => $request->query->get('keyword'),
+            'detectedTag' => $request->query->get('detectedTag'),
             'sort' => $sort,
         ];
 
@@ -70,6 +72,7 @@ class EntryController extends AbstractController
                 'decision' => $decision?->value,
                 'clickbaitLevel' => $clickbaitLevel?->value,
                 'keyword' => (string) $request->query->get('keyword', ''),
+                'detectedTag' => (string) $request->query->get('detectedTag', ''),
                 'sort' => $sort ?? '',
             ],
         ]);
@@ -88,6 +91,23 @@ class EntryController extends AbstractController
         $entityManager->flush();
 
         $this->addFlash('success', 'Analyse relancee.');
+
+        return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+    }
+
+    #[Route('/{id}/detect-tags', name: 'app_entry_detect_tags', methods: ['POST'])]
+    public function detectTags(Request $request, Entry $entry, EntryTagDetector $entryTagDetector, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid('detect_entry_tags_'.$entry->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, detection non lancee.');
+
+            return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+        }
+
+        $entryTagDetector->detect($entry);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Tags detectes recalcules.');
 
         return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
     }

@@ -57,6 +57,7 @@ class EntryRepository extends ServiceEntityRepository
      *     decision?: ?AnalysisDecision,
      *     clickbaitLevel?: ?ClickbaitLevel,
      *     keyword?: ?string,
+     *     detectedTag?: ?string,
      *     sort?: ?string
      * } $filters
      *
@@ -134,7 +135,23 @@ class EntryRepository extends ServiceEntityRepository
             default => $queryBuilder->orderBy('entry.createdAt', 'DESC'),
         };
 
-        return $queryBuilder->getQuery()->getResult();
+        $entries = $queryBuilder->getQuery()->getResult();
+
+        if (($filters['detectedTag'] ?? null) !== null && trim((string) $filters['detectedTag']) !== '') {
+            $tag = mb_strtolower(trim((string) $filters['detectedTag']));
+
+            return array_values(array_filter($entries, static function (Entry $entry) use ($tag): bool {
+                foreach ($entry->getDetectedTags() as $detectedTag) {
+                    if (mb_strtolower($detectedTag) === $tag) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }));
+        }
+
+        return $entries;
     }
 
     /**
@@ -152,6 +169,23 @@ class EntryRepository extends ServiceEntityRepository
             ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @return Entry[]
+     */
+    public function findWithoutDetectedTags(int $limit = 100): array
+    {
+        $entries = $this->createQueryBuilder('entry')
+            ->leftJoin('entry.source', 'source')
+            ->addSelect('source')
+            ->orderBy('entry.importedAt', 'DESC')
+            ->addOrderBy('entry.createdAt', 'DESC')
+            ->setMaxResults(max($limit * 3, $limit))
+            ->getQuery()
+            ->getResult();
+
+        return array_slice(array_values(array_filter($entries, static fn (Entry $entry): bool => $entry->getDetectedTags() === [])), 0, $limit);
     }
 
     /**

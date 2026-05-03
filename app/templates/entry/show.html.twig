@@ -10,6 +10,10 @@
         </div>
         <div class="actions">
             <a class="button" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
+            <form method="post" action="{{ path('app_entry_detect_tags', {id: entry.id}) }}" class="inline-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('detect_entry_tags_' ~ entry.id) }}">
+                <button class="button button-secondary">Recalculer les tags</button>
+            </form>
             <form method="post" action="{{ path('app_entry_analyze', {id: entry.id}) }}" class="inline-form">
                 <input type="hidden" name="_token" value="{{ csrf_token('analyze_entry_' ~ entry.id) }}">
                 <button class="button button-secondary">Relancer l'analyse</button>
@@ -44,6 +48,18 @@
                 {{ entry.personalTags|join(', ') }}
             {% endif %}
         </dd>
+        <dt>Tags détectés</dt>
+        <dd>
+            {% if entry.detectedTags is empty %}
+                <span class="muted">Aucun tag détecté</span>
+            {% else %}
+                {% for tag in entry.detectedTags %}
+                    <span class="badge badge-muted">{{ tag }}</span>
+                {% endfor %}
+            {% endif %}
+        </dd>
+        <dt>Type détecté</dt>
+        <dd>{{ entry.detectedMediaType ? entry.detectedMediaType.label() : 'Non détecté' }}</dd>
         <dt>Repéré le</dt>
         <dd>{{ entry.spottedAt|date('d/m/Y H:i') }}</dd>
         <dt>Publié le</dt>

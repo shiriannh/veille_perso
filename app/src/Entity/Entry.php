@@ -139,6 +139,15 @@ class Entry
     #[ORM\Column(type: Types::JSON)]
     private array $personalTags = [];
 
+    /**
+     * @var array<int, string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $detectedTags = [];
+
+    #[ORM\Column(enumType: MediaType::class, nullable: true)]
+    private ?MediaType $detectedMediaType = null;
+
     #[ORM\OneToOne(mappedBy: 'entry', targetEntity: Review::class, cascade: ['persist'])]
     private ?Review $review = null;
 
@@ -585,6 +594,36 @@ class Entry
         }
 
         $this->setPersonalTags(explode(',', $personalTags));
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getDetectedTags(): array
+    {
+        return $this->detectedTags;
+    }
+
+    /**
+     * @param array<int, string> $detectedTags
+     */
+    public function setDetectedTags(array $detectedTags): self
+    {
+        $this->detectedTags = array_values(array_unique(array_filter(array_map('trim', $detectedTags))));
+
+        return $this;
+    }
+
+    public function getDetectedMediaType(): ?MediaType
+    {
+        return $this->detectedMediaType;
+    }
+
+    public function setDetectedMediaType(?MediaType $detectedMediaType): self
+    {
+        $this->detectedMediaType = $detectedMediaType;
 
         return $this;
     }

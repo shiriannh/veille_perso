@@ -83,6 +83,10 @@
             <input id="keyword" type="search" name="keyword" value="{{ filters.keyword }}" placeholder="sf, fantasy, rumeur...">
         </div>
         <div>
+            <label for="detectedTag">Tag détecté</label>
+            <input id="detectedTag" type="search" name="detectedTag" value="{{ filters.detectedTag }}" placeholder="battlefield, fps, sf...">
+        </div>
+        <div>
             <label for="sort">Tri</label>
             <select id="sort" name="sort">
                 <option value="">Création récente</option>
@@ -111,6 +115,7 @@
                     <th>Intérêt</th>
                     <th>Analyse</th>
                     <th>Putaclic</th>
+                    <th>Tags détectés</th>
                     <th>Fiche</th>
                     <th></th>
                 </tr>
@@ -137,6 +142,15 @@
                                 <small>{{ entry.clickbaitScore ?? 0 }}/100</small>
                             {% else %}
                                 <span class="badge badge-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if entry.detectedTags is empty %}
+                                <span class="badge badge-muted">Aucun</span>
+                            {% else %}
+                                {% for tag in entry.detectedTags|slice(0, 4) %}
+                                    <span class="badge badge-muted">{{ tag }}</span>
+                                {% endfor %}
                             {% endif %}
                         </td>
                         <td>
