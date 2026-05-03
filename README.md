@@ -194,16 +194,17 @@ Regle de doublon : le nom de Source doit etre unique, sans tenir compte de la ca
 
 ## Analyse post-RSS
 
-La V1.4 ajoute une analyse simple apres import RSS. Depuis `rules-v2`, l'analyse est decoupee en blocs lisibles :
+La V1.5 ameliore le moteur deterministe sans changer l'architecture. Depuis `rules-v3`, l'analyse suit une hierarchie de signaux explicite :
 
 1. import RSS ;
-2. detection de tags et proposition prudente de type media ;
-3. normalisation du titre, contenu, URL et source ;
-4. detection legere de langue `fr`, `en` ou `mixed` ;
-5. scoring media, scoring thematique, scoring de qualite editoriale ;
-6. detection heuristique du bruit / clickbait FR et EN ;
-7. appel IA optionnel uniquement sur les cas ambigus ;
-8. stockage de la decision finale et de ses raisons sur `Entry`.
+2. categories RSS `category` / `categorie`, conservees dans `rawPayload.categories` ;
+3. profil de source, deduit du nom, de l'URL, du flux et des notes de la Source ;
+4. tags detectes ;
+5. titre, resume RSS, URL et source ;
+6. detection de langue `fr`, `en`, `mixed` ou `unknown` ;
+7. scoring media, thematique, qualite editoriale et clickbait ;
+8. appel IA optionnel uniquement sur les cas ambigus ;
+9. stockage de la decision finale et de ses raisons sur `Entry`.
 
 Les entrees sont classees, jamais supprimees automatiquement.
 
@@ -220,11 +221,11 @@ Le profil d'interet est configure dans `app/config/services.yaml` avec `app.anal
 
 La logique de score reste simple et deterministe :
 
-- score media : type detecte, tags de media preferes, coherence avec le type manuel ;
-- score thematique : themes, licences, univers, studios et editeurs suivis ;
+- score media : type detecte, categories RSS, profil de source, tags de media preferes, coherence avec le type manuel ;
+- score thematique : dictionnaires FR / EN, genres, licences, univers, studios, editeurs suivis, profil utilisateur et categories RSS ;
 - penalites : sujets a eviter et contenus a declasser ;
 - qualite editoriale : bonus pour critique, analyse, interview, review ; malus pour rumeur, drama, polemique ;
-- pertinence finale : combinaison media 25 %, thematique 50 %, qualite editoriale 25 %, avec penalite si clickbait.
+- pertinence finale : combinaison media 34 %, thematique 46 %, qualite editoriale 20 %, avec bonus profil de source et penalite clickbait plus prudente.
 
 La detection clickbait FR/EN cherche des signaux explicites : lexique sensationnaliste, promesses vides, rumeurs/polemiques, ponctuation excessive, majuscules insistantes et listes creuses.
 
@@ -238,7 +239,7 @@ docker compose exec app php bin/console app:reanalyze-entries --all
 docker compose exec app php bin/console app:reanalyze-entries <entryId> --force-ai
 ```
 
-L'interface Entry affiche les badges de decision, le score de pertinence, le niveau putaclic, les raisons et les mots-cles detectes. La fiche detail d'une Entry propose aussi un bouton pour relancer l'analyse.
+L'interface Entry affiche les badges de decision, le score de pertinence, le niveau putaclic, le media detecte, les categories RSS exploitees, les raisons et les mots-cles detectes. La liste permet aussi de filtrer par media detecte, decision, niveau putaclic, source, tag detecte et langue.
 
 ### IA optionnelle
 
@@ -270,7 +271,7 @@ docker compose exec app php bin/console app:detect-entry-tags --all
 docker compose exec app php bin/console app:rebuild-entry-tags --all
 ```
 
-La liste des Entry propose aussi un filtre simple par tag detecte exact et un filtre par langue d'analyse.
+La liste des Entry propose aussi un filtre simple par tag detecte exact, par media detecte et par langue d'analyse.
 
 Les dictionnaires sont centralises dans `app/src/Service/EntryTagDetector.php`. Exemple de structure :
 
@@ -282,27 +283,44 @@ Les dictionnaires sont centralises dans `app/src/Service/EntryTagDetector.php`. 
 
 Pour enrichir la detection, ajouter un tag canonique et ses variantes dans `TAG_DICTIONARY`. Pour proposer un type d'oeuvre quand le signal est fort, ajouter le tag dans `MEDIA_TYPE_BY_TAG`. Les regles restent deterministes : pas d'IA, pas de NLP avance, pas de taxonomie multi-entites.
 
-Le profil d'interet de l'analyse de pertinence est dans `app/src/Service/EntryAnalyzer.php`, constantes `INTERESTS` et `CLICKBAIT_SIGNALS`. Exemple :
+Le profil d'interet de l'analyse de pertinence est dans `app/src/Service/EntryAnalyzer.php`, constantes `INTERESTS`, `SOURCE_PROFILES`, `CLICKBAIT_SIGNALS` et `LANGUAGE_MARKERS`. Exemple :
 
 ```php
 'licenses' => ['battlefield', 'final fantasy', 'warhammer 40k'],
 'avoid' => ['people', 'celebrity', 'drama'],
 'deprioritize' => ['battle pass', 'microtransaction', 'loot box'],
+'video_games' => [
+    'needles' => ['canard pc', 'gamekult', 'actugaming'],
+    'media' => ['video_game'],
+    'primaryMedia' => 'video_game',
+    'tags' => ['jeu-video', 'rpg', 'fps'],
+],
 ```
 
-Les categories RSS `category` et `categorie` sont conservees dans `rawPayload.categories` et passent par `app/src/Service/RssCategoryMapper.php`.
+Les profils de source renforcent le media probable, les tags probables et le score de pertinence. Ils servent a reduire les faux `ignored` quand une source est deja specialisee : SFF / romans, BD / manga / comics, jeux video, JDR ou figurines.
+
+Les categories RSS `category` et `categorie` sont conservees dans `rawPayload.categories` et passent par `app/src/Service/RssCategoryMapper.php`. Elles ont un poids fort : media detecte, tags utiles, signaux visibles dans l'analyse.
 
 Mappings principaux :
 
-- `roman`, `romans`, `roman-vf`, `romans-vf`, `roman-vo`, `romans-vo`, `livre`, `livres`, `novel`, `novels`, `book`, `books` => type detecte `Roman SF` ;
-- `manga`, `comics`, `bd`, `bande dessinée` => type detecte `BD / manga / comics` ;
-- `anime`, `serie`, `series` => type detecte `Série` ;
-- `jeu vidéo`, `video game` => type detecte `Jeu vidéo` ;
+- `roman`, `romans`, `roman-vf`, `romans-vf`, `roman-vo`, `romans-vo`, `livre`, `livres`, `novel`, `novels`, `book`, `books` => type detecte `Livre` ;
+- `manga` => type detecte `Manga` ;
+- `manhwa` / `manwha` => type detecte `Manhwa` ;
+- `manhua` => type detecte `Manhua` ;
+- `bd`, `bande dessinee` => type detecte `BD` ;
+- `comics`, `comic` => type detecte `Comics` ;
+- `jdr`, `jeu de role`, `ttrpg` => type detecte `JDR` ;
+- `figurines`, `miniatures` => type detecte `Figurines` ;
+- `anime` => type detecte `Anime` ;
+- `serie`, `series` => type detecte `Serie` ;
+- `jeu video`, `video game` => type detecte `Jeu video` ;
 - `space opera` => tag `space-opera` ;
 - `transhumanisme` ou `transhumanism` => tag `transhumanisme` ;
 - `roman vf` / `romans vf` ajoutent le tag `vf`, `roman vo` / `romans vo` ajoutent le tag `vo`.
 
-Priorite : les categories RSS peuvent renseigner `detectedMediaType` seulement s'il est encore vide. Elles n'ecrasent pas une detection de media deja presente et ne modifient jamais le `mediaType` manuel.
+Priorite : les categories RSS peuvent renseigner `detectedMediaType` seulement s'il est encore vide. Les profils de source peuvent proposer un type uniquement quand le profil est mono-media et qu'aucune categorie RSS ne tranche. Rien n'ecrase le `mediaType` manuel.
+
+Decision finale : `clickbait` n'est applique directement que si le bruit est fort et la pertinence faible. Un contenu coherent avec une source specialisee ou des categories RSS fortes passe plus facilement en `maybe_relevant` plutot qu'en `ignored`.
 
 ## Synthèses manuelles
 
@@ -362,7 +380,7 @@ Les statuts métier sont représentés par des enums PHP :
 
 - `EntryStatus` : à tester, à surveiller, à attendre en promo, à ignorer, valeur sûre.
 - `ReviewVerdict` : prioritaire, recommandé, curiosité, attendre, passer.
-- `MediaType` : jeu vidéo, roman SF, fantasy, space opera, BD, film, série, autre.
+- `MediaType` : jeu video, livre, roman SF, fantasy, space opera, BD, manga, manhwa, manhua, comics, anime, film, serie, JDR, figurines, autre.
 - `SourceType` : site web, RSS, newsletter, YouTube, podcast, réseau social, autre.
 
 ## V2 possibles

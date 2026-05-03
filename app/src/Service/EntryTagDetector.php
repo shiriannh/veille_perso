@@ -17,10 +17,10 @@ class EntryTagDetector
         'serie' => ['serie', 'saison', 'episode', 'showrunner'],
         'film' => ['film', 'cinema', 'long metrage', 'realisateur'],
         'manga' => ['manga', 'mangas', 'shonen', 'seinen'],
-        'manwha' => ['manwha', 'manhwa'],
+        'manhwa' => ['manwha', 'manhwa'],
         'manhua' => ['manhua'],
         'anime' => ['anime', 'animation japonaise'],
-        'livre' => ['livre', 'roman', 'auteur', 'editeur'],
+        'livre' => ['livre', 'livres', 'roman', 'romans', 'novel', 'novels', 'book', 'books', 'auteur', 'editeur'],
         'bd' => ['bd', 'bande dessinee'],
         'comics' => ['comics', 'comic book'],
         'jdr' => ['jdr', 'jeu de role', 'roleplaying game', 'rpg papier'],
@@ -65,12 +65,15 @@ class EntryTagDetector
         'tactique' => MediaType::VideoGame,
         'film' => MediaType::Movie,
         'serie' => MediaType::Series,
-        'manga' => MediaType::Comic,
-        'bd' => MediaType::Comic,
-        'comics' => MediaType::Comic,
-        'jdr' => MediaType::Other,
-        'figurines' => MediaType::Other,
-        'livre' => MediaType::ScienceFictionNovel,
+        'manga' => MediaType::Manga,
+        'manhwa' => MediaType::Manhwa,
+        'manhua' => MediaType::Manhua,
+        'anime' => MediaType::Anime,
+        'bd' => MediaType::Bd,
+        'comics' => MediaType::Comics,
+        'jdr' => MediaType::Ttrpg,
+        'figurines' => MediaType::Figurines,
+        'livre' => MediaType::Book,
         'space-opera' => MediaType::SpaceOperaNovel,
         'fantasy' => MediaType::FantasyNovel,
     ];
@@ -117,7 +120,13 @@ class EntryTagDetector
      */
     private function detectMediaType(array $tags): ?MediaType
     {
-        foreach ($tags as $tag) {
+        $priority = ['manga', 'manhwa', 'manhua', 'bd', 'comics', 'anime', 'jdr', 'figurines', 'jeu-video', 'fps', 'jrpg', 'rpg', 'tactique', 'livre', 'space-opera', 'fantasy', 'film', 'serie'];
+
+        foreach ($priority as $tag) {
+            if (!in_array($tag, $tags, true)) {
+                continue;
+            }
+
             if (isset(self::MEDIA_TYPE_BY_TAG[$tag])) {
                 return self::MEDIA_TYPE_BY_TAG[$tag];
             }

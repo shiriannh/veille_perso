@@ -51,6 +51,7 @@ class EntryRepository extends ServiceEntityRepository
      *     q?: ?string,
      *     source?: ?Source,
      *     mediaType?: ?MediaType,
+     *     detectedMediaType?: ?MediaType,
      *     status?: ?EntryStatus,
      *     interestLevel?: ?int,
      *     reviewState?: ?string,
@@ -88,6 +89,12 @@ class EntryRepository extends ServiceEntityRepository
             $queryBuilder
                 ->andWhere('entry.mediaType = :mediaType')
                 ->setParameter('mediaType', $filters['mediaType']);
+        }
+
+        if (($filters['detectedMediaType'] ?? null) instanceof MediaType) {
+            $queryBuilder
+                ->andWhere('entry.detectedMediaType = :detectedMediaType')
+                ->setParameter('detectedMediaType', $filters['detectedMediaType']);
         }
 
         if (($filters['status'] ?? null) instanceof EntryStatus) {

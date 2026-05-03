@@ -35,6 +35,15 @@
             </select>
         </div>
         <div>
+            <label for="detectedMediaType">Média détecté</label>
+            <select id="detectedMediaType" name="detectedMediaType">
+                <option value="">Tous</option>
+                {% for media_type in media_types %}
+                    <option value="{{ media_type.value }}" {{ filters.detectedMediaType == media_type.value ? 'selected' : '' }}>{{ media_type.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
             <label for="status">Statut</label>
             <select id="status" name="status">
                 <option value="">Tous</option>
@@ -93,6 +102,7 @@
                 <option value="fr" {{ filters.analysisLanguage == 'fr' ? 'selected' : '' }}>FR</option>
                 <option value="en" {{ filters.analysisLanguage == 'en' ? 'selected' : '' }}>EN</option>
                 <option value="mixed" {{ filters.analysisLanguage == 'mixed' ? 'selected' : '' }}>Mixte</option>
+                <option value="unknown" {{ filters.analysisLanguage == 'unknown' ? 'selected' : '' }}>Inconnue</option>
             </select>
         </div>
         <div>
@@ -119,6 +129,7 @@
                 <tr>
                     <th>Titre</th>
                     <th>Type</th>
+                    <th>Détecté</th>
                     <th>Source</th>
                     <th>Statut</th>
                     <th>Intérêt</th>
@@ -135,6 +146,13 @@
                     <tr>
                         <td><a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a></td>
                         <td>{{ entry.mediaType.label() }}</td>
+                        <td>
+                            {% if entry.detectedMediaType %}
+                                <span class="badge {{ entry.detectedMediaType.value == 'other' ? 'badge-muted' : '' }}">{{ entry.detectedMediaType.label() }}</span>
+                            {% else %}
+                                <span class="badge badge-muted">Non détecté</span>
+                            {% endif %}
+                        </td>
                         <td>{{ entry.source.name }}</td>
                         <td><span class="badge">{{ entry.status.label() }}</span></td>
                         <td>{{ entry.interestLevel }}/5</td>

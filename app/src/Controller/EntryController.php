@@ -27,6 +27,7 @@ class EntryController extends AbstractController
         $sourceId = (string) $request->query->get('source', '');
         $source = ctype_digit($sourceId) && (int) $sourceId > 0 ? $sourceRepository->find((int) $sourceId) : null;
         $mediaType = MediaType::tryFrom((string) $request->query->get('mediaType'));
+        $detectedMediaType = MediaType::tryFrom((string) $request->query->get('detectedMediaType'));
         $status = EntryStatus::tryFrom((string) $request->query->get('status'));
         $interestLevelValue = (string) $request->query->get('interestLevel', '');
         $interestLevel = ctype_digit($interestLevelValue)
@@ -37,7 +38,7 @@ class EntryController extends AbstractController
             : null;
         $decision = AnalysisDecision::tryFrom((string) $request->query->get('decision'));
         $clickbaitLevel = ClickbaitLevel::tryFrom((string) $request->query->get('clickbaitLevel'));
-        $analysisLanguage = in_array($request->query->get('analysisLanguage'), ['fr', 'en', 'mixed'], true)
+        $analysisLanguage = in_array($request->query->get('analysisLanguage'), ['fr', 'en', 'mixed', 'unknown'], true)
             ? (string) $request->query->get('analysisLanguage')
             : null;
         $sort = in_array($request->query->get('sort'), ['published_desc', 'published_asc', 'imported_desc', 'imported_asc'], true)
@@ -48,6 +49,7 @@ class EntryController extends AbstractController
             'q' => $request->query->get('q'),
             'source' => $source,
             'mediaType' => $mediaType,
+            'detectedMediaType' => $detectedMediaType,
             'status' => $status,
             'interestLevel' => $interestLevel,
             'reviewState' => $reviewState,
@@ -70,6 +72,7 @@ class EntryController extends AbstractController
                 'q' => (string) $request->query->get('q', ''),
                 'source' => $source?->getId(),
                 'mediaType' => $mediaType?->value,
+                'detectedMediaType' => $detectedMediaType?->value,
                 'status' => $status?->value,
                 'interestLevel' => $interestLevel,
                 'reviewState' => $reviewState,

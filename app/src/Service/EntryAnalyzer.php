@@ -10,14 +10,19 @@ use App\Enum\MediaType;
 
 class EntryAnalyzer
 {
-    public const VERSION = 'rules-v2';
+    public const VERSION = 'rules-v3';
 
     /**
+     * Dictionnaire metier centralise. Les blocs restent explicites pour eviter
+     * qu'un score global masque la raison d'une decision.
+     *
      * @var array<string, array<int, string>>
      */
     private const INTERESTS = [
-        'media' => ['jeu-video', 'film', 'serie', 'manga', 'anime', 'bd', 'comics', 'livre', 'jdr', 'figurines'],
-        'themes' => ['sf', 'science fiction', 'sci-fi', 'fantasy', 'space opera', 'cyberpunk', 'rpg', 'jrpg', 'fps', 'tactique', 'horror', 'horreur'],
+        'media' => ['jeu-video', 'film', 'serie', 'manga', 'manhwa', 'manhua', 'anime', 'bd', 'comics', 'livre', 'jdr', 'figurines'],
+        'themes_fr' => ['sf', 'science fiction', 'fantastique', 'fantasy', 'space opera', 'cyberpunk', 'horreur', 'jeu de role', 'strategie', 'tactique'],
+        'themes_en' => ['sci-fi', 'science fiction', 'fantasy', 'space opera', 'cyberpunk', 'horror', 'roleplaying', 'strategy', 'tactical'],
+        'genres' => ['rpg', 'jrpg', 'fps', 'tactique', 'live-service', 'space-opera'],
         'licenses' => ['battlefield', 'final fantasy', 'warhammer 40k', 'dungeons and dragons', 'pathfinder', 'shadowrun', 'marvel', 'dc comics'],
         'makers' => ['ea', 'electronic arts', 'square enix', 'games workshop'],
         'avoid' => ['people', 'celebrity', 'drama', 'influenceur', 'influencer', 'rumeur people', 'tele realite', 'giveaway', 'concours'],
@@ -25,14 +30,82 @@ class EntryAnalyzer
     ];
 
     /**
+     * Profils prudents : ils renforcent le score et les raisons, mais ne
+     * remplacent pas une valeur manuelle.
+     *
+     * @var array<string, array<string, mixed>>
+     */
+    private const SOURCE_PROFILES = [
+        'sff_books' => [
+            'label' => 'source SFF / romans',
+            'needles' => ['actusf', 'belial', 'noosfere', 'elbakine', 'l-atalante', 'mnemos', 'bragelonne', 'rivages imaginaire'],
+            'media' => ['book', 'science_fiction_novel', 'fantasy_novel', 'space_opera_novel'],
+            'primaryMedia' => 'book',
+            'tags' => ['livre', 'sf', 'fantasy', 'space-opera'],
+            'relevanceBonus' => 24,
+            'mediaBonus' => 28,
+        ],
+        'manga_sources' => [
+            'label' => 'source manga',
+            'needles' => ['manga news', 'manga-news', 'manganews', 'sanctuary manga'],
+            'media' => ['manga'],
+            'primaryMedia' => 'manga',
+            'tags' => ['manga'],
+            'relevanceBonus' => 22,
+            'mediaBonus' => 28,
+        ],
+        'sequential_art' => [
+            'label' => 'source BD / manga / comics',
+            'needles' => ['actuabd', 'bdgest', 'bdzoom', 'du9', 'comixtrip'],
+            'media' => ['bd', 'manga', 'comics'],
+            'primaryMedia' => 'bd',
+            'tags' => ['bd', 'manga', 'comics'],
+            'relevanceBonus' => 22,
+            'mediaBonus' => 26,
+        ],
+        'video_games' => [
+            'label' => 'source jeux video',
+            'needles' => ['canard pc', 'canardpc', 'gamekult', 'factornews', 'actugaming', 'jeuxvideo', 'pc gamer', 'ign', 'rock paper shotgun'],
+            'media' => ['video_game'],
+            'tags' => ['jeu-video', 'rpg', 'fps'],
+            'relevanceBonus' => 22,
+            'mediaBonus' => 30,
+        ],
+        'ttrpg' => [
+            'label' => 'source JDR',
+            'needles' => ['jdr', 'roliste', 'grog', 'black book', 'ttrpg', 'roleplaying'],
+            'media' => ['ttrpg'],
+            'tags' => ['jdr'],
+            'relevanceBonus' => 20,
+            'mediaBonus' => 28,
+        ],
+        'miniatures' => [
+            'label' => 'source figurines / hobby',
+            'needles' => ['warhammer community', 'games workshop', 'figurines', 'miniatures', 'hobby'],
+            'media' => ['figurines'],
+            'tags' => ['figurines', 'warhammer-40k', 'games-workshop'],
+            'relevanceBonus' => 20,
+            'mediaBonus' => 28,
+        ],
+    ];
+
+    /**
      * @var array<string, array<int, string>>
      */
     private const CLICKBAIT_SIGNALS = [
-        'fr_sensational' => ['incroyable', 'le choc', 'secret', 'revelation', 'scandale', 'hallucinant'],
-        'fr_empty_promise' => ['vous n allez pas croire', 'la verite sur', 'personne n etait pret', 'tout le monde en parle', 'ce que personne ne vous dit', 'incroyable mais vrai'],
+        'fr_sensational' => ['incroyable', 'incroyable mais vrai', 'le choc', 'secret', 'revelation', 'scandale', 'hallucinant'],
+        'fr_empty_promise' => ['vous n allez pas croire', 'la verite sur', 'personne n etait pret', 'tout le monde en parle', 'ce que personne ne vous dit'],
         'en_sensational' => ['shocking', 'insane', 'unbelievable', 'mind blowing', 'secret', 'revealed'],
         'en_empty_promise' => ['you won t believe', 'the truth about', 'what nobody tells you', 'everyone is talking about'],
         'rumor_polemic' => ['rumeur', 'rumor', 'controverse', 'controversy', 'polemique', 'clash', 'backlash'],
+    ];
+
+    /**
+     * @var array<string, array<int, string>>
+     */
+    private const LANGUAGE_MARKERS = [
+        'fr' => [' le ', ' la ', ' les ', ' des ', ' une ', ' avec ', ' pour ', ' dans ', ' sur ', ' cette ', ' nouveau ', ' critique ', ' roman ', ' bande dessinee '],
+        'en' => [' the ', ' and ', ' with ', ' for ', ' from ', ' this ', ' new ', ' review ', ' season ', ' trailer ', ' revealed ', ' novel ', ' comic '],
     ];
 
     public function __construct(
@@ -46,33 +119,38 @@ class EntryAnalyzer
     public function analyze(Entry $entry, bool $forceAi = false): void
     {
         $this->entryTagDetector->detect($entry);
-        $rawPayload = $entry->getRawPayload();
-        $categories = is_array($rawPayload) && isset($rawPayload['categories']) && is_array($rawPayload['categories'])
-            ? array_filter($rawPayload['categories'], 'is_string')
-            : [];
+        $categories = $this->rssCategories($entry);
         $this->rssCategoryMapper->enrich($entry, $categories);
+        $sourceProfile = $this->sourceProfile($entry);
+        $this->promoteReliableSourceMedia($entry, $sourceProfile, $categories);
 
         $normalizedTitle = $this->normalize($entry->getTitle());
         $normalizedContent = $this->normalize((string) $entry->getRawContent());
+        $categorySlugs = array_map(fn (string $category): string => $this->rssCategoryMapper->slugCategory($category), $categories);
         $haystack = trim(implode(' ', array_filter([
             $normalizedTitle,
             $normalizedContent,
             $this->normalize((string) $entry->getOriginalUrl()),
             $this->normalize((string) $entry->getCanonicalUrl()),
             $this->normalize((string) $entry->getSource()?->getName()),
+            $this->normalize((string) $entry->getSource()?->getUrl()),
+            $this->normalize((string) $entry->getSource()?->getFeedUrl()),
             implode(' ', $entry->getDetectedTags()),
+            implode(' ', $categorySlugs),
         ])));
 
         $language = $this->detectLanguage($haystack);
-        [$mediaScore, $mediaSignals, $mediaConfidence] = $this->scoreMedia($entry);
-        [$thematicScore, $positiveMatches, $negativeMatches, $themeSignals] = $this->scoreTheme($haystack, $entry->getDetectedTags());
+        [$mediaScore, $mediaSignals, $mediaConfidence] = $this->scoreMedia($entry, $sourceProfile, $categories);
+        [$thematicScore, $positiveMatches, $negativeMatches, $themeSignals] = $this->scoreTheme($haystack, $entry->getDetectedTags(), $sourceProfile, $categorySlugs, $language);
         [$editorialQualityScore, $editorialSignals] = $this->scoreEditorialQuality($haystack);
         [$clickbaitScore, $clickbaitSignals] = $this->scoreClickbait($entry->getTitle(), $normalizedTitle);
         $clickbaitLevel = $this->clickbaitLevel($clickbaitScore);
 
-        $relevanceScore = $this->combineRelevance($mediaScore, $thematicScore, $editorialQualityScore, $clickbaitScore);
+        $sourceProfileBonus = $this->sourceProfileBonus($sourceProfile);
+        $relevanceScore = $this->combineRelevance($mediaScore, $thematicScore, $editorialQualityScore, $clickbaitScore, $sourceProfileBonus);
         $signals = array_merge(
             ['langue: '.$language],
+            $categories === [] ? [] : ['categories RSS exploitees: '.implode(', ', $categorySlugs)],
             $mediaSignals,
             $themeSignals,
             $editorialSignals,
@@ -88,6 +166,8 @@ class EntryAnalyzer
                 'editorialQualityScore' => $editorialQualityScore,
                 'relevanceScore' => $relevanceScore,
                 'clickbaitScore' => $clickbaitScore,
+                'sourceProfile' => $sourceProfile['label'] ?? null,
+                'rssCategories' => $categories,
                 'positiveMatches' => $positiveMatches,
                 'negativeMatches' => $negativeMatches,
                 'detectedTags' => $entry->getDetectedTags(),
@@ -95,7 +175,7 @@ class EntryAnalyzer
             ]);
         }
 
-        $decision = $this->decide($relevanceScore, $editorialQualityScore, $clickbaitLevel, $negativeMatches, $aiResult);
+        $decision = $this->decide($relevanceScore, $mediaScore, $thematicScore, $editorialQualityScore, $clickbaitLevel, $negativeMatches, $sourceProfileBonus, $aiResult);
 
         $entry
             ->setNormalizedTitle($normalizedTitle)
@@ -134,54 +214,81 @@ class EntryAnalyzer
     }
 
     /**
+     * @param array<string, mixed>|null $sourceProfile
+     * @param array<int, string> $categories
+     *
      * @return array{0: int, 1: array<int, string>, 2: int}
      */
-    private function scoreMedia(Entry $entry): array
+    private function scoreMedia(Entry $entry, ?array $sourceProfile, array $categories): array
     {
         $tags = $entry->getDetectedTags();
         $detectedMediaType = $entry->getDetectedMediaType();
         $signals = [];
-        $score = 10;
+        $score = 18;
         $confidence = 0;
 
         if ($detectedMediaType instanceof MediaType) {
             $signals[] = 'media detecte: '.$detectedMediaType->label();
-            $score += 35;
-            $confidence += 60;
+            $score += 34;
+            $confidence += 52;
+        }
+
+        foreach ($categories as $category) {
+            $media = $this->rssCategoryMapper->mediaTypeForCategory($category);
+            if ($media instanceof MediaType) {
+                $signals[] = 'media renforce par categorie RSS: '.$media->label();
+                $score += 12;
+                $confidence += 14;
+            }
+        }
+
+        if ($sourceProfile !== null) {
+            $signals[] = 'media renforce par profil source: '.$sourceProfile['label'];
+            $score += (int) $sourceProfile['mediaBonus'];
+            $confidence += 22;
         }
 
         foreach (self::INTERESTS['media'] as $tag) {
             if (in_array($tag, $tags, true)) {
                 $signals[] = 'media prefere: '.$tag;
-                $score += 8;
-                $confidence += 8;
+                $score += 6;
+                $confidence += 6;
             }
         }
 
         if ($entry->getMediaType() !== MediaType::Other && $detectedMediaType === $entry->getMediaType()) {
             $signals[] = 'media manuel coherent';
-            $score += 15;
-            $confidence += 15;
+            $score += 12;
+            $confidence += 12;
         }
 
-        return [$this->clamp($score), $signals, $this->clamp($confidence)];
+        return [$this->clamp($score), array_values(array_unique($signals)), $this->clamp($confidence)];
     }
 
     /**
      * @param array<int, string> $detectedTags
+     * @param array<string, mixed>|null $sourceProfile
+     * @param array<int, string> $categorySlugs
      *
      * @return array{0: int, 1: array<int, string>, 2: array<int, string>, 3: array<int, string>}
      */
-    private function scoreTheme(string $haystack, array $detectedTags): array
+    private function scoreTheme(string $haystack, array $detectedTags, ?array $sourceProfile, array $categorySlugs, string $language): array
     {
         $positive = [];
         $negative = [];
         $signals = [];
-        $score = 15;
+        $score = 24;
 
-        foreach (['themes' => 10, 'licenses' => 18, 'makers' => 12] as $group => $weight) {
+        $themeGroups = ['genres' => 9, 'licenses' => 16, 'makers' => 11];
+        $themeGroups[$language === 'en' ? 'themes_en' : 'themes_fr'] = 10;
+        if ($language === 'mixed' || $language === 'unknown') {
+            $themeGroups['themes_fr'] = 8;
+            $themeGroups['themes_en'] = 8;
+        }
+
+        foreach ($themeGroups as $group => $weight) {
             foreach (self::INTERESTS[$group] as $needle) {
-                if ($this->matches($haystack, $needle) || in_array($this->slug($needle), $detectedTags, true)) {
+                if ($this->matches($haystack, $needle) || in_array($this->slug($needle), $detectedTags, true) || in_array($this->slug($needle), $categorySlugs, true)) {
                     $positive[] = $needle;
                     $signals[] = $group.': '.$needle;
                     $score += $weight;
@@ -189,23 +296,46 @@ class EntryAnalyzer
             }
         }
 
-        foreach (self::INTERESTS['avoid'] as $needle) {
+        foreach (array_merge($this->profile->positiveKeywords(), $this->profile->boostedPhrases()) as $needle) {
+            if ($this->matches($haystack, $needle) || in_array($this->slug($needle), $detectedTags, true) || in_array($this->slug($needle), $categorySlugs, true)) {
+                $positive[] = $needle;
+                $signals[] = 'profil interet: '.$needle;
+                $score += 7;
+            }
+        }
+
+        foreach ($categorySlugs as $slug) {
+            if ($slug !== '' && !in_array($slug, $detectedTags, true)) {
+                $signals[] = 'categorie RSS thematique: '.$slug;
+                $score += 5;
+            }
+        }
+
+        if ($sourceProfile !== null) {
+            $signals[] = 'bonus pertinence via profil source: '.$sourceProfile['label'];
+            $score += (int) $sourceProfile['relevanceBonus'];
+            foreach ($sourceProfile['tags'] as $tag) {
+                $positive[] = (string) $tag;
+            }
+        }
+
+        foreach (array_merge(self::INTERESTS['avoid'], $this->profile->negativeKeywords(), $this->profile->excludedPhrases()) as $needle) {
             if ($this->matches($haystack, $needle)) {
                 $negative[] = $needle;
                 $signals[] = 'eviter: '.$needle;
-                $score -= 25;
+                $score -= 18;
             }
         }
 
         foreach (self::INTERESTS['deprioritize'] as $needle) {
             if ($this->matches($haystack, $needle) || in_array($this->slug($needle), $detectedTags, true)) {
                 $negative[] = $needle;
-                $signals[] = 'declassement: '.$needle;
-                $score -= 8;
+                $signals[] = 'declassement leger: '.$needle;
+                $score -= 5;
             }
         }
 
-        return [$this->clamp($score), array_values(array_unique($positive)), array_values(array_unique($negative)), $signals];
+        return [$this->clamp($score), array_values(array_unique($positive)), array_values(array_unique($negative)), array_values(array_unique($signals))];
     }
 
     /**
@@ -213,20 +343,20 @@ class EntryAnalyzer
      */
     private function scoreEditorialQuality(string $haystack): array
     {
-        $score = 70;
+        $score = 72;
         $signals = [];
 
-        foreach (['source', 'interview', 'critique', 'review', 'analyse', 'analysis', 'preview', 'guide'] as $needle) {
+        foreach (['source', 'interview', 'critique', 'review', 'analyse', 'analysis', 'preview', 'guide', 'dossier', 'entretien', 'chronique'] as $needle) {
             if ($this->matches($haystack, $needle)) {
                 $signals[] = 'contenu qualifiant: '.$needle;
-                $score += 6;
+                $score += 5;
             }
         }
 
         foreach (['rumeur', 'rumor', 'leak', 'clash', 'drama', 'controversy', 'polemique'] as $needle) {
             if ($this->matches($haystack, $needle)) {
                 $signals[] = 'bruit editorial: '.$needle;
-                $score -= 12;
+                $score -= 10;
             }
         }
 
@@ -245,42 +375,46 @@ class EntryAnalyzer
             foreach ($phrases as $phrase) {
                 if ($this->matches($normalizedTitle, $phrase)) {
                     $signals[] = $group.': '.$phrase;
-                    $score += str_contains($group, 'empty_promise') ? 22 : 14;
+                    $score += str_contains($group, 'empty_promise') ? 20 : 12;
                 }
             }
         }
 
         if (substr_count($rawTitle, '!') >= 2) {
             $signals[] = 'ponctuation excessive';
-            $score += 12;
+            $score += 10;
         }
 
         if (substr_count($rawTitle, '?') >= 2) {
             $signals[] = 'questions repetitives';
-            $score += 10;
+            $score += 8;
         }
 
         if (preg_match('/\b[A-Z]{5,}\b/u', $rawTitle) === 1) {
             $signals[] = 'majuscule insistante';
-            $score += 10;
+            $score += 8;
         }
 
         if (preg_match('/\b[0-9]+\s+(raisons|choses|secrets|reasons|things|secrets)\b/u', $normalizedTitle) === 1) {
             $signals[] = 'liste creuse';
-            $score += 16;
+            $score += 14;
         }
 
         return [$this->clamp($score), array_values(array_unique($signals))];
     }
 
-    private function combineRelevance(int $mediaScore, int $thematicScore, int $editorialQualityScore, int $clickbaitScore): int
+    private function combineRelevance(int $mediaScore, int $thematicScore, int $editorialQualityScore, int $clickbaitScore, int $sourceProfileBonus): int
     {
-        $score = (int) round(($mediaScore * 0.25) + ($thematicScore * 0.50) + ($editorialQualityScore * 0.25));
+        $score = (int) round(($mediaScore * 0.34) + ($thematicScore * 0.46) + ($editorialQualityScore * 0.20));
+
+        if ($sourceProfileBonus > 0) {
+            $score += min(8, (int) round($sourceProfileBonus / 4));
+        }
 
         if ($clickbaitScore >= 60) {
-            $score -= 25;
+            $score -= 12;
         } elseif ($clickbaitScore >= 35) {
-            $score -= 10;
+            $score -= 5;
         }
 
         return $this->clamp($score);
@@ -303,7 +437,7 @@ class EntryAnalyzer
      * @param array<int, string> $negativeMatches
      * @param array<string, mixed>|null $aiResult
      */
-    private function decide(int $relevanceScore, int $editorialQualityScore, ClickbaitLevel $clickbaitLevel, array $negativeMatches, ?array $aiResult): AnalysisDecision
+    private function decide(int $relevanceScore, int $mediaScore, int $thematicScore, int $editorialQualityScore, ClickbaitLevel $clickbaitLevel, array $negativeMatches, int $sourceProfileBonus, ?array $aiResult): AnalysisDecision
     {
         $parsed = is_array($aiResult['parsed'] ?? null) ? $aiResult['parsed'] : null;
         $confidence = is_numeric($parsed['confidence'] ?? null) ? (float) $parsed['confidence'] : 0.0;
@@ -315,15 +449,23 @@ class EntryAnalyzer
             return $suggestedDecision;
         }
 
-        if ($clickbaitLevel === ClickbaitLevel::Clickbait && $relevanceScore < 75) {
+        if ($clickbaitLevel === ClickbaitLevel::Clickbait && $relevanceScore < 52) {
             return AnalysisDecision::Clickbait;
         }
 
-        if ($relevanceScore >= 68 && $editorialQualityScore >= 45) {
+        if ($relevanceScore >= 66 && $editorialQualityScore >= 40) {
             return AnalysisDecision::Relevant;
         }
 
-        if ($relevanceScore >= $this->profile->minimumRelevanceScore() && count($negativeMatches) < 3) {
+        if (count($negativeMatches) >= 3 && $relevanceScore < 60 && $sourceProfileBonus === 0) {
+            return AnalysisDecision::Ignored;
+        }
+
+        if (
+            $relevanceScore >= $this->profile->minimumRelevanceScore()
+            || ($mediaScore >= 58 && $thematicScore >= 35)
+            || ($sourceProfileBonus >= 20 && $mediaScore >= 45)
+        ) {
             return AnalysisDecision::MaybeRelevant;
         }
 
@@ -332,9 +474,9 @@ class EntryAnalyzer
 
     private function shouldAskAi(int $relevanceScore, int $clickbaitScore, int $editorialQualityScore): bool
     {
-        return ($relevanceScore >= 38 && $relevanceScore <= 62)
-            || ($clickbaitScore >= 25 && $clickbaitScore < 60)
-            || ($editorialQualityScore >= 35 && $editorialQualityScore <= 55);
+        return ($relevanceScore >= 36 && $relevanceScore <= 58)
+            || ($clickbaitScore >= 30 && $clickbaitScore < 60)
+            || ($editorialQualityScore >= 35 && $editorialQualityScore <= 52);
     }
 
     /**
@@ -352,10 +494,10 @@ class EntryAnalyzer
 
         $parts[] = $positiveMatches === []
             ? 'Aucun centre d interet fort detecte.'
-            : 'Correspondances positives: '.implode(', ', $positiveMatches).'.';
+            : 'Correspondances positives: '.implode(', ', array_slice($positiveMatches, 0, 12)).'.';
 
         if ($negativeMatches !== []) {
-            $parts[] = 'Penalites: '.implode(', ', $negativeMatches).'.';
+            $parts[] = 'Penalites: '.implode(', ', array_slice($negativeMatches, 0, 8)).'.';
         }
 
         if ($clickbaitSignals !== []) {
@@ -371,31 +513,120 @@ class EntryAnalyzer
         return implode(' ', $parts);
     }
 
+    /**
+     * @return array<int, string>
+     */
+    private function rssCategories(Entry $entry): array
+    {
+        $rawPayload = $entry->getRawPayload();
+
+        return is_array($rawPayload) && isset($rawPayload['categories']) && is_array($rawPayload['categories'])
+            ? array_values(array_filter($rawPayload['categories'], 'is_string'))
+            : [];
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function sourceProfile(Entry $entry): ?array
+    {
+        $source = $entry->getSource();
+        $haystack = $this->normalize(implode(' ', array_filter([
+            $source?->getName(),
+            $source?->getUrl(),
+            $source?->getFeedUrl(),
+            $source?->getNotes(),
+        ])));
+
+        foreach (self::SOURCE_PROFILES as $profile) {
+            foreach ($profile['needles'] as $needle) {
+                if ($this->matches($haystack, (string) $needle)) {
+                    return $profile;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param array<string, mixed>|null $sourceProfile
+     * @param array<int, string> $categories
+     */
+    private function promoteReliableSourceMedia(Entry $entry, ?array $sourceProfile, array $categories): void
+    {
+        if ($entry->getDetectedMediaType() instanceof MediaType || $sourceProfile === null || $this->hasCategoryMedia($categories)) {
+            return;
+        }
+
+        $primaryMedia = $sourceProfile['primaryMedia'] ?? null;
+        if (is_string($primaryMedia)) {
+            $detected = MediaType::tryFrom($primaryMedia);
+            if ($detected instanceof MediaType) {
+                $entry->setDetectedMediaType($detected);
+            }
+
+            return;
+        }
+
+        $media = $sourceProfile['media'];
+        if (is_array($media) && count($media) === 1) {
+            $detected = MediaType::tryFrom((string) reset($media));
+            if ($detected instanceof MediaType) {
+                $entry->setDetectedMediaType($detected);
+            }
+        }
+    }
+
+    /**
+     * @param array<string, mixed>|null $sourceProfile
+     */
+    private function sourceProfileBonus(?array $sourceProfile): int
+    {
+        return $sourceProfile === null ? 0 : (int) $sourceProfile['relevanceBonus'];
+    }
+
+    /**
+     * @param array<int, string> $categories
+     */
+    private function hasCategoryMedia(array $categories): bool
+    {
+        foreach ($categories as $category) {
+            if ($this->rssCategoryMapper->mediaTypeForCategory($category) instanceof MediaType) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function detectLanguage(string $haystack): string
     {
-        $fr = [' le ', ' la ', ' les ', ' des ', ' une ', ' avec ', ' pour ', ' jeux ', ' serie ', ' rumeur ', ' critique '];
-        $en = [' the ', ' and ', ' with ', ' for ', ' game ', ' review ', ' rumor ', ' season ', ' trailer ', ' revealed '];
+        $boxed = ' '.$haystack.' ';
         $frScore = 0;
         $enScore = 0;
-        $boxed = ' '.$haystack.' ';
 
-        foreach ($fr as $needle) {
+        foreach (self::LANGUAGE_MARKERS['fr'] as $needle) {
             $frScore += substr_count($boxed, $needle);
         }
 
-        foreach ($en as $needle) {
+        foreach (self::LANGUAGE_MARKERS['en'] as $needle) {
             $enScore += substr_count($boxed, $needle);
         }
 
-        if ($frScore > $enScore + 1) {
+        if ($frScore === 0 && $enScore === 0) {
+            return 'unknown';
+        }
+
+        if ($frScore >= $enScore + 1) {
             return 'fr';
         }
 
-        if ($enScore > $frScore + 1) {
+        if ($enScore >= $frScore + 1) {
             return 'en';
         }
 
-        return 'mixed';
+        return $frScore >= 2 && $enScore >= 2 ? 'mixed' : ($frScore >= $enScore ? 'fr' : 'en');
     }
 
     private function matches(string $haystack, string $needle): bool

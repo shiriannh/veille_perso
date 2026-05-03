@@ -65,6 +65,17 @@
                 <span class="score">Confiance {{ entry.mediaDetectionConfidence }}/100</span>
             {% endif %}
         </dd>
+        <dt>Catégories RSS</dt>
+        <dd>
+            {% set rss_categories = entry.rawPayload.categories|default([]) %}
+            {% if rss_categories is empty %}
+                <span class="muted">Aucune catégorie RSS enregistrée</span>
+            {% else %}
+                {% for category in rss_categories %}
+                    <span class="badge badge-muted">{{ category }}</span>
+                {% endfor %}
+            {% endif %}
+        </dd>
         <dt>Repéré le</dt>
         <dd>{{ entry.spottedAt|date('d/m/Y H:i') }}</dd>
         <dt>Publié le</dt>

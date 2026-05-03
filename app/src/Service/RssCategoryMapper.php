@@ -11,28 +11,32 @@ class RssCategoryMapper
      * @var array<string, MediaType>
      */
     private const MEDIA_BY_CATEGORY = [
-        'roman' => MediaType::ScienceFictionNovel,
-        'romans' => MediaType::ScienceFictionNovel,
-        'roman-vf' => MediaType::ScienceFictionNovel,
-        'romans-vf' => MediaType::ScienceFictionNovel,
-        'roman-vo' => MediaType::ScienceFictionNovel,
-        'romans-vo' => MediaType::ScienceFictionNovel,
-        'livre' => MediaType::ScienceFictionNovel,
-        'livres' => MediaType::ScienceFictionNovel,
-        'novel' => MediaType::ScienceFictionNovel,
-        'novels' => MediaType::ScienceFictionNovel,
-        'book' => MediaType::ScienceFictionNovel,
-        'books' => MediaType::ScienceFictionNovel,
-        'manga' => MediaType::Comic,
-        'anime' => MediaType::Series,
-        'comics' => MediaType::Comic,
-        'bd' => MediaType::Comic,
-        'bande-dessinee' => MediaType::Comic,
-        'jdr' => MediaType::Other,
-        'jeu-de-role' => MediaType::Other,
-        'ttrpg' => MediaType::Other,
-        'figurines' => MediaType::Other,
-        'miniatures' => MediaType::Other,
+        'roman' => MediaType::Book,
+        'romans' => MediaType::Book,
+        'roman-vf' => MediaType::Book,
+        'romans-vf' => MediaType::Book,
+        'roman-vo' => MediaType::Book,
+        'romans-vo' => MediaType::Book,
+        'livre' => MediaType::Book,
+        'livres' => MediaType::Book,
+        'novel' => MediaType::Book,
+        'novels' => MediaType::Book,
+        'book' => MediaType::Book,
+        'books' => MediaType::Book,
+        'manga' => MediaType::Manga,
+        'manhwa' => MediaType::Manhwa,
+        'manwha' => MediaType::Manhwa,
+        'manhua' => MediaType::Manhua,
+        'anime' => MediaType::Anime,
+        'comics' => MediaType::Comics,
+        'comic' => MediaType::Comics,
+        'bd' => MediaType::Bd,
+        'bande-dessinee' => MediaType::Bd,
+        'jdr' => MediaType::Ttrpg,
+        'jeu-de-role' => MediaType::Ttrpg,
+        'ttrpg' => MediaType::Ttrpg,
+        'figurines' => MediaType::Figurines,
+        'miniatures' => MediaType::Figurines,
         'jeu-video' => MediaType::VideoGame,
         'jeux-video' => MediaType::VideoGame,
         'video-game' => MediaType::VideoGame,
@@ -85,6 +89,24 @@ class RssCategoryMapper
         }
 
         $entry->setDetectedTags($tags);
+    }
+
+    public function mediaTypeForCategory(string $category): ?MediaType
+    {
+        return self::MEDIA_BY_CATEGORY[$this->slug($category)] ?? null;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function tagsForRawCategory(string $category): array
+    {
+        return $this->tagsForCategory($this->slug($category));
+    }
+
+    public function slugCategory(string $category): string
+    {
+        return $this->slug($category);
     }
 
     /**
