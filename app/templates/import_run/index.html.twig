@@ -8,6 +8,10 @@
             <h1>Imports</h1>
             <p>Historique des imports RSS lancés manuellement.</p>
         </div>
+        <form method="post" action="{{ path('app_import_run_import_sources') }}" class="inline-form">
+            <input type="hidden" name="_token" value="{{ csrf_token('import_sources') }}">
+            <button class="button">Importer les sources RSS</button>
+        </form>
     </section>
 
     {% if runs is empty %}
