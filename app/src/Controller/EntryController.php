@@ -23,11 +23,13 @@ class EntryController extends AbstractController
     #[Route('', name: 'app_entry_index', methods: ['GET'])]
     public function index(Request $request, EntryRepository $entryRepository, SourceRepository $sourceRepository): Response
     {
-        $source = $request->query->getInt('source') > 0 ? $sourceRepository->find($request->query->getInt('source')) : null;
+        $sourceId = (string) $request->query->get('source', '');
+        $source = ctype_digit($sourceId) && (int) $sourceId > 0 ? $sourceRepository->find((int) $sourceId) : null;
         $mediaType = MediaType::tryFrom((string) $request->query->get('mediaType'));
         $status = EntryStatus::tryFrom((string) $request->query->get('status'));
-        $interestLevel = $request->query->has('interestLevel') && $request->query->get('interestLevel') !== ''
-            ? max(0, min(5, $request->query->getInt('interestLevel')))
+        $interestLevelValue = (string) $request->query->get('interestLevel', '');
+        $interestLevel = ctype_digit($interestLevelValue)
+            ? max(0, min(5, (int) $interestLevelValue))
             : null;
         $reviewState = in_array($request->query->get('reviewState'), ['with', 'without'], true)
             ? (string) $request->query->get('reviewState')

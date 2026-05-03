@@ -23,9 +23,11 @@ class ReviewController extends AbstractController
     {
         $verdict = ReviewVerdict::tryFrom((string) $request->query->get('verdict'));
         $mediaType = MediaType::tryFrom((string) $request->query->get('mediaType'));
-        $source = $request->query->getInt('source') > 0 ? $sourceRepository->find($request->query->getInt('source')) : null;
-        $minScore = $request->query->has('minScore') && $request->query->get('minScore') !== ''
-            ? max(0, min(100, $request->query->getInt('minScore')))
+        $sourceId = (string) $request->query->get('source', '');
+        $source = ctype_digit($sourceId) && (int) $sourceId > 0 ? $sourceRepository->find((int) $sourceId) : null;
+        $minScoreValue = (string) $request->query->get('minScore', '');
+        $minScore = ctype_digit($minScoreValue)
+            ? max(0, min(100, (int) $minScoreValue))
             : null;
         $sort = in_array($request->query->get('sort'), ['updated_desc', 'updated_asc', 'score_desc', 'score_asc'], true)
             ? (string) $request->query->get('sort')
@@ -63,14 +65,16 @@ class ReviewController extends AbstractController
             return $this->redirectToRoute('app_entry_new');
         }
 
-        if ($entryRepository->countWithoutReview() === 0 && $request->query->getInt('entry') === 0) {
+        $entryIdValue = (string) $request->query->get('entry', '');
+        $entryId = ctype_digit($entryIdValue) ? (int) $entryIdValue : 0;
+
+        if ($entryRepository->countWithoutReview() === 0 && $entryId === 0) {
             $this->addFlash('error', 'Toutes les entrées ont déjà une fiche.');
 
             return $this->redirectToRoute('app_review_index');
         }
 
         $review = new Review();
-        $entryId = $request->query->getInt('entry');
 
         if ($entryId > 0) {
             $entry = $entryRepository->find($entryId);

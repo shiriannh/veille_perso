@@ -16,7 +16,8 @@ class ImportRunController extends AbstractController
     #[Route('', name: 'app_import_run_index', methods: ['GET'])]
     public function index(Request $request, ImportRunRepository $importRunRepository, SourceRepository $sourceRepository): Response
     {
-        $source = $request->query->getInt('source') > 0 ? $sourceRepository->find($request->query->getInt('source')) : null;
+        $sourceId = (string) $request->query->get('source', '');
+        $source = ctype_digit($sourceId) && (int) $sourceId > 0 ? $sourceRepository->find((int) $sourceId) : null;
 
         return $this->render('import_run/index.html.twig', [
             'runs' => $importRunRepository->findLatestFiltered($source),
