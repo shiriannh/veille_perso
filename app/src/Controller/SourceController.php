@@ -8,6 +8,7 @@ use App\Form\SourceCsvImportType;
 use App\Form\SourceType;
 use App\Repository\ImportRunRepository;
 use App\Repository\SourceRepository;
+use App\Service\DatabaseResetter;
 use App\Service\RssImporter;
 use App\Service\SourceCsvImporter;
 use Doctrine\ORM\EntityManagerInterface;
@@ -73,6 +74,28 @@ class SourceController extends AbstractController
             'form' => $form,
             'errors' => $errors,
         ]);
+    }
+
+    #[Route('/reset-database', name: 'app_source_reset_database', methods: ['POST'])]
+    public function resetDatabase(Request $request, DatabaseResetter $databaseResetter): Response
+    {
+        if (!$this->isCsrfTokenValid('reset_database', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, remise a zero annulee.');
+
+            return $this->redirectToRoute('app_source_index');
+        }
+
+        $counts = $databaseResetter->reset();
+
+        $this->addFlash('success', sprintf(
+            'Base videe : %d source(s), %d entree(s), %d fiche(s), %d import(s) supprime(s).',
+            $counts['sources'],
+            $counts['entries'],
+            $counts['reviews'],
+            $counts['importRuns'],
+        ));
+
+        return $this->redirectToRoute('app_source_index');
     }
 
     #[Route('/{id}', name: 'app_source_show', methods: ['GET'])]
