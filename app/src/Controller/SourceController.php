@@ -3,8 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Source;
+use App\Enum\FetchMode;
 use App\Form\SourceType;
+use App\Repository\ImportRunRepository;
 use App\Repository\SourceRepository;
+use App\Service\RssImporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -45,11 +48,40 @@ class SourceController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_source_show', methods: ['GET'])]
-    public function show(Source $source): Response
+    public function show(Source $source, ImportRunRepository $importRunRepository): Response
     {
         return $this->render('source/show.html.twig', [
             'source' => $source,
+            'import_runs' => $importRunRepository->findLatestForSource($source),
         ]);
+    }
+
+    #[Route('/{id}/import', name: 'app_source_import', methods: ['POST'])]
+    public function import(Request $request, Source $source, RssImporter $rssImporter): Response
+    {
+        if (!$this->isCsrfTokenValid('import_source_'.$source->getId(), (string) $request->request->get('_token'))) {
+            return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
+        }
+
+        if ($source->getFetchMode() !== FetchMode::Rss) {
+            $this->addFlash('error', 'Cette source n’est pas configurée en import RSS.');
+
+            return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
+        }
+
+        $run = $rssImporter->import($source);
+
+        if ($run->getErrorMessage() !== null) {
+            $this->addFlash('error', 'Import échoué : '.$run->getErrorMessage());
+        } else {
+            $this->addFlash('success', sprintf(
+                'Import terminé : %d créée(s), %d ignorée(s).',
+                $run->getCreatedCount(),
+                $run->getSkippedCount(),
+            ));
+        }
+
+        return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
     }
 
     #[Route('/{id}/edit', name: 'app_source_edit', methods: ['GET', 'POST'])]

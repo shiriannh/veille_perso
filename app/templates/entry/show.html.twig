@@ -41,6 +41,22 @@
         </dd>
         <dt>Repéré le</dt>
         <dd>{{ entry.spottedAt|date('d/m/Y H:i') }}</dd>
+        <dt>Publié le</dt>
+        <dd>{{ entry.publishedAt ? entry.publishedAt|date('d/m/Y H:i') : 'Non renseigné' }}</dd>
+        <dt>Importé le</dt>
+        <dd>{{ entry.importedAt ? entry.importedAt|date('d/m/Y H:i') : 'Saisie manuelle' }}</dd>
+        <dt>ID externe</dt>
+        <dd>{{ entry.externalId|default('Non renseigné') }}</dd>
+        <dt>URL canonique</dt>
+        <dd>
+            {% if entry.canonicalUrl %}
+                <a href="{{ entry.canonicalUrl }}" rel="noreferrer">{{ entry.canonicalUrl }}</a>
+            {% else %}
+                <span class="muted">Non renseignée</span>
+            {% endif %}
+        </dd>
+        <dt>Hash source</dt>
+        <dd>{{ entry.sourceHash|default('Non renseigné') }}</dd>
         <dt>Contenu brut</dt>
         <dd>{{ entry.rawContent|default('Aucun contenu brut')|nl2br }}</dd>
     </dl>

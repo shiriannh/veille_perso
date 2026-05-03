@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\FetchMode;
 use App\Enum\SourceType;
 use App\Repository\SourceRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -35,6 +36,26 @@ class Source
     #[ORM\Column]
     private bool $isActive = true;
 
+    #[ORM\Column(enumType: FetchMode::class)]
+    private FetchMode $fetchMode = FetchMode::Manual;
+
+    #[ORM\Column(length: 500, nullable: true)]
+    #[Assert\Url]
+    #[Assert\Length(max: 500)]
+    private ?string $feedUrl = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastFetchedAt = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastSuccessAt = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastErrorAt = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $lastErrorMessage = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
 
@@ -50,9 +71,16 @@ class Source
     #[ORM\OneToMany(mappedBy: 'source', targetEntity: Entry::class)]
     private Collection $entries;
 
+    /**
+     * @var Collection<int, ImportRun>
+     */
+    #[ORM\OneToMany(mappedBy: 'source', targetEntity: ImportRun::class, orphanRemoval: true)]
+    private Collection $importRuns;
+
     public function __construct()
     {
         $this->entries = new ArrayCollection();
+        $this->importRuns = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -113,6 +141,78 @@ class Source
         return $this;
     }
 
+    public function getFetchMode(): FetchMode
+    {
+        return $this->fetchMode;
+    }
+
+    public function setFetchMode(FetchMode $fetchMode): self
+    {
+        $this->fetchMode = $fetchMode;
+
+        return $this;
+    }
+
+    public function getFeedUrl(): ?string
+    {
+        return $this->feedUrl;
+    }
+
+    public function setFeedUrl(?string $feedUrl): self
+    {
+        $this->feedUrl = $feedUrl;
+
+        return $this;
+    }
+
+    public function getLastFetchedAt(): ?\DateTimeImmutable
+    {
+        return $this->lastFetchedAt;
+    }
+
+    public function setLastFetchedAt(?\DateTimeImmutable $lastFetchedAt): self
+    {
+        $this->lastFetchedAt = $lastFetchedAt;
+
+        return $this;
+    }
+
+    public function getLastSuccessAt(): ?\DateTimeImmutable
+    {
+        return $this->lastSuccessAt;
+    }
+
+    public function setLastSuccessAt(?\DateTimeImmutable $lastSuccessAt): self
+    {
+        $this->lastSuccessAt = $lastSuccessAt;
+
+        return $this;
+    }
+
+    public function getLastErrorAt(): ?\DateTimeImmutable
+    {
+        return $this->lastErrorAt;
+    }
+
+    public function setLastErrorAt(?\DateTimeImmutable $lastErrorAt): self
+    {
+        $this->lastErrorAt = $lastErrorAt;
+
+        return $this;
+    }
+
+    public function getLastErrorMessage(): ?string
+    {
+        return $this->lastErrorMessage;
+    }
+
+    public function setLastErrorMessage(?string $lastErrorMessage): self
+    {
+        $this->lastErrorMessage = $lastErrorMessage;
+
+        return $this;
+    }
+
     public function getNotes(): ?string
     {
         return $this->notes;
@@ -141,6 +241,14 @@ class Source
     public function getEntries(): Collection
     {
         return $this->entries;
+    }
+
+    /**
+     * @return Collection<int, ImportRun>
+     */
+    public function getImportRuns(): Collection
+    {
+        return $this->importRuns;
     }
 
     #[ORM\PrePersist]

@@ -39,11 +39,32 @@ class Entry
     #[Assert\Length(max: 500)]
     private ?string $originalUrl = null;
 
+    #[ORM\Column(length: 500, nullable: true)]
+    #[Assert\Length(max: 500)]
+    private ?string $externalId = null;
+
+    #[ORM\Column(length: 500, nullable: true)]
+    #[Assert\Url]
+    #[Assert\Length(max: 500)]
+    private ?string $canonicalUrl = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $rawContent = null;
 
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $rawPayload = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private \DateTimeImmutable $spottedAt;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $publishedAt = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $importedAt = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $sourceHash = null;
 
     #[ORM\Column]
     #[Assert\Range(min: 0, max: 5)]
@@ -142,6 +163,30 @@ class Entry
         return $this;
     }
 
+    public function getExternalId(): ?string
+    {
+        return $this->externalId;
+    }
+
+    public function setExternalId(?string $externalId): self
+    {
+        $this->externalId = $externalId;
+
+        return $this;
+    }
+
+    public function getCanonicalUrl(): ?string
+    {
+        return $this->canonicalUrl;
+    }
+
+    public function setCanonicalUrl(?string $canonicalUrl): self
+    {
+        $this->canonicalUrl = $canonicalUrl;
+
+        return $this;
+    }
+
     public function getRawContent(): ?string
     {
         return $this->rawContent;
@@ -154,6 +199,18 @@ class Entry
         return $this;
     }
 
+    public function getRawPayload(): ?array
+    {
+        return $this->rawPayload;
+    }
+
+    public function setRawPayload(?array $rawPayload): self
+    {
+        $this->rawPayload = $rawPayload;
+
+        return $this;
+    }
+
     public function getSpottedAt(): \DateTimeImmutable
     {
         return $this->spottedAt;
@@ -162,6 +219,42 @@ class Entry
     public function setSpottedAt(\DateTimeImmutable $spottedAt): self
     {
         $this->spottedAt = $spottedAt;
+
+        return $this;
+    }
+
+    public function getPublishedAt(): ?\DateTimeImmutable
+    {
+        return $this->publishedAt;
+    }
+
+    public function setPublishedAt(?\DateTimeImmutable $publishedAt): self
+    {
+        $this->publishedAt = $publishedAt;
+
+        return $this;
+    }
+
+    public function getImportedAt(): ?\DateTimeImmutable
+    {
+        return $this->importedAt;
+    }
+
+    public function setImportedAt(?\DateTimeImmutable $importedAt): self
+    {
+        $this->importedAt = $importedAt;
+
+        return $this;
+    }
+
+    public function getSourceHash(): ?string
+    {
+        return $this->sourceHash;
+    }
+
+    public function setSourceHash(?string $sourceHash): self
+    {
+        $this->sourceHash = $sourceHash;
 
         return $this;
     }

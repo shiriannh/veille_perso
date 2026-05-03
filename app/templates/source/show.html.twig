@@ -6,10 +6,16 @@
     <section class="page-heading">
         <div>
             <h1>{{ source.name }}</h1>
-            <p>{{ source.type.label() }} · {{ source.active ? 'active' : 'inactive' }}</p>
+            <p>{{ source.type.label() }} · {{ source.fetchMode.label() }} · {{ source.active ? 'active' : 'inactive' }}</p>
         </div>
         <div class="actions">
             <a class="button" href="{{ path('app_source_edit', {id: source.id}) }}">Modifier</a>
+            {% if source.fetchMode.value == 'rss' %}
+                <form method="post" action="{{ path('app_source_import', {id: source.id}) }}" class="inline-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('import_source_' ~ source.id) }}">
+                    <button class="button button-secondary">Importer</button>
+                </form>
+            {% endif %}
             <a class="button button-secondary" href="{{ path('app_source_index') }}">Retour</a>
         </div>
     </section>
@@ -23,6 +29,29 @@
                 <span class="muted">Non renseignée</span>
             {% endif %}
         </dd>
+        <dt>Flux RSS</dt>
+        <dd>
+            {% if source.feedUrl %}
+                <a href="{{ source.feedUrl }}" rel="noreferrer">{{ source.feedUrl }}</a>
+            {% else %}
+                <span class="muted">Non renseigné</span>
+            {% endif %}
+        </dd>
+        <dt>Dernier import</dt>
+        <dd>{{ source.lastFetchedAt ? source.lastFetchedAt|date('d/m/Y H:i') : 'Jamais' }}</dd>
+        <dt>Dernier succès</dt>
+        <dd>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : 'Jamais' }}</dd>
+        <dt>Dernière erreur</dt>
+        <dd>
+            {% if source.lastErrorAt %}
+                {{ source.lastErrorAt|date('d/m/Y H:i') }}
+                {% if source.lastErrorMessage %}
+                    <br><span class="muted">{{ source.lastErrorMessage }}</span>
+                {% endif %}
+            {% else %}
+                Aucune
+            {% endif %}
+        </dd>
         <dt>Notes</dt>
         <dd>{{ source.notes|default('Aucune note')|nl2br }}</dd>
         <dt>Créée le</dt>
@@ -34,4 +63,39 @@
     <div class="actions">
         {{ include('source/_delete_form.html.twig') }}
     </div>
+
+    <section class="section-block">
+        <div class="section-title">
+            <h2>Historique d’import</h2>
+            <a href="{{ path('app_import_run_index') }}">Tout voir</a>
+        </div>
+        {% if import_runs is empty %}
+            <p class="empty">Aucun import lancé pour cette source.</p>
+        {% else %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Démarré</th>
+                        <th>Statut</th>
+                        <th>Récupérés</th>
+                        <th>Créés</th>
+                        <th>Ignorés</th>
+                        <th>Erreur</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in import_runs %}
+                        <tr>
+                            <td>{{ run.startedAt|date('d/m/Y H:i') }}</td>
+                            <td><span class="badge">{{ run.status.label() }}</span></td>
+                            <td>{{ run.fetchedCount }}</td>
+                            <td>{{ run.createdCount }}</td>
+                            <td>{{ run.skippedCount }}</td>
+                            <td>{{ run.errorMessage|default('-') }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </section>
 {% endblock %}

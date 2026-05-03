@@ -275,6 +275,14 @@ form[name="review"] {
     padding: 20px;
 }
 
+.inline-form {
+    display: inline-flex;
+}
+
+.section-block {
+    margin-top: 32px;
+}
+
 label {
     display: block;
     margin-bottom: 6px;

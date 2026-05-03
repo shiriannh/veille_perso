@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Entry;
+use App\Entity\Source;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -38,5 +39,47 @@ class EntryRepository extends ServiceEntityRepository
             ->andWhere('review.id IS NULL')
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    public function findImportedDuplicate(Source $source, ?string $externalId, ?string $canonicalUrl, string $sourceHash): ?Entry
+    {
+        if ($externalId !== null && $externalId !== '') {
+            $entry = $this->createQueryBuilder('entry')
+                ->andWhere('entry.source = :source')
+                ->andWhere('entry.externalId = :externalId')
+                ->setParameter('source', $source)
+                ->setParameter('externalId', $externalId)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            if ($entry !== null) {
+                return $entry;
+            }
+        }
+
+        if ($canonicalUrl !== null && $canonicalUrl !== '') {
+            $entry = $this->createQueryBuilder('entry')
+                ->andWhere('entry.source = :source')
+                ->andWhere('entry.canonicalUrl = :canonicalUrl OR entry.originalUrl = :canonicalUrl')
+                ->setParameter('source', $source)
+                ->setParameter('canonicalUrl', $canonicalUrl)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            if ($entry !== null) {
+                return $entry;
+            }
+        }
+
+        return $this->createQueryBuilder('entry')
+            ->andWhere('entry.source = :source')
+            ->andWhere('entry.sourceHash = :sourceHash')
+            ->setParameter('source', $source)
+            ->setParameter('sourceHash', $sourceHash)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
     }
 }

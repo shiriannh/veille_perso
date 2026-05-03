@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Imports - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Imports</h1>
+            <p>Historique des imports RSS lancés manuellement.</p>
+        </div>
+    </section>
+
+    {% if runs is empty %}
+        <p class="empty">Aucun import lancé.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Démarré</th>
+                    <th>Source</th>
+                    <th>Statut</th>
+                    <th>Récupérés</th>
+                    <th>Créés</th>
+                    <th>Ignorés</th>
+                    <th>Erreur</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in runs %}
+                    <tr>
+                        <td>{{ run.startedAt|date('d/m/Y H:i') }}</td>
+                        <td><a href="{{ path('app_source_show', {id: run.source.id}) }}">{{ run.source.name }}</a></td>
+                        <td><span class="badge">{{ run.status.label() }}</span></td>
+                        <td>{{ run.fetchedCount }}</td>
+                        <td>{{ run.createdCount }}</td>
+                        <td>{{ run.skippedCount }}</td>
+                        <td>{{ run.errorMessage|default('-') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}
