@@ -169,7 +169,7 @@ Exemple valide :
 
 ```csv
 name;type;url;isActive;fetchMode;feedUrl;notes
-Actu SF;rss;https://example.org;true;rss;https://example.org/feed.xml;Veille science-fiction
+Actu SF;website;https://example.org;true;rss;https://example.org/feed.xml;Veille science-fiction
 Site manuel;website;https://example.net;oui;manual;;A consulter ponctuellement
 ```
 
