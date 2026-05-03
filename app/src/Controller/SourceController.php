@@ -88,10 +88,11 @@ class SourceController extends AbstractController
         $counts = $databaseResetter->reset();
 
         $this->addFlash('success', sprintf(
-            'Base videe : %d source(s), %d entree(s), %d fiche(s), %d import(s) supprime(s).',
+            'Base videe : %d source(s), %d entree(s), %d fiche(s), %d synthese(s), %d import(s) supprime(s).',
             $counts['sources'],
             $counts['entries'],
             $counts['reviews'],
+            $counts['reports'],
             $counts['importRuns'],
         ));
 

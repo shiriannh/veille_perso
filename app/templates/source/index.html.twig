@@ -11,7 +11,7 @@
         <div class="actions">
             <a class="button button-secondary" href="{{ path('app_source_import_csv') }}">Importer un CSV</a>
             <a class="button" href="{{ path('app_source_new') }}">Nouvelle source</a>
-            <form method="post" action="{{ path('app_source_reset_database') }}" class="inline-form" onsubmit="return confirm('Cette action supprime toutes les sources, entrées, fiches et historiques d’import. Continuer ?');">
+            <form method="post" action="{{ path('app_source_reset_database') }}" class="inline-form" onsubmit="return confirm('Cette action supprime toutes les sources, entrées, fiches, synthèses et historiques d’import. Continuer ?');">
                 <input type="hidden" name="_token" value="{{ csrf_token('reset_database') }}">
                 <button class="button button-danger">Raz</button>
             </form>

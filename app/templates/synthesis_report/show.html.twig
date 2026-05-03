@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ report.title }} - Veille perso{% endblock %}
+
+{% block body %}
+    <article class="printable-report">
+        <section class="page-heading">
+            <div>
+                <h1>{{ report.title }}</h1>
+                <p>
+                    Générée le {{ report.createdAt|date('d/m/Y H:i') }}
+                    · période :
+                    {{ report.fromDate ? report.fromDate|date('d/m/Y H:i') : 'début' }}
+                    →
+                    {{ report.toDate|date('d/m/Y H:i') }}
+                    · {{ report.entries|length }} entrée(s)
+                </p>
+            </div>
+            <div class="actions no-print">
+                <button class="button button-secondary" onclick="window.print()">Imprimer</button>
+                <a class="button button-secondary" href="{{ path('app_synthesis_report_index') }}">Historique</a>
+            </div>
+        </section>
+
+        {% if report.notes %}
+            <section class="section-block">
+                <h2>Notes</h2>
+                <p>{{ report.notes|nl2br }}</p>
+            </section>
+        {% endif %}
+
+        {% if report.entries is empty %}
+            <p class="empty">Aucune nouvelle entrée pertinente n'était disponible au moment de la génération.</p>
+        {% else %}
+            {% for media, entries in groups %}
+                <section class="section-block report-section">
+                    <h2>{{ media }}</h2>
+                    <div class="list">
+                        {% for entry in entries %}
+                            <article class="list-row report-entry">
+                                <div>
+                                    <strong><a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a></strong>
+                                    <small>
+                                        {{ entry.source.name }}
+                                        · {{ entry.publishedAt ? entry.publishedAt|date('d/m/Y') : (entry.importedAt ? entry.importedAt|date('d/m/Y') : entry.createdAt|date('d/m/Y')) }}
+                                        · {{ entry.detectedMediaType ? entry.detectedMediaType.label() : entry.mediaType.label() }}
+                                    </small>
+                                    {% if entry.rawContent %}
+                                        <p>{{ entry.rawContent|striptags|slice(0, 260) }}{{ entry.rawContent|length > 260 ? '…' : '' }}</p>
+                                    {% endif %}
+                                    <p>
+                                        {% for tag in entry.detectedTags|slice(0, 8) %}
+                                            <span class="badge badge-muted">{{ tag }}</span>
+                                        {% endfor %}
+                                    </p>
+                                    <small>{{ entry.decisionReason|default('Aucune raison enregistrée') }}</small>
+                                </div>
+                                <div class="actions no-print">
+                                    {% if entry.originalUrl %}
+                                        <a class="button button-secondary" href="{{ entry.originalUrl }}" rel="noreferrer">Lien</a>
+                                    {% endif %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        {% endif %}
+    </article>
+{% endblock %}

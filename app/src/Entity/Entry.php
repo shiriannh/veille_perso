@@ -8,6 +8,8 @@ use App\Enum\ClickbaitLevel;
 use App\Enum\EntryStatus;
 use App\Enum\MediaType;
 use App\Repository\EntryRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -65,6 +67,9 @@ class Entry
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $importedAt = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $lastSynthesizedAt = null;
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $sourceHash = null;
@@ -169,6 +174,12 @@ class Entry
     #[ORM\OneToOne(mappedBy: 'entry', targetEntity: Review::class, cascade: ['persist'])]
     private ?Review $review = null;
 
+    /**
+     * @var Collection<int, SynthesisReport>
+     */
+    #[ORM\ManyToMany(targetEntity: SynthesisReport::class, mappedBy: 'entries')]
+    private Collection $synthesisReports;
+
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
@@ -178,6 +189,7 @@ class Entry
     public function __construct()
     {
         $this->spottedAt = new \DateTimeImmutable();
+        $this->synthesisReports = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -330,6 +342,18 @@ class Entry
     public function setImportedAt(?\DateTimeImmutable $importedAt): self
     {
         $this->importedAt = $importedAt;
+
+        return $this;
+    }
+
+    public function getLastSynthesizedAt(): ?\DateTimeImmutable
+    {
+        return $this->lastSynthesizedAt;
+    }
+
+    public function setLastSynthesizedAt(?\DateTimeImmutable $lastSynthesizedAt): self
+    {
+        $this->lastSynthesizedAt = $lastSynthesizedAt;
 
         return $this;
     }
@@ -730,6 +754,14 @@ class Entry
         $this->review = $review;
 
         return $this;
+    }
+
+    /**
+     * @return Collection<int, SynthesisReport>
+     */
+    public function getSynthesisReports(): Collection
+    {
+        return $this->synthesisReports;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Synthèses - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Synthèses</h1>
+            <p>Récaps manuels des dernières entrées pertinentes non encore synthétisées.</p>
+        </div>
+        <a class="button" href="{{ path('app_synthesis_report_new') }}">Générer une synthèse</a>
+    </section>
+
+    {% if reports is empty %}
+        <p class="empty">Aucune synthèse générée.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Générée le</th>
+                    <th>Période</th>
+                    <th>Entrées</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for report in reports %}
+                    <tr>
+                        <td><a href="{{ path('app_synthesis_report_show', {id: report.id}) }}">{{ report.title }}</a></td>
+                        <td>{{ report.createdAt|date('d/m/Y H:i') }}</td>
+                        <td>
+                            {{ report.fromDate ? report.fromDate|date('d/m/Y H:i') : 'Début' }}
+                            →
+                            {{ report.toDate|date('d/m/Y H:i') }}
+                        </td>
+                        <td>{{ report.entries|length }}</td>
+                        <td class="table-actions">
+                            <a class="button button-secondary" href="{{ path('app_synthesis_report_show', {id: report.id}) }}">Ouvrir</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

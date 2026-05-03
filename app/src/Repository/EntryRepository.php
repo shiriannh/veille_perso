@@ -267,4 +267,27 @@ class EntryRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    /**
+     * @return Entry[]
+     */
+    public function findEntriesForSynthesis(bool $includeMaybeRelevant): array
+    {
+        $decisions = [AnalysisDecision::Relevant];
+        if ($includeMaybeRelevant) {
+            $decisions[] = AnalysisDecision::MaybeRelevant;
+        }
+
+        return $this->createQueryBuilder('entry')
+            ->leftJoin('entry.source', 'source')
+            ->addSelect('source')
+            ->andWhere('entry.decision IN (:decisions)')
+            ->andWhere('entry.lastSynthesizedAt IS NULL')
+            ->setParameter('decisions', $decisions)
+            ->orderBy('entry.detectedMediaType', 'ASC')
+            ->addOrderBy('entry.publishedAt', 'DESC')
+            ->addOrderBy('entry.importedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -147,6 +147,7 @@ table,
 form[name="source"],
 form[name="entry"],
 form[name="review"],
+form[name="synthesis_report_generate"],
 .upload-form {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -275,6 +276,7 @@ tr:last-child td {
 form[name="source"],
 form[name="entry"],
 form[name="review"],
+form[name="synthesis_report_generate"],
 .upload-form {
     display: grid;
     gap: 16px;
@@ -288,6 +290,38 @@ form[name="review"],
     border: 1px solid var(--line);
     border-radius: 8px;
     background: var(--surface);
+}
+
+.report-entry {
+    align-items: flex-start;
+}
+
+.printable-report .badge {
+    margin-top: 6px;
+}
+
+@media print {
+    .app-header,
+    .flash,
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: #fff;
+    }
+
+    .page {
+        width: 100%;
+        margin: 0;
+    }
+
+    .list-row,
+    .details,
+    table {
+        border-color: #ccc;
+        break-inside: avoid;
+    }
 }
 
 .inline-form {

@@ -290,6 +290,31 @@ Le profil d'interet de l'analyse de pertinence est dans `app/src/Service/EntryAn
 'deprioritize' => ['battle pass', 'microtransaction', 'loot box'],
 ```
 
+## Synthèses manuelles
+
+La page `Synthèses` permet de générer manuellement une fiche récapitulative HTML imprimable.
+
+Logique de sélection :
+
+- inclut les Entry dont `decision` vaut `relevant` ;
+- peut inclure aussi `maybe_relevant` via la case du formulaire ;
+- exclut toujours `ignored` et `clickbait` ;
+- ne reprend que les Entry dont `lastSynthesizedAt` est nul.
+
+Logique de différentiel : au moment où une Entry est ajoutée à une synthèse, son champ `lastSynthesizedAt` est renseigné. Elle ne ressort donc pas dans les synthèses suivantes. Le rapport conserve aussi sa période avec `fromDate` = date de la synthèse précédente et `toDate` = date de génération.
+
+Chaque `SynthesisReport` garde :
+
+- titre ;
+- date de génération ;
+- période couverte ;
+- notes ;
+- option d'inclusion des `maybe_relevant` ;
+- relation avec les Entry incluses ;
+- contenu texte généré pour trace simple.
+
+Le rendu regroupe les Entry par type média détecté si disponible, sinon par type manuel. Pour chaque Entry, la synthèse affiche titre, source, date, lien, extrait, tags détectés, score et raison de décision.
+
 ## Consultation quotidienne
 
 La liste des entrées accepte des filtres transmis en query string :

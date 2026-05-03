@@ -8,7 +8,10 @@
             <h1>Fiches</h1>
             <p>Synthèses enrichies et jugement personnel.</p>
         </div>
-        <a class="button" href="{{ path('app_review_new') }}">Nouvelle fiche</a>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_synthesis_report_new') }}">Générer une synthèse</a>
+            <a class="button" href="{{ path('app_review_new') }}">Nouvelle fiche</a>
+        </div>
     </section>
 
     <form method="get" class="filter-form">

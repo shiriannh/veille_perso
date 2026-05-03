@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Générer une synthèse - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Générer une synthèse</h1>
+            <p>Inclut uniquement les entrées pertinentes qui n'ont pas encore été rattachées à une synthèse.</p>
+        </div>
+        <a class="button button-secondary" href="{{ path('app_synthesis_report_index') }}">Retour</a>
+    </section>
+
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <div class="actions">
+            <button class="button">Générer</button>
+            <a class="button button-secondary" href="{{ path('app_synthesis_report_index') }}">Annuler</a>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}
