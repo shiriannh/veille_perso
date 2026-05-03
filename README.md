@@ -58,6 +58,8 @@ docker compose exec app php bin/console doctrine:migrations:status
 docker compose exec app php bin/console doctrine:schema:validate
 docker compose exec app php bin/console app:import-source 1
 docker compose exec app php bin/console app:import-sources
+docker compose exec app php bin/console app:analyze-new-entries
+docker compose exec app php bin/console app:reanalyze-entries --all
 ```
 
 ## Structure
@@ -148,6 +150,56 @@ Déduplication, par priorité :
 3. Hash métier `sourceHash` : titre normalisé + URL canonique + date de publication.
 
 Si une entrée existante correspond à l’un de ces critères pour la même source, l’item est ignoré et compté dans `skippedCount`.
+
+## Analyse post-RSS
+
+La V1.4 ajoute une analyse simple apres import RSS. Le flux reste volontairement monolithique et lisible :
+
+1. import RSS ;
+2. normalisation du titre et du contenu brut ;
+3. scoring par mots-cles positifs et negatifs ;
+4. detection heuristique du putaclic ;
+5. appel IA optionnel uniquement sur les cas ambigus ;
+6. stockage de la decision finale et de ses raisons sur `Entry`.
+
+Les entrees sont classees, jamais supprimees automatiquement.
+
+Decisions possibles :
+
+- `relevant` : contenu clairement pertinent ;
+- `maybe_relevant` : contenu a verifier manuellement ;
+- `ignored` : contenu hors profil ;
+- `clickbait` : contenu classe comme putaclic.
+
+Les champs d'analyse principaux sur `Entry` sont : `normalizedTitle`, `normalizedContent`, `relevanceScore`, `clickbaitScore`, `decision`, `decisionReason`, `matchedPositiveKeywords`, `matchedNegativeKeywords`, `clickbaitSignals`, `clickbaitLevel`, `aiAnalyzedAt`, `aiModel`, `aiRawResult`, `analysisVersion` et `analysisStatus`.
+
+Le profil d'interet est configure dans `app/config/services.yaml` avec `app.analysis.positive_keywords`, `app.analysis.negative_keywords`, `app.analysis.boosted_phrases`, `app.analysis.excluded_phrases`, `app.analysis.minimum_relevance_score`, `app.analysis.clickbait_suspicion_threshold` et `app.analysis.clickbait_threshold`.
+
+La logique de score reste simple : les signaux positifs et expressions favorisees augmentent la pertinence, les signaux negatifs et expressions exclues la diminuent. Le score putaclic vient de signaux explicites comme vocabulaire sensationnaliste, listes vagues, majuscules et ponctuation excessive.
+
+Commandes d'analyse :
+
+```bash
+docker compose exec app php bin/console app:analyze-new-entries
+docker compose exec app php bin/console app:analyze-new-entries --limit=50
+docker compose exec app php bin/console app:reanalyze-entries <entryId>
+docker compose exec app php bin/console app:reanalyze-entries --all
+docker compose exec app php bin/console app:reanalyze-entries <entryId> --force-ai
+```
+
+L'interface Entry affiche les badges de decision, le score de pertinence, le niveau putaclic, les raisons et les mots-cles detectes. La fiche detail d'une Entry propose aussi un bouton pour relancer l'analyse.
+
+### IA optionnelle
+
+L'application fonctionne sans IA. Par defaut, l'analyse IA est desactivee :
+
+```dotenv
+OPENAI_ANALYSIS_ENABLED=0
+OPENAI_ANALYSIS_MODEL=gpt-5.4-mini
+OPENAI_API_KEY=
+```
+
+Si `OPENAI_ANALYSIS_ENABLED=1` et `OPENAI_API_KEY` est renseignee, le service IA peut etre appele seulement quand le score de pertinence ou le score putaclic est ambigu, ou avec l'option `--force-ai`. Le resultat brut est conserve dans `aiRawResult`, avec le modele et la date d'analyse.
 
 ## Consultation quotidienne
 

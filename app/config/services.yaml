@@ -1,3 +1,50 @@
+parameters:
+    app.analysis.positive_keywords:
+        - science-fiction
+        - sf
+        - fantasy
+        - fantastique
+        - space opera
+        - jeu video
+        - jeux video
+        - rpg
+        - strategie
+        - tactique
+        - roman
+        - bd
+        - manga
+        - anime
+        - film
+        - serie
+        - auteur
+        - studio
+    app.analysis.negative_keywords:
+        - people
+        - drama
+        - influenceur
+        - influenceuse
+        - rumeur
+        - concours
+        - buzz
+        - polemique
+        - clash
+        - tele-realite
+    app.analysis.boosted_phrases:
+        - space opera
+        - roman sf
+        - jeu tactique
+        - science-fiction
+        - monde ouvert
+        - jeu de role
+    app.analysis.excluded_phrases:
+        - tout le monde en parle
+        - rumeur people
+        - concours
+        - drama
+    app.analysis.minimum_relevance_score: 45
+    app.analysis.clickbait_suspicion_threshold: 35
+    app.analysis.clickbait_threshold: 60
+
 services:
     _defaults:
         autowire: true
@@ -12,3 +59,13 @@ services:
     App\Controller\:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
+
+    App\Service\InterestProfile:
+        arguments:
+            $positiveKeywords: '%app.analysis.positive_keywords%'
+            $negativeKeywords: '%app.analysis.negative_keywords%'
+            $boostedPhrases: '%app.analysis.boosted_phrases%'
+            $excludedPhrases: '%app.analysis.excluded_phrases%'
+            $minimumRelevanceScore: '%app.analysis.minimum_relevance_score%'
+            $clickbaitSuspicionThreshold: '%app.analysis.clickbait_suspicion_threshold%'
+            $clickbaitThreshold: '%app.analysis.clickbait_threshold%'

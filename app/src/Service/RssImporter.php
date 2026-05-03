@@ -19,6 +19,7 @@ class RssImporter
         private readonly HttpClientInterface $httpClient,
         private readonly EntityManagerInterface $entityManager,
         private readonly EntryRepository $entryRepository,
+        private readonly EntryAnalyzer $entryAnalyzer,
     ) {
     }
 
@@ -79,6 +80,7 @@ class RssImporter
                     ->setStatus(EntryStatus::ToWatch)
                     ->setPersonalTags(['rss']);
 
+                $this->entryAnalyzer->analyze($entry);
                 $this->entityManager->persist($entry);
                 ++$createdCount;
             }

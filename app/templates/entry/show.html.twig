@@ -10,6 +10,10 @@
         </div>
         <div class="actions">
             <a class="button" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
+            <form method="post" action="{{ path('app_entry_analyze', {id: entry.id}) }}" class="inline-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('analyze_entry_' ~ entry.id) }}">
+                <button class="button button-secondary">Relancer l'analyse</button>
+            </form>
             {% if entry.review %}
                 <a class="button button-secondary" href="{{ path('app_review_show', {id: entry.review.id}) }}">Voir la fiche</a>
                 <a class="button button-secondary" href="{{ path('app_review_edit', {id: entry.review.id}) }}">Modifier la fiche</a>
@@ -58,6 +62,45 @@
         </dd>
         <dt>Hash source</dt>
         <dd>{{ entry.sourceHash|default('Non renseigné') }}</dd>
+        <dt>Décision</dt>
+        <dd>
+            {% if entry.decision %}
+                <span class="badge badge-decision-{{ entry.decision.value }}">{{ entry.decision.label() }}</span>
+                <span class="score">Pertinence {{ entry.relevanceScore ?? 0 }}/100</span>
+            {% else %}
+                <span class="badge badge-muted">Non analysée</span>
+            {% endif %}
+        </dd>
+        <dt>Putaclic</dt>
+        <dd>
+            {% if entry.clickbaitLevel %}
+                <span class="badge badge-clickbait-{{ entry.clickbaitLevel.value }}">{{ entry.clickbaitLevel.label() }}</span>
+                <span class="score">{{ entry.clickbaitScore ?? 0 }}/100</span>
+            {% else %}
+                <span class="muted">Non analysé</span>
+            {% endif %}
+        </dd>
+        <dt>Raison d'analyse</dt>
+        <dd>{{ entry.decisionReason|default('Aucune raison enregistrée') }}</dd>
+        <dt>Mots-clés positifs</dt>
+        <dd>{{ entry.matchedPositiveKeywords is empty ? 'Aucun' : entry.matchedPositiveKeywords|join(', ') }}</dd>
+        <dt>Mots-clés négatifs</dt>
+        <dd>{{ entry.matchedNegativeKeywords is empty ? 'Aucun' : entry.matchedNegativeKeywords|join(', ') }}</dd>
+        <dt>Signaux putaclic</dt>
+        <dd>{{ entry.clickbaitSignals is empty ? 'Aucun' : entry.clickbaitSignals|join(', ') }}</dd>
+        <dt>Analyse</dt>
+        <dd>
+            {{ entry.analysisStatus.label() }}{% if entry.analysisVersion %} · {{ entry.analysisVersion }}{% endif %}
+            {% if entry.analyzedAt %} · {{ entry.analyzedAt|date('d/m/Y H:i') }}{% endif %}
+        </dd>
+        <dt>Analyse IA</dt>
+        <dd>
+            {% if entry.aiAnalyzedAt %}
+                {{ entry.aiModel|default('Modèle non renseigné') }} · {{ entry.aiAnalyzedAt|date('d/m/Y H:i') }}
+            {% else %}
+                <span class="muted">Non utilisée</span>
+            {% endif %}
+        </dd>
         <dt>Contenu brut</dt>
         <dd>{{ entry.rawContent|default('Aucun contenu brut')|nl2br }}</dd>
     </dl>

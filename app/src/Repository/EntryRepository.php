@@ -4,6 +4,9 @@ namespace App\Repository;
 
 use App\Entity\Entry;
 use App\Entity\Source;
+use App\Enum\AnalysisDecision;
+use App\Enum\AnalysisStatus;
+use App\Enum\ClickbaitLevel;
 use App\Enum\EntryStatus;
 use App\Enum\MediaType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -51,6 +54,9 @@ class EntryRepository extends ServiceEntityRepository
      *     status?: ?EntryStatus,
      *     interestLevel?: ?int,
      *     reviewState?: ?string,
+     *     decision?: ?AnalysisDecision,
+     *     clickbaitLevel?: ?ClickbaitLevel,
+     *     keyword?: ?string,
      *     sort?: ?string
      * } $filters
      *
@@ -102,6 +108,24 @@ class EntryRepository extends ServiceEntityRepository
             $queryBuilder->andWhere('review.id IS NULL');
         }
 
+        if (($filters['decision'] ?? null) instanceof AnalysisDecision) {
+            $queryBuilder
+                ->andWhere('entry.decision = :decision')
+                ->setParameter('decision', $filters['decision']);
+        }
+
+        if (($filters['clickbaitLevel'] ?? null) instanceof ClickbaitLevel) {
+            $queryBuilder
+                ->andWhere('entry.clickbaitLevel = :clickbaitLevel')
+                ->setParameter('clickbaitLevel', $filters['clickbaitLevel']);
+        }
+
+        if (($filters['keyword'] ?? null) !== null && trim((string) $filters['keyword']) !== '') {
+            $queryBuilder
+                ->andWhere('LOWER(entry.normalizedTitle) LIKE :analysisKeyword OR LOWER(entry.normalizedContent) LIKE :analysisKeyword')
+                ->setParameter('analysisKeyword', '%'.mb_strtolower(trim((string) $filters['keyword'])).'%');
+        }
+
         match ($filters['sort'] ?? null) {
             'published_asc' => $queryBuilder->orderBy('entry.publishedAt', 'ASC')->addOrderBy('entry.createdAt', 'DESC'),
             'published_desc' => $queryBuilder->orderBy('entry.publishedAt', 'DESC')->addOrderBy('entry.createdAt', 'DESC'),
@@ -111,6 +135,23 @@ class EntryRepository extends ServiceEntityRepository
         };
 
         return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * @return Entry[]
+     */
+    public function findPendingAnalysis(int $limit = 100): array
+    {
+        return $this->createQueryBuilder('entry')
+            ->leftJoin('entry.source', 'source')
+            ->addSelect('source')
+            ->andWhere('entry.analysisStatus = :pending OR entry.decision IS NULL')
+            ->setParameter('pending', AnalysisStatus::Pending)
+            ->orderBy('entry.importedAt', 'DESC')
+            ->addOrderBy('entry.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 
     /**

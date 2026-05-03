@@ -319,6 +319,37 @@ form[name="review"] {
     color: var(--muted);
 }
 
+.badge-decision-relevant {
+    background: #e4f5e8;
+    color: #216037;
+}
+
+.badge-decision-maybe_relevant {
+    background: #fff5df;
+    color: #735018;
+}
+
+.badge-decision-ignored {
+    background: #f2f0eb;
+    color: var(--muted);
+}
+
+.badge-decision-clickbait,
+.badge-clickbait-clickbait {
+    background: #fff0ef;
+    color: var(--danger);
+}
+
+.badge-clickbait-clean {
+    background: #ecf3f1;
+    color: var(--primary-dark);
+}
+
+.badge-clickbait-suspicious {
+    background: #fff5df;
+    color: #735018;
+}
+
 label {
     display: block;
     margin-bottom: 6px;

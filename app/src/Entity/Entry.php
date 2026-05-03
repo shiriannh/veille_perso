@@ -2,6 +2,9 @@
 
 namespace App\Entity;
 
+use App\Enum\AnalysisDecision;
+use App\Enum\AnalysisStatus;
+use App\Enum\ClickbaitLevel;
 use App\Enum\EntryStatus;
 use App\Enum\MediaType;
 use App\Repository\EntryRepository;
@@ -65,6 +68,63 @@ class Entry
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $sourceHash = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $normalizedTitle = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $normalizedContent = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $relevanceScore = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $clickbaitScore = null;
+
+    #[ORM\Column(enumType: AnalysisDecision::class, nullable: true)]
+    private ?AnalysisDecision $decision = null;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $decisionReason = null;
+
+    /**
+     * @var array<int, string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $matchedPositiveKeywords = [];
+
+    /**
+     * @var array<int, string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $matchedNegativeKeywords = [];
+
+    /**
+     * @var array<int, string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $clickbaitSignals = [];
+
+    #[ORM\Column(enumType: ClickbaitLevel::class, nullable: true)]
+    private ?ClickbaitLevel $clickbaitLevel = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $analyzedAt = null;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $aiAnalyzedAt = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $aiModel = null;
+
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $aiRawResult = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $analysisVersion = null;
+
+    #[ORM\Column(enumType: AnalysisStatus::class)]
+    private AnalysisStatus $analysisStatus = AnalysisStatus::Pending;
 
     #[ORM\Column]
     #[Assert\Range(min: 0, max: 5)]
@@ -255,6 +315,216 @@ class Entry
     public function setSourceHash(?string $sourceHash): self
     {
         $this->sourceHash = $sourceHash;
+
+        return $this;
+    }
+
+    public function getNormalizedTitle(): ?string
+    {
+        return $this->normalizedTitle;
+    }
+
+    public function setNormalizedTitle(?string $normalizedTitle): self
+    {
+        $this->normalizedTitle = $normalizedTitle;
+
+        return $this;
+    }
+
+    public function getNormalizedContent(): ?string
+    {
+        return $this->normalizedContent;
+    }
+
+    public function setNormalizedContent(?string $normalizedContent): self
+    {
+        $this->normalizedContent = $normalizedContent;
+
+        return $this;
+    }
+
+    public function getRelevanceScore(): ?int
+    {
+        return $this->relevanceScore;
+    }
+
+    public function setRelevanceScore(?int $relevanceScore): self
+    {
+        $this->relevanceScore = $relevanceScore;
+
+        return $this;
+    }
+
+    public function getClickbaitScore(): ?int
+    {
+        return $this->clickbaitScore;
+    }
+
+    public function setClickbaitScore(?int $clickbaitScore): self
+    {
+        $this->clickbaitScore = $clickbaitScore;
+
+        return $this;
+    }
+
+    public function getDecision(): ?AnalysisDecision
+    {
+        return $this->decision;
+    }
+
+    public function setDecision(?AnalysisDecision $decision): self
+    {
+        $this->decision = $decision;
+
+        return $this;
+    }
+
+    public function getDecisionReason(): ?string
+    {
+        return $this->decisionReason;
+    }
+
+    public function setDecisionReason(?string $decisionReason): self
+    {
+        $this->decisionReason = $decisionReason;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getMatchedPositiveKeywords(): array
+    {
+        return $this->matchedPositiveKeywords;
+    }
+
+    /**
+     * @param array<int, string> $matchedPositiveKeywords
+     */
+    public function setMatchedPositiveKeywords(array $matchedPositiveKeywords): self
+    {
+        $this->matchedPositiveKeywords = array_values(array_unique($matchedPositiveKeywords));
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getMatchedNegativeKeywords(): array
+    {
+        return $this->matchedNegativeKeywords;
+    }
+
+    /**
+     * @param array<int, string> $matchedNegativeKeywords
+     */
+    public function setMatchedNegativeKeywords(array $matchedNegativeKeywords): self
+    {
+        $this->matchedNegativeKeywords = array_values(array_unique($matchedNegativeKeywords));
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getClickbaitSignals(): array
+    {
+        return $this->clickbaitSignals;
+    }
+
+    /**
+     * @param array<int, string> $clickbaitSignals
+     */
+    public function setClickbaitSignals(array $clickbaitSignals): self
+    {
+        $this->clickbaitSignals = array_values(array_unique($clickbaitSignals));
+
+        return $this;
+    }
+
+    public function getClickbaitLevel(): ?ClickbaitLevel
+    {
+        return $this->clickbaitLevel;
+    }
+
+    public function setClickbaitLevel(?ClickbaitLevel $clickbaitLevel): self
+    {
+        $this->clickbaitLevel = $clickbaitLevel;
+
+        return $this;
+    }
+
+    public function getAnalyzedAt(): ?\DateTimeImmutable
+    {
+        return $this->analyzedAt;
+    }
+
+    public function setAnalyzedAt(?\DateTimeImmutable $analyzedAt): self
+    {
+        $this->analyzedAt = $analyzedAt;
+
+        return $this;
+    }
+
+    public function getAiAnalyzedAt(): ?\DateTimeImmutable
+    {
+        return $this->aiAnalyzedAt;
+    }
+
+    public function setAiAnalyzedAt(?\DateTimeImmutable $aiAnalyzedAt): self
+    {
+        $this->aiAnalyzedAt = $aiAnalyzedAt;
+
+        return $this;
+    }
+
+    public function getAiModel(): ?string
+    {
+        return $this->aiModel;
+    }
+
+    public function setAiModel(?string $aiModel): self
+    {
+        $this->aiModel = $aiModel;
+
+        return $this;
+    }
+
+    public function getAiRawResult(): ?array
+    {
+        return $this->aiRawResult;
+    }
+
+    public function setAiRawResult(?array $aiRawResult): self
+    {
+        $this->aiRawResult = $aiRawResult;
+
+        return $this;
+    }
+
+    public function getAnalysisVersion(): ?string
+    {
+        return $this->analysisVersion;
+    }
+
+    public function setAnalysisVersion(?string $analysisVersion): self
+    {
+        $this->analysisVersion = $analysisVersion;
+
+        return $this;
+    }
+
+    public function getAnalysisStatus(): AnalysisStatus
+    {
+        return $this->analysisStatus;
+    }
+
+    public function setAnalysisStatus(AnalysisStatus $analysisStatus): self
+    {
+        $this->analysisStatus = $analysisStatus;
 
         return $this;
     }

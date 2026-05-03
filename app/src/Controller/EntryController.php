@@ -3,11 +3,14 @@
 namespace App\Controller;
 
 use App\Entity\Entry;
+use App\Enum\AnalysisDecision;
+use App\Enum\ClickbaitLevel;
 use App\Enum\EntryStatus;
 use App\Enum\MediaType;
 use App\Form\EntryType;
 use App\Repository\EntryRepository;
 use App\Repository\SourceRepository;
+use App\Service\EntryAnalyzer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,6 +32,8 @@ class EntryController extends AbstractController
         $reviewState = in_array($request->query->get('reviewState'), ['with', 'without'], true)
             ? (string) $request->query->get('reviewState')
             : null;
+        $decision = AnalysisDecision::tryFrom((string) $request->query->get('decision'));
+        $clickbaitLevel = ClickbaitLevel::tryFrom((string) $request->query->get('clickbaitLevel'));
         $sort = in_array($request->query->get('sort'), ['published_desc', 'published_asc', 'imported_desc', 'imported_asc'], true)
             ? (string) $request->query->get('sort')
             : null;
@@ -40,6 +45,9 @@ class EntryController extends AbstractController
             'status' => $status,
             'interestLevel' => $interestLevel,
             'reviewState' => $reviewState,
+            'decision' => $decision,
+            'clickbaitLevel' => $clickbaitLevel,
+            'keyword' => $request->query->get('keyword'),
             'sort' => $sort,
         ];
 
@@ -48,6 +56,8 @@ class EntryController extends AbstractController
             'sources' => $sourceRepository->findAllOrdered(),
             'media_types' => MediaType::cases(),
             'statuses' => EntryStatus::cases(),
+            'decisions' => AnalysisDecision::cases(),
+            'clickbait_levels' => ClickbaitLevel::cases(),
             'filters' => [
                 'q' => (string) $request->query->get('q', ''),
                 'source' => $source?->getId(),
@@ -55,9 +65,29 @@ class EntryController extends AbstractController
                 'status' => $status?->value,
                 'interestLevel' => $interestLevel,
                 'reviewState' => $reviewState,
+                'decision' => $decision?->value,
+                'clickbaitLevel' => $clickbaitLevel?->value,
+                'keyword' => (string) $request->query->get('keyword', ''),
                 'sort' => $sort ?? '',
             ],
         ]);
+    }
+
+    #[Route('/{id}/analyze', name: 'app_entry_analyze', methods: ['POST'])]
+    public function analyze(Request $request, Entry $entry, EntryAnalyzer $entryAnalyzer, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid('analyze_entry_'.$entry->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, analyse non lancee.');
+
+            return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+        }
+
+        $entryAnalyzer->analyze($entry, $request->request->getBoolean('force_ai'));
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Analyse relancee.');
+
+        return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
     }
 
     #[Route('/new', name: 'app_entry_new', methods: ['GET', 'POST'])]

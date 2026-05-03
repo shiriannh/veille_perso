@@ -13,25 +13,39 @@ V1.2 already supports:
 - entity deletion buttons
 
 ## Current goal
-Implement V1.3 focused on daily usability:
-- better consultation of entries and reviews
-- better import observability
-- safer deletion
-- simple Entry -> Review workflow
-- global RSS import command
+Implement a post-RSS analysis pipeline to improve content relevance.
+
+## Scope
+- keyword-based relevance scoring
+- heuristic clickbait detection
+- optional AI-based classification for ambiguous cases
+- visible decision and reasoning in the UI
+- Symfony commands for analysis
 
 ## Non-goals
 Do not add:
 - scraping
-- authentication
+- auth
 - public API
-- message bus
-- workers
-- queues
-- AI features
-- external search engine
-- microservices
-- SPA frontend
+- distributed workers
+- vector database
+- search engine
+- destructive auto-deletion
+- complex ML infrastructure
+
+## Product rules
+- RSS remains the only automatic input
+- analysis happens after import
+- entries are classified, not deleted
+- decisions must remain explainable
+- AI is optional and must not be required for the app to remain useful
+
+## Expected decisions
+Entry final decision should be one of:
+- relevant
+- maybe_relevant
+- ignored
+- clickbait
 
 ## Technical expectations
 - Symfony conventions first

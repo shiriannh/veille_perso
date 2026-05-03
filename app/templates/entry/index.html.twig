@@ -61,6 +61,28 @@
             </select>
         </div>
         <div>
+            <label for="decision">Décision</label>
+            <select id="decision" name="decision">
+                <option value="">Toutes</option>
+                {% for decision in decisions %}
+                    <option value="{{ decision.value }}" {{ filters.decision == decision.value ? 'selected' : '' }}>{{ decision.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="clickbaitLevel">Putaclic</label>
+            <select id="clickbaitLevel" name="clickbaitLevel">
+                <option value="">Tous</option>
+                {% for level in clickbait_levels %}
+                    <option value="{{ level.value }}" {{ filters.clickbaitLevel == level.value ? 'selected' : '' }}>{{ level.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="keyword">Mot-clé détecté</label>
+            <input id="keyword" type="search" name="keyword" value="{{ filters.keyword }}" placeholder="sf, fantasy, rumeur...">
+        </div>
+        <div>
             <label for="sort">Tri</label>
             <select id="sort" name="sort">
                 <option value="">Création récente</option>
@@ -87,6 +109,8 @@
                     <th>Source</th>
                     <th>Statut</th>
                     <th>Intérêt</th>
+                    <th>Analyse</th>
+                    <th>Putaclic</th>
                     <th>Fiche</th>
                     <th></th>
                 </tr>
@@ -99,6 +123,22 @@
                         <td>{{ entry.source.name }}</td>
                         <td><span class="badge">{{ entry.status.label() }}</span></td>
                         <td>{{ entry.interestLevel }}/5</td>
+                        <td>
+                            {% if entry.decision %}
+                                <span class="badge badge-decision-{{ entry.decision.value }}">{{ entry.decision.label() }}</span>
+                                <small>{{ entry.relevanceScore ?? 0 }}/100</small>
+                            {% else %}
+                                <span class="badge badge-muted">À analyser</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if entry.clickbaitLevel %}
+                                <span class="badge badge-clickbait-{{ entry.clickbaitLevel.value }}">{{ entry.clickbaitLevel.label() }}</span>
+                                <small>{{ entry.clickbaitScore ?? 0 }}/100</small>
+                            {% else %}
+                                <span class="badge badge-muted">-</span>
+                            {% endif %}
+                        </td>
                         <td>
                             {% if entry.review %}
                                 <span class="badge">Fichée</span>
