@@ -1,80 +1,68 @@
 # AGENTS.md
 
 ## Project intent
-This project is a personal local-first cultural watch tool.
-It is meant to be useful in daily life, not a technical showcase.
+This is a local-first personal cultural watch tool.
+It is not a technical showcase.
+The application must remain pragmatic, simple, and useful in daily use.
 
-## Product philosophy
-- local first
-- monolith first
-- simple architecture
-- pragmatic implementation
-- no microservices
-- no SPA frontend for V1
-- no overengineering
-- code must remain easy to read and maintain
+## Current state
+V1.2 already supports:
+- Source CRUD
+- manual RSS import from a source screen
+- automatic Entry creation from RSS items
+- entity deletion buttons
 
-## Technical stack
-- Symfony 7
-- PHP 8.4
-- PostgreSQL 16
-- Apache 2.4
-- Adminer
-- Docker Compose
+## Current goal
+Implement V1.3 focused on daily usability:
+- better consultation of entries and reviews
+- better import observability
+- safer deletion
+- simple Entry -> Review workflow
+- global RSS import command
 
-## Coding expectations
-- Prefer Symfony conventions over custom abstractions
-- Prefer simple CRUD controllers and Twig templates for V1
-- Use Doctrine cleanly, with explicit relationships
-- Avoid unnecessary service classes unless they add clear value
-- Avoid premature optimization
-- Keep configuration explicit and easy to understand
-- Favor readability over cleverness
-
-## V1 scope
-Implement:
-- Source management
-- Entry management
-- Review management
-- Home dashboard
-- Database migrations
-- Local Docker environment
-- README with exact setup steps
-
-Do not implement in V1:
+## Non-goals
+Do not add:
+- scraping
 - authentication
 - public API
-- scraping engine
-- AI enrichment
-- background workers
 - message bus
-- search engine
-- event sourcing
+- workers
+- queues
+- AI features
+- external search engine
 - microservices
+- SPA frontend
 
-## Domain guidance
-Entities expected:
-- Source
-- Entry
-- Review
+## Technical expectations
+- Symfony conventions first
+- Twig server-rendered UI
+- Doctrine query builders for filtering
+- Keep abstractions light
+- No unnecessary service layers
+- Favor readability over cleverness
 
-Entry stores the spotted raw item.
-Review stores the enriched personal judgment.
-A Review may not exist for every Entry.
+## UX expectations
+- sober UI
+- useful filters
+- clear flash messages
+- explicit delete confirmations
+- import history should be easy to read
 
-Use timestamps consistently:
-- createdAt
-- updatedAt
+## Delete rules
+- a Source with existing Entry records must not be deletable
+- an Entry linked to a Review must not be deletable
+- no silent destructive cascade behavior
 
-## UI guidance
-- Server-rendered HTML only
-- Twig templates
-- Keep the UI sober and functional
-- Minimal CSS
-- Bootstrap allowed only if it speeds up delivery cleanly
+## Deduplication expectations
+Document and implement this priority:
+1. externalId / guid
+2. canonicalUrl
+3. stable business hash
 
-## Delivery guidance
-Work in small coherent steps.
-After each major step, ensure the project is still runnable.
-Prefer atomic commits if the environment supports commits.
-Document important design choices briefly in README.
+## Done means
+A change is done when:
+- code is coherent
+- pages are wired in navigation when relevant
+- database migrations are correct
+- flash messages are present
+- README is updated if behavior changed
