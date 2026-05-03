@@ -58,6 +58,7 @@ class EntryRepository extends ServiceEntityRepository
      *     clickbaitLevel?: ?ClickbaitLevel,
      *     keyword?: ?string,
      *     detectedTag?: ?string,
+     *     analysisLanguage?: ?string,
      *     sort?: ?string
      * } $filters
      *
@@ -125,6 +126,12 @@ class EntryRepository extends ServiceEntityRepository
             $queryBuilder
                 ->andWhere('LOWER(entry.normalizedTitle) LIKE :analysisKeyword OR LOWER(entry.normalizedContent) LIKE :analysisKeyword')
                 ->setParameter('analysisKeyword', '%'.mb_strtolower(trim((string) $filters['keyword'])).'%');
+        }
+
+        if (($filters['analysisLanguage'] ?? null) !== null && trim((string) $filters['analysisLanguage']) !== '') {
+            $queryBuilder
+                ->andWhere('entry.analysisLanguage = :analysisLanguage')
+                ->setParameter('analysisLanguage', trim((string) $filters['analysisLanguage']));
         }
 
         match ($filters['sort'] ?? null) {

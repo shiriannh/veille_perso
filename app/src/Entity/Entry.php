@@ -108,6 +108,24 @@ class Entry
     #[ORM\Column(enumType: ClickbaitLevel::class, nullable: true)]
     private ?ClickbaitLevel $clickbaitLevel = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $mediaDetectionConfidence = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $thematicScore = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $editorialQualityScore = null;
+
+    /**
+     * @var array<int, string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $analysisSignals = [];
+
+    #[ORM\Column(length: 10, nullable: true)]
+    private ?string $analysisLanguage = null;
+
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $analyzedAt = null;
 
@@ -462,6 +480,72 @@ class Entry
     public function setClickbaitLevel(?ClickbaitLevel $clickbaitLevel): self
     {
         $this->clickbaitLevel = $clickbaitLevel;
+
+        return $this;
+    }
+
+    public function getMediaDetectionConfidence(): ?int
+    {
+        return $this->mediaDetectionConfidence;
+    }
+
+    public function setMediaDetectionConfidence(?int $mediaDetectionConfidence): self
+    {
+        $this->mediaDetectionConfidence = $mediaDetectionConfidence;
+
+        return $this;
+    }
+
+    public function getThematicScore(): ?int
+    {
+        return $this->thematicScore;
+    }
+
+    public function setThematicScore(?int $thematicScore): self
+    {
+        $this->thematicScore = $thematicScore;
+
+        return $this;
+    }
+
+    public function getEditorialQualityScore(): ?int
+    {
+        return $this->editorialQualityScore;
+    }
+
+    public function setEditorialQualityScore(?int $editorialQualityScore): self
+    {
+        $this->editorialQualityScore = $editorialQualityScore;
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getAnalysisSignals(): array
+    {
+        return $this->analysisSignals;
+    }
+
+    /**
+     * @param array<int, string> $analysisSignals
+     */
+    public function setAnalysisSignals(array $analysisSignals): self
+    {
+        $this->analysisSignals = array_values(array_unique(array_filter(array_map('trim', $analysisSignals))));
+
+        return $this;
+    }
+
+    public function getAnalysisLanguage(): ?string
+    {
+        return $this->analysisLanguage;
+    }
+
+    public function setAnalysisLanguage(?string $analysisLanguage): self
+    {
+        $this->analysisLanguage = $analysisLanguage;
 
         return $this;
     }

@@ -59,7 +59,12 @@
             {% endif %}
         </dd>
         <dt>Type détecté</dt>
-        <dd>{{ entry.detectedMediaType ? entry.detectedMediaType.label() : 'Non détecté' }}</dd>
+        <dd>
+            {{ entry.detectedMediaType ? entry.detectedMediaType.label() : 'Non détecté' }}
+            {% if entry.mediaDetectionConfidence is not null %}
+                <span class="score">Confiance {{ entry.mediaDetectionConfidence }}/100</span>
+            {% endif %}
+        </dd>
         <dt>Repéré le</dt>
         <dd>{{ entry.spottedAt|date('d/m/Y H:i') }}</dd>
         <dt>Publié le</dt>
@@ -87,6 +92,14 @@
                 <span class="badge badge-muted">Non analysée</span>
             {% endif %}
         </dd>
+        <dt>Scores détaillés</dt>
+        <dd>
+            <span class="score">Thématique {{ entry.thematicScore ?? 0 }}/100</span>
+            <span class="score">Qualité {{ entry.editorialQualityScore ?? 0 }}/100</span>
+            <span class="score">Langue {{ entry.analysisLanguage|default('n/a')|upper }}</span>
+        </dd>
+        <dt>Signaux d'analyse</dt>
+        <dd>{{ entry.analysisSignals is empty ? 'Aucun' : entry.analysisSignals|join(', ') }}</dd>
         <dt>Putaclic</dt>
         <dd>
             {% if entry.clickbaitLevel %}

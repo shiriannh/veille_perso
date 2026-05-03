@@ -194,14 +194,16 @@ Regle de doublon : le nom de Source doit etre unique, sans tenir compte de la ca
 
 ## Analyse post-RSS
 
-La V1.4 ajoute une analyse simple apres import RSS. Le flux reste volontairement monolithique et lisible :
+La V1.4 ajoute une analyse simple apres import RSS. Depuis `rules-v2`, l'analyse est decoupee en blocs lisibles :
 
 1. import RSS ;
-2. normalisation du titre et du contenu brut ;
-3. scoring par mots-cles positifs et negatifs ;
-4. detection heuristique du putaclic ;
-5. appel IA optionnel uniquement sur les cas ambigus ;
-6. stockage de la decision finale et de ses raisons sur `Entry`.
+2. detection de tags et proposition prudente de type media ;
+3. normalisation du titre, contenu, URL et source ;
+4. detection legere de langue `fr`, `en` ou `mixed` ;
+5. scoring media, scoring thematique, scoring de qualite editoriale ;
+6. detection heuristique du bruit / clickbait FR et EN ;
+7. appel IA optionnel uniquement sur les cas ambigus ;
+8. stockage de la decision finale et de ses raisons sur `Entry`.
 
 Les entrees sont classees, jamais supprimees automatiquement.
 
@@ -212,11 +214,19 @@ Decisions possibles :
 - `ignored` : contenu hors profil ;
 - `clickbait` : contenu classe comme putaclic.
 
-Les champs d'analyse principaux sur `Entry` sont : `normalizedTitle`, `normalizedContent`, `relevanceScore`, `clickbaitScore`, `decision`, `decisionReason`, `matchedPositiveKeywords`, `matchedNegativeKeywords`, `clickbaitSignals`, `clickbaitLevel`, `aiAnalyzedAt`, `aiModel`, `aiRawResult`, `analysisVersion` et `analysisStatus`.
+Les champs d'analyse principaux sur `Entry` sont : `detectedMediaType`, `mediaDetectionConfidence`, `thematicScore`, `editorialQualityScore`, `normalizedTitle`, `normalizedContent`, `relevanceScore`, `clickbaitScore`, `decision`, `decisionReason`, `analysisSignals`, `matchedPositiveKeywords`, `matchedNegativeKeywords`, `clickbaitSignals`, `clickbaitLevel`, `analysisLanguage`, `aiAnalyzedAt`, `aiModel`, `aiRawResult`, `analysisVersion` et `analysisStatus`.
 
 Le profil d'interet est configure dans `app/config/services.yaml` avec `app.analysis.positive_keywords`, `app.analysis.negative_keywords`, `app.analysis.boosted_phrases`, `app.analysis.excluded_phrases`, `app.analysis.minimum_relevance_score`, `app.analysis.clickbait_suspicion_threshold` et `app.analysis.clickbait_threshold`.
 
-La logique de score reste simple : les signaux positifs et expressions favorisees augmentent la pertinence, les signaux negatifs et expressions exclues la diminuent. Le score putaclic vient de signaux explicites comme vocabulaire sensationnaliste, listes vagues, majuscules et ponctuation excessive.
+La logique de score reste simple et deterministe :
+
+- score media : type detecte, tags de media preferes, coherence avec le type manuel ;
+- score thematique : themes, licences, univers, studios et editeurs suivis ;
+- penalites : sujets a eviter et contenus a declasser ;
+- qualite editoriale : bonus pour critique, analyse, interview, review ; malus pour rumeur, drama, polemique ;
+- pertinence finale : combinaison media 25 %, thematique 50 %, qualite editoriale 25 %, avec penalite si clickbait.
+
+La detection clickbait FR/EN cherche des signaux explicites : lexique sensationnaliste, promesses vides, rumeurs/polemiques, ponctuation excessive, majuscules insistantes et listes creuses.
 
 Commandes d'analyse :
 
@@ -260,7 +270,7 @@ docker compose exec app php bin/console app:detect-entry-tags --all
 docker compose exec app php bin/console app:rebuild-entry-tags --all
 ```
 
-La liste des Entry propose aussi un filtre simple par tag detecte exact.
+La liste des Entry propose aussi un filtre simple par tag detecte exact et un filtre par langue d'analyse.
 
 Les dictionnaires sont centralises dans `app/src/Service/EntryTagDetector.php`. Exemple de structure :
 
@@ -271,6 +281,14 @@ Les dictionnaires sont centralises dans `app/src/Service/EntryTagDetector.php`. 
 ```
 
 Pour enrichir la detection, ajouter un tag canonique et ses variantes dans `TAG_DICTIONARY`. Pour proposer un type d'oeuvre quand le signal est fort, ajouter le tag dans `MEDIA_TYPE_BY_TAG`. Les regles restent deterministes : pas d'IA, pas de NLP avance, pas de taxonomie multi-entites.
+
+Le profil d'interet de l'analyse de pertinence est dans `app/src/Service/EntryAnalyzer.php`, constantes `INTERESTS` et `CLICKBAIT_SIGNALS`. Exemple :
+
+```php
+'licenses' => ['battlefield', 'final fantasy', 'warhammer 40k'],
+'avoid' => ['people', 'celebrity', 'drama'],
+'deprioritize' => ['battle pass', 'microtransaction', 'loot box'],
+```
 
 ## Consultation quotidienne
 

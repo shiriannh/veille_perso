@@ -37,6 +37,9 @@ class EntryController extends AbstractController
             : null;
         $decision = AnalysisDecision::tryFrom((string) $request->query->get('decision'));
         $clickbaitLevel = ClickbaitLevel::tryFrom((string) $request->query->get('clickbaitLevel'));
+        $analysisLanguage = in_array($request->query->get('analysisLanguage'), ['fr', 'en', 'mixed'], true)
+            ? (string) $request->query->get('analysisLanguage')
+            : null;
         $sort = in_array($request->query->get('sort'), ['published_desc', 'published_asc', 'imported_desc', 'imported_asc'], true)
             ? (string) $request->query->get('sort')
             : null;
@@ -52,6 +55,7 @@ class EntryController extends AbstractController
             'clickbaitLevel' => $clickbaitLevel,
             'keyword' => $request->query->get('keyword'),
             'detectedTag' => $request->query->get('detectedTag'),
+            'analysisLanguage' => $analysisLanguage,
             'sort' => $sort,
         ];
 
@@ -73,6 +77,7 @@ class EntryController extends AbstractController
                 'clickbaitLevel' => $clickbaitLevel?->value,
                 'keyword' => (string) $request->query->get('keyword', ''),
                 'detectedTag' => (string) $request->query->get('detectedTag', ''),
+                'analysisLanguage' => $analysisLanguage ?? '',
                 'sort' => $sort ?? '',
             ],
         ]);

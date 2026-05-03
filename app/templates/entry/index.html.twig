@@ -87,6 +87,15 @@
             <input id="detectedTag" type="search" name="detectedTag" value="{{ filters.detectedTag }}" placeholder="battlefield, fps, sf...">
         </div>
         <div>
+            <label for="analysisLanguage">Langue</label>
+            <select id="analysisLanguage" name="analysisLanguage">
+                <option value="">Toutes</option>
+                <option value="fr" {{ filters.analysisLanguage == 'fr' ? 'selected' : '' }}>FR</option>
+                <option value="en" {{ filters.analysisLanguage == 'en' ? 'selected' : '' }}>EN</option>
+                <option value="mixed" {{ filters.analysisLanguage == 'mixed' ? 'selected' : '' }}>Mixte</option>
+            </select>
+        </div>
+        <div>
             <label for="sort">Tri</label>
             <select id="sort" name="sort">
                 <option value="">Création récente</option>
@@ -115,6 +124,7 @@
                     <th>Intérêt</th>
                     <th>Analyse</th>
                     <th>Putaclic</th>
+                    <th>Langue</th>
                     <th>Tags détectés</th>
                     <th>Fiche</th>
                     <th></th>
@@ -144,6 +154,7 @@
                                 <span class="badge badge-muted">-</span>
                             {% endif %}
                         </td>
+                        <td>{{ entry.analysisLanguage|default('-')|upper }}</td>
                         <td>
                             {% if entry.detectedTags is empty %}
                                 <span class="badge badge-muted">Aucun</span>
