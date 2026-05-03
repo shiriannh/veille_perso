@@ -39,12 +39,18 @@ class EntryAnalyzer
         private readonly InterestProfile $profile,
         private readonly OptionalAiEntryAnalyzer $aiAnalyzer,
         private readonly EntryTagDetector $entryTagDetector,
+        private readonly RssCategoryMapper $rssCategoryMapper,
     ) {
     }
 
     public function analyze(Entry $entry, bool $forceAi = false): void
     {
         $this->entryTagDetector->detect($entry);
+        $rawPayload = $entry->getRawPayload();
+        $categories = is_array($rawPayload) && isset($rawPayload['categories']) && is_array($rawPayload['categories'])
+            ? array_filter($rawPayload['categories'], 'is_string')
+            : [];
+        $this->rssCategoryMapper->enrich($entry, $categories);
 
         $normalizedTitle = $this->normalize($entry->getTitle());
         $normalizedContent = $this->normalize((string) $entry->getRawContent());

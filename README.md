@@ -290,6 +290,20 @@ Le profil d'interet de l'analyse de pertinence est dans `app/src/Service/EntryAn
 'deprioritize' => ['battle pass', 'microtransaction', 'loot box'],
 ```
 
+Les categories RSS `category` et `categorie` sont conservees dans `rawPayload.categories` et passent par `app/src/Service/RssCategoryMapper.php`.
+
+Mappings principaux :
+
+- `roman`, `romans`, `roman-vf`, `romans-vf`, `roman-vo`, `romans-vo`, `livre`, `livres`, `novel`, `novels`, `book`, `books` => type detecte `Roman SF` ;
+- `manga`, `comics`, `bd`, `bande dessinée` => type detecte `BD / manga / comics` ;
+- `anime`, `serie`, `series` => type detecte `Série` ;
+- `jeu vidéo`, `video game` => type detecte `Jeu vidéo` ;
+- `space opera` => tag `space-opera` ;
+- `transhumanisme` ou `transhumanism` => tag `transhumanisme` ;
+- `roman vf` / `romans vf` ajoutent le tag `vf`, `roman vo` / `romans vo` ajoutent le tag `vo`.
+
+Priorite : les categories RSS peuvent renseigner `detectedMediaType` seulement s'il est encore vide. Elles n'ecrasent pas une detection de media deja presente et ne modifient jamais le `mediaType` manuel.
+
 ## Synthèses manuelles
 
 La page `Synthèses` permet de générer manuellement une fiche récapitulative HTML imprimable.

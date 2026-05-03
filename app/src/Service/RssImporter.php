@@ -21,6 +21,7 @@ class RssImporter
         private readonly EntryRepository $entryRepository,
         private readonly EntryAnalyzer $entryAnalyzer,
         private readonly EntryTagDetector $entryTagDetector,
+        private readonly RssCategoryMapper $rssCategoryMapper,
     ) {
     }
 
@@ -82,6 +83,7 @@ class RssImporter
                     ->setPersonalTags(['rss']);
 
                 $this->entryTagDetector->detect($entry);
+                $this->rssCategoryMapper->enrich($entry, $item['categories']);
                 $this->entryAnalyzer->analyze($entry);
                 $this->entityManager->persist($entry);
                 ++$createdCount;
@@ -136,7 +138,8 @@ class RssImporter
      *     canonicalUrl: ?string,
      *     summary: ?string,
      *     publishedAt: ?\DateTimeImmutable,
-     *     rawPayload: array<string, ?string>
+     *     categories: array<int, string>,
+     *     rawPayload: array<string, mixed>
      * }>
      */
     private function parseFeed(string $content): array
@@ -177,6 +180,7 @@ class RssImporter
             $guid = $this->clean((string) $item->guid) ?: null;
             $publishedAt = $this->parseDate($this->clean((string) $item->pubDate) ?: null);
             $summary = $this->clean((string) ($item->description ?? '')) ?: null;
+            $categories = $this->extractCategories($item);
 
             $items[] = [
                 'title' => $title,
@@ -184,12 +188,14 @@ class RssImporter
                 'canonicalUrl' => $url,
                 'summary' => $summary,
                 'publishedAt' => $publishedAt,
+                'categories' => $categories,
                 'rawPayload' => [
                     'title' => $title,
                     'guid' => $guid,
                     'link' => $url,
                     'publishedAt' => $publishedAt?->format(\DateTimeInterface::ATOM),
                     'summary' => $summary,
+                    'categories' => $categories,
                 ],
             ];
         }
@@ -214,6 +220,7 @@ class RssImporter
                 ?: null,
             );
             $summary = $this->clean((string) ($entry->summary ?? $entry->content ?? '')) ?: null;
+            $categories = $this->extractCategories($entry);
 
             $items[] = [
                 'title' => $title,
@@ -221,17 +228,38 @@ class RssImporter
                 'canonicalUrl' => $url,
                 'summary' => $summary,
                 'publishedAt' => $publishedAt,
+                'categories' => $categories,
                 'rawPayload' => [
                     'title' => $title,
                     'id' => $externalId,
                     'link' => $url,
                     'publishedAt' => $publishedAt?->format(\DateTimeInterface::ATOM),
                     'summary' => $summary,
+                    'categories' => $categories,
                 ],
             ];
         }
 
         return $items;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractCategories(\SimpleXMLElement $node): array
+    {
+        $categories = [];
+
+        foreach (['category', 'categorie'] as $tagName) {
+            foreach ($node->{$tagName} as $category) {
+                $value = $this->clean((string) $category);
+                if ($value !== '') {
+                    $categories[] = $value;
+                }
+            }
+        }
+
+        return array_values(array_unique($categories));
     }
 
     private function extractAtomLink(\SimpleXMLElement $entry): ?string
