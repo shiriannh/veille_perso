@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Importer des sources - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Importer des sources</h1>
+            <p>Import transactionnel : si une ligne est invalide, aucune source n'est creee.</p>
+        </div>
+        <a class="button button-secondary" href="{{ path('app_source_index') }}">Retour</a>
+    </section>
+
+    <section class="section-block">
+        <h2>Format attendu</h2>
+        <div class="details">
+            <dt>Separateur</dt>
+            <dd>Point-virgule <code>;</code></dd>
+            <dt>Encodage</dt>
+            <dd>UTF-8, BOM UTF-8 tolere</dd>
+            <dt>En-tetes</dt>
+            <dd><code>name;type;url;isActive;fetchMode;feedUrl;notes</code></dd>
+            <dt>Valeurs enum</dt>
+            <dd><code>type</code> : website, rss, newsletter, youtube, podcast, social, other. <code>fetchMode</code> : manual, rss.</dd>
+            <dt>Booleen</dt>
+            <dd><code>isActive</code> : true, false, 1, 0, oui, non.</dd>
+        </div>
+    </section>
+
+    <section class="section-block">
+        <h2>Exemple</h2>
+        <pre class="code-sample"><code>name;type;url;isActive;fetchMode;feedUrl;notes
+Actu SF;rss;https://example.org;true;rss;https://example.org/feed.xml;Veille science-fiction
+Site manuel;website;https://example.net;true;manual;;A consulter ponctuellement</code></pre>
+    </section>
+
+    {% if errors is not empty %}
+        <section class="section-block">
+            <h2>Erreurs detectees</h2>
+            <div class="empty">
+                <p>Aucune source n'a ete importee.</p>
+                <ul>
+                    {% for error in errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </section>
+    {% endif %}
+
+    {{ form_start(form, {attr: {class: 'upload-form'}}) }}
+        {{ form_widget(form) }}
+        <div class="actions">
+            <button class="button">Importer le CSV</button>
+            <a class="button button-secondary" href="{{ path('app_source_index') }}">Annuler</a>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}

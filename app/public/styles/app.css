@@ -146,7 +146,8 @@ table,
 .details,
 form[name="source"],
 form[name="entry"],
-form[name="review"] {
+form[name="review"],
+.upload-form {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -273,10 +274,20 @@ tr:last-child td {
 
 form[name="source"],
 form[name="entry"],
-form[name="review"] {
+form[name="review"],
+.upload-form {
     display: grid;
     gap: 16px;
     padding: 20px;
+}
+
+.code-sample {
+    overflow-x: auto;
+    margin: 12px 0 0;
+    padding: 16px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--surface);
 }
 
 .inline-form {

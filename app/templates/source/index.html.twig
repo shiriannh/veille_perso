@@ -8,7 +8,10 @@
             <h1>Sources</h1>
             <p>Origines de veille à consulter ou à alimenter manuellement.</p>
         </div>
-        <a class="button" href="{{ path('app_source_new') }}">Nouvelle source</a>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_source_import_csv') }}">Importer un CSV</a>
+            <a class="button" href="{{ path('app_source_new') }}">Nouvelle source</a>
+        </div>
     </section>
 
     {% if sources is empty %}

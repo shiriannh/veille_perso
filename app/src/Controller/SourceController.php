@@ -4,10 +4,12 @@ namespace App\Controller;
 
 use App\Entity\Source;
 use App\Enum\FetchMode;
+use App\Form\SourceCsvImportType;
 use App\Form\SourceType;
 use App\Repository\ImportRunRepository;
 use App\Repository\SourceRepository;
 use App\Service\RssImporter;
+use App\Service\SourceCsvImporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -44,6 +46,32 @@ class SourceController extends AbstractController
         return $this->render('source/new.html.twig', [
             'source' => $source,
             'form' => $form,
+        ]);
+    }
+
+    #[Route('/import-csv', name: 'app_source_import_csv', methods: ['GET', 'POST'])]
+    public function importCsv(Request $request, SourceCsvImporter $sourceCsvImporter): Response
+    {
+        $form = $this->createForm(SourceCsvImportType::class);
+        $form->handleRequest($request);
+        $errors = [];
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $result = $sourceCsvImporter->import($form->get('file')->getData());
+
+            if (!$result->hasErrors()) {
+                $this->addFlash('success', sprintf('%d sources importees avec succes.', $result->importedCount()));
+
+                return $this->redirectToRoute('app_source_index');
+            }
+
+            $errors = $result->errors();
+            $this->addFlash('error', 'Import annule : le CSV contient des erreurs.');
+        }
+
+        return $this->render('source/import_csv.html.twig', [
+            'form' => $form,
+            'errors' => $errors,
         ]);
     }
 

@@ -151,6 +151,46 @@ Déduplication, par priorité :
 
 Si une entrée existante correspond à l’un de ces critères pour la même source, l’item est ignoré et compté dans `skippedCount`.
 
+## Import CSV des sources
+
+La page Sources propose un bouton `Importer un CSV`. L'import est strictement transactionnel : toutes les lignes sont validees avant insertion. Si une erreur est detectee, aucune source n'est creee.
+
+Format retenu :
+
+- encodage UTF-8, BOM UTF-8 tolere ;
+- separateur point-virgule `;` ;
+- premiere ligne obligatoire avec les en-tetes exacts :
+
+```csv
+name;type;url;isActive;fetchMode;feedUrl;notes
+```
+
+Exemple valide :
+
+```csv
+name;type;url;isActive;fetchMode;feedUrl;notes
+Actu SF;rss;https://example.org;true;rss;https://example.org/feed.xml;Veille science-fiction
+Site manuel;website;https://example.net;oui;manual;;A consulter ponctuellement
+```
+
+Valeurs autorisees :
+
+- `type` : `website`, `rss`, `newsletter`, `youtube`, `podcast`, `social`, `other` ;
+- `fetchMode` : `manual`, `rss` ;
+- `isActive` : `true`, `false`, `1`, `0`, `oui`, `non`, `yes`, `no`.
+
+Regles de validation :
+
+- `name` obligatoire ;
+- `url` et `feedUrl` doivent etre des URL valides si renseignees ;
+- si `fetchMode` vaut `rss`, `feedUrl` est obligatoire ;
+- si `fetchMode` ne vaut pas `rss`, `feedUrl` peut rester vide ;
+- les lignes vides sont ignorees ;
+- les valeurs texte sont nettoyees avec `trim` ;
+- les erreurs sont remontees avec numero de ligne.
+
+Regle de doublon : le nom de Source doit etre unique, sans tenir compte de la casse, a la fois dans le CSV et par rapport aux sources deja presentes en base.
+
 ## Analyse post-RSS
 
 La V1.4 ajoute une analyse simple apres import RSS. Le flux reste volontairement monolithique et lisible :
