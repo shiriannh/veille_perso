@@ -11,6 +11,53 @@
         <a class="button" href="{{ path('app_review_new') }}">Nouvelle fiche</a>
     </section>
 
+    <form method="get" class="filter-form">
+        <div>
+            <label for="verdict">Verdict</label>
+            <select id="verdict" name="verdict">
+                <option value="">Tous</option>
+                {% for verdict in verdicts %}
+                    <option value="{{ verdict.value }}" {{ filters.verdict == verdict.value ? 'selected' : '' }}>{{ verdict.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="source">Source</label>
+            <select id="source" name="source">
+                <option value="">Toutes</option>
+                {% for source in sources %}
+                    <option value="{{ source.id }}" {{ filters.source == source.id ? 'selected' : '' }}>{{ source.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="mediaType">Média</label>
+            <select id="mediaType" name="mediaType">
+                <option value="">Tous</option>
+                {% for media_type in media_types %}
+                    <option value="{{ media_type.value }}" {{ filters.mediaType == media_type.value ? 'selected' : '' }}>{{ media_type.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="minScore">Score min.</label>
+            <input id="minScore" type="number" name="minScore" min="0" max="100" value="{{ filters.minScore }}">
+        </div>
+        <div>
+            <label for="sort">Tri</label>
+            <select id="sort" name="sort">
+                <option value="">Modification récente</option>
+                <option value="updated_asc" {{ filters.sort == 'updated_asc' ? 'selected' : '' }}>Modification ancienne</option>
+                <option value="score_desc" {{ filters.sort == 'score_desc' ? 'selected' : '' }}>Score décroissant</option>
+                <option value="score_asc" {{ filters.sort == 'score_asc' ? 'selected' : '' }}>Score croissant</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="button">Filtrer</button>
+            <a class="button button-secondary" href="{{ path('app_review_index') }}">Réinitialiser</a>
+        </div>
+    </form>
+
     {% if reviews is empty %}
         <p class="empty">Aucune fiche enregistrée.</p>
     {% else %}

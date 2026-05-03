@@ -16,8 +16,8 @@
 
     <section class="metric-grid" aria-label="Indicateurs">
         <article class="metric">
-            <span>Sources</span>
-            <strong>{{ source_count }}</strong>
+            <span>Sources actives</span>
+            <strong>{{ active_source_count }}/{{ source_count }}</strong>
         </article>
         <article class="metric">
             <span>Entrées</span>
@@ -36,20 +36,66 @@
     <section class="two-columns">
         <div>
             <div class="section-title">
-                <h2>Dernières entrées</h2>
-                <a href="{{ path('app_entry_index') }}">Tout voir</a>
+                <h2>Dernières entrées importées</h2>
+                <a href="{{ path('app_entry_index', {sort: 'imported_desc'}) }}">Tout voir</a>
             </div>
-            {% if latest_entries is empty %}
-                <p class="empty">Aucune entrée pour le moment.</p>
+            {% if latest_imported_entries is empty %}
+                <p class="empty">Aucune entrée importée pour le moment.</p>
             {% else %}
                 <div class="list">
-                    {% for entry in latest_entries %}
+                    {% for entry in latest_imported_entries %}
+                        <a class="list-row" href="{{ path('app_entry_show', {id: entry.id}) }}">
+                            <span>
+                                <strong>{{ entry.title }}</strong>
+                                <small>{{ entry.source.name }} · importée le {{ entry.importedAt|date('d/m/Y H:i') }}</small>
+                            </span>
+                            <span class="badge">{{ entry.status.label() }}</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="section-title">
+                <h2>Entrées sans fiche</h2>
+                <a href="{{ path('app_entry_index', {reviewState: 'without'}) }}">Tout voir</a>
+            </div>
+            {% if unreviewed_entries is empty %}
+                <p class="empty">Aucune entrée à ficher.</p>
+            {% else %}
+                <div class="list">
+                    {% for entry in unreviewed_entries %}
                         <a class="list-row" href="{{ path('app_entry_show', {id: entry.id}) }}">
                             <span>
                                 <strong>{{ entry.title }}</strong>
                                 <small>{{ entry.mediaType.label() }} · {{ entry.source.name }}</small>
                             </span>
-                            <span class="badge">{{ entry.status.label() }}</span>
+                            <span class="badge badge-muted">À ficher</span>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="two-columns section-block">
+        <div>
+            <div class="section-title">
+                <h2>Imports en erreur</h2>
+                <a href="{{ path('app_import_run_index') }}">Tout voir</a>
+            </div>
+            {% if sources_with_errors is empty %}
+                <p class="empty">Aucun import en erreur.</p>
+            {% else %}
+                <div class="list">
+                    {% for source in sources_with_errors %}
+                        <a class="list-row" href="{{ path('app_source_show', {id: source.id}) }}">
+                            <span>
+                                <strong>{{ source.name }}</strong>
+                                <small>{{ source.lastErrorAt|date('d/m/Y H:i') }} · {{ source.lastErrorMessage }}</small>
+                            </span>
+                            <span class="badge badge-muted">Erreur</span>
                         </a>
                     {% endfor %}
                 </div>

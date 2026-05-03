@@ -12,6 +12,7 @@
             <a class="button" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
             {% if entry.review %}
                 <a class="button button-secondary" href="{{ path('app_review_show', {id: entry.review.id}) }}">Voir la fiche</a>
+                <a class="button button-secondary" href="{{ path('app_review_edit', {id: entry.review.id}) }}">Modifier la fiche</a>
             {% else %}
                 <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Créer une fiche</a>
             {% endif %}

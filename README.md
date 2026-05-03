@@ -6,6 +6,8 @@ La V1 reste volontairement simple : Symfony rend les pages HTML avec Twig, Postg
 
 La V1.2 ajoute uniquement l’import RSS manuel : une source configurée avec une URL de flux peut être importée à la demande, sans worker, sans scraping HTML et sans API.
 
+La V1.3 consolide l’exploitation quotidienne : filtres et tris sur les listes, dashboard plus utile, historique d’import filtrable, workflow Entry vers Review plus visible et suppressions plus sûres.
+
 ## Stack
 
 - Symfony 7.4
@@ -137,6 +139,7 @@ docker compose exec app php bin/console app:import-sources
 ```
 
 L’interface HTML propose aussi un bouton “Importer” sur la page d’une source RSS.
+La page “Imports” propose un bouton global équivalent à `app:import-sources`.
 
 Déduplication, par priorité :
 
@@ -145,6 +148,33 @@ Déduplication, par priorité :
 3. Hash métier `sourceHash` : titre normalisé + URL canonique + date de publication.
 
 Si une entrée existante correspond à l’un de ces critères pour la même source, l’item est ignoré et compté dans `skippedCount`.
+
+## Consultation quotidienne
+
+La liste des entrées accepte des filtres transmis en query string :
+
+- recherche texte sur le titre ;
+- source ;
+- type de média ;
+- statut ;
+- niveau d’intérêt ;
+- présence ou absence de fiche ;
+- tri par date de publication ou date d’import.
+
+La liste des fiches accepte aussi des filtres par verdict, score minimum, type de média, source et tri par score ou date de modification.
+
+Le tableau de bord affiche les compteurs principaux, les dernières entrées importées, les entrées sans fiche, les dernières fiches modifiées et les sources dont le dernier import est en erreur.
+
+## Suppressions
+
+Les suppressions passent par un formulaire POST avec token CSRF et confirmation navigateur.
+
+Règles métier :
+
+- une `Source` qui possède encore des `Entry` ne peut pas être supprimée ;
+- une `Entry` liée à une `Review` ne peut pas être supprimée ;
+- une `Review` peut être supprimée seule ;
+- il n’y a pas de cascade silencieuse Entry vers Review.
 
 ## Statuts et verdicts
 

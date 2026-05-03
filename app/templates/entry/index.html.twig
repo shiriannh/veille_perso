@@ -11,6 +11,71 @@
         <a class="button" href="{{ path('app_entry_new') }}">Nouvelle entrée</a>
     </section>
 
+    <form method="get" class="filter-form">
+        <div>
+            <label for="q">Recherche</label>
+            <input id="q" type="search" name="q" value="{{ filters.q }}" placeholder="Titre">
+        </div>
+        <div>
+            <label for="source">Source</label>
+            <select id="source" name="source">
+                <option value="">Toutes</option>
+                {% for source in sources %}
+                    <option value="{{ source.id }}" {{ filters.source == source.id ? 'selected' : '' }}>{{ source.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="mediaType">Média</label>
+            <select id="mediaType" name="mediaType">
+                <option value="">Tous</option>
+                {% for media_type in media_types %}
+                    <option value="{{ media_type.value }}" {{ filters.mediaType == media_type.value ? 'selected' : '' }}>{{ media_type.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="status">Statut</label>
+            <select id="status" name="status">
+                <option value="">Tous</option>
+                {% for status in statuses %}
+                    <option value="{{ status.value }}" {{ filters.status == status.value ? 'selected' : '' }}>{{ status.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="interestLevel">Intérêt</label>
+            <select id="interestLevel" name="interestLevel">
+                <option value="">Tous</option>
+                {% for level in 0..5 %}
+                    <option value="{{ level }}" {{ filters.interestLevel is same as(level) ? 'selected' : '' }}>{{ level }}/5</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="reviewState">Fiche</label>
+            <select id="reviewState" name="reviewState">
+                <option value="">Toutes</option>
+                <option value="with" {{ filters.reviewState == 'with' ? 'selected' : '' }}>Avec fiche</option>
+                <option value="without" {{ filters.reviewState == 'without' ? 'selected' : '' }}>Sans fiche</option>
+            </select>
+        </div>
+        <div>
+            <label for="sort">Tri</label>
+            <select id="sort" name="sort">
+                <option value="">Création récente</option>
+                <option value="published_desc" {{ filters.sort == 'published_desc' ? 'selected' : '' }}>Publication récente</option>
+                <option value="published_asc" {{ filters.sort == 'published_asc' ? 'selected' : '' }}>Publication ancienne</option>
+                <option value="imported_desc" {{ filters.sort == 'imported_desc' ? 'selected' : '' }}>Import récent</option>
+                <option value="imported_asc" {{ filters.sort == 'imported_asc' ? 'selected' : '' }}>Import ancien</option>
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="button">Filtrer</button>
+            <a class="button button-secondary" href="{{ path('app_entry_index') }}">Réinitialiser</a>
+        </div>
+    </form>
+
     {% if entries is empty %}
         <p class="empty">Aucune entrée enregistrée.</p>
     {% else %}
@@ -36,12 +101,17 @@
                         <td>{{ entry.interestLevel }}/5</td>
                         <td>
                             {% if entry.review %}
-                                <a href="{{ path('app_review_show', {id: entry.review.id}) }}">Voir</a>
+                                <span class="badge">Fichée</span>
                             {% else %}
-                                <a href="{{ path('app_review_new', {entry: entry.id}) }}">Créer</a>
+                                <span class="badge badge-muted">À ficher</span>
                             {% endif %}
                         </td>
                         <td class="table-actions">
+                            {% if entry.review %}
+                                <a class="button button-secondary" href="{{ path('app_review_edit', {id: entry.review.id}) }}">Review</a>
+                            {% else %}
+                                <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Créer review</a>
+                            {% endif %}
                             <a class="button button-secondary" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
                             {{ include('entry/_delete_form.html.twig') }}
                         </td>

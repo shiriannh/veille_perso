@@ -293,6 +293,32 @@ form[name="review"] {
     margin-top: 32px;
 }
 
+.filter-form {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+}
+
+.filter-form-small {
+    grid-template-columns: minmax(220px, 1fr) auto;
+}
+
+.filter-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+}
+
+.badge-muted {
+    background: #f2f0eb;
+    color: var(--muted);
+}
+
 label {
     display: block;
     margin-bottom: 6px;
@@ -351,7 +377,8 @@ input[type="checkbox"] {
     }
 
     .metric-grid,
-    .two-columns {
+    .two-columns,
+    .filter-form {
         grid-template-columns: 1fr;
     }
 

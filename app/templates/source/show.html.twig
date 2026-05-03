@@ -67,7 +67,7 @@
     <section class="section-block">
         <div class="section-title">
             <h2>Historique d’import</h2>
-            <a href="{{ path('app_import_run_index') }}">Tout voir</a>
+            <a href="{{ path('app_import_run_index', {source: source.id}) }}">Tout voir</a>
         </div>
         {% if import_runs is empty %}
             <p class="empty">Aucun import lancé pour cette source.</p>

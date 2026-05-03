@@ -41,4 +41,26 @@ class SourceRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function countActive(): int
+    {
+        return (int) $this->createQueryBuilder('source')
+            ->select('COUNT(source.id)')
+            ->andWhere('source.isActive = true')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * @return Source[]
+     */
+    public function findWithLastImportError(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('source')
+            ->andWhere('source.lastErrorAt IS NOT NULL')
+            ->orderBy('source.lastErrorAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }

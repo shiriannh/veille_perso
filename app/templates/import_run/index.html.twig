@@ -14,6 +14,22 @@
         </form>
     </section>
 
+    <form method="get" class="filter-form filter-form-small">
+        <div>
+            <label for="source">Source</label>
+            <select id="source" name="source">
+                <option value="">Toutes</option>
+                {% for source in sources %}
+                    <option value="{{ source.id }}" {{ filters.source == source.id ? 'selected' : '' }}>{{ source.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-actions">
+            <button class="button">Filtrer</button>
+            <a class="button button-secondary" href="{{ path('app_import_run_index') }}">Réinitialiser</a>
+        </div>
+    </form>
+
     {% if runs is empty %}
         <p class="empty">Aucun import lancé.</p>
     {% else %}
@@ -21,6 +37,7 @@
             <thead>
                 <tr>
                     <th>Démarré</th>
+                    <th>Terminé</th>
                     <th>Source</th>
                     <th>Statut</th>
                     <th>Récupérés</th>
@@ -33,12 +50,13 @@
                 {% for run in runs %}
                     <tr>
                         <td>{{ run.startedAt|date('d/m/Y H:i') }}</td>
+                        <td>{{ run.finishedAt ? run.finishedAt|date('d/m/Y H:i') : '-' }}</td>
                         <td><a href="{{ path('app_source_show', {id: run.source.id}) }}">{{ run.source.name }}</a></td>
                         <td><span class="badge">{{ run.status.label() }}</span></td>
                         <td>{{ run.fetchedCount }}</td>
                         <td>{{ run.createdCount }}</td>
                         <td>{{ run.skippedCount }}</td>
-                        <td>{{ run.errorMessage|default('-') }}</td>
+                        <td>{{ run.errorMessage ? run.errorMessage : '-' }}</td>
                     </tr>
                 {% endfor %}
             </tbody>

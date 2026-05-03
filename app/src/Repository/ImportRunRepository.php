@@ -34,6 +34,26 @@ class ImportRunRepository extends ServiceEntityRepository
     /**
      * @return ImportRun[]
      */
+    public function findLatestFiltered(?Source $source = null, int $limit = 50): array
+    {
+        $queryBuilder = $this->createQueryBuilder('run')
+            ->leftJoin('run.source', 'source')
+            ->addSelect('source')
+            ->orderBy('run.startedAt', 'DESC')
+            ->setMaxResults($limit);
+
+        if ($source !== null) {
+            $queryBuilder
+                ->andWhere('run.source = :source')
+                ->setParameter('source', $source);
+        }
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * @return ImportRun[]
+     */
     public function findLatestForSource(Source $source, int $limit = 20): array
     {
         return $this->createQueryBuilder('run')

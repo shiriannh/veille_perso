@@ -79,7 +79,7 @@ class Entry
     #[ORM\Column(type: Types::JSON)]
     private array $personalTags = [];
 
-    #[ORM\OneToOne(mappedBy: 'entry', targetEntity: Review::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(mappedBy: 'entry', targetEntity: Review::class, cascade: ['persist'])]
     private ?Review $review = null;
 
     #[ORM\Column]

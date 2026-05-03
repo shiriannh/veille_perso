@@ -14,10 +14,16 @@ use Symfony\Component\Routing\Attribute\Route;
 class ImportRunController extends AbstractController
 {
     #[Route('', name: 'app_import_run_index', methods: ['GET'])]
-    public function index(ImportRunRepository $importRunRepository): Response
+    public function index(Request $request, ImportRunRepository $importRunRepository, SourceRepository $sourceRepository): Response
     {
+        $source = $request->query->getInt('source') > 0 ? $sourceRepository->find($request->query->getInt('source')) : null;
+
         return $this->render('import_run/index.html.twig', [
-            'runs' => $importRunRepository->findLatest(),
+            'runs' => $importRunRepository->findLatestFiltered($source),
+            'sources' => $sourceRepository->findAllOrdered(),
+            'filters' => [
+                'source' => $source?->getId(),
+            ],
         ]);
     }
 

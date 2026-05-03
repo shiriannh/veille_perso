@@ -18,7 +18,7 @@ class Review
     private ?int $id = null;
 
     #[ORM\OneToOne(inversedBy: 'review')]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(nullable: false)]
     private ?Entry $entry = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]

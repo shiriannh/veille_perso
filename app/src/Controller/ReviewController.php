@@ -3,9 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Review;
+use App\Enum\MediaType;
+use App\Enum\ReviewVerdict;
 use App\Form\ReviewType;
 use App\Repository\EntryRepository;
 use App\Repository\ReviewRepository;
+use App\Repository\SourceRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -16,10 +19,38 @@ use Symfony\Component\Routing\Attribute\Route;
 class ReviewController extends AbstractController
 {
     #[Route('', name: 'app_review_index', methods: ['GET'])]
-    public function index(ReviewRepository $reviewRepository): Response
+    public function index(Request $request, ReviewRepository $reviewRepository, SourceRepository $sourceRepository): Response
     {
+        $verdict = ReviewVerdict::tryFrom((string) $request->query->get('verdict'));
+        $mediaType = MediaType::tryFrom((string) $request->query->get('mediaType'));
+        $source = $request->query->getInt('source') > 0 ? $sourceRepository->find($request->query->getInt('source')) : null;
+        $minScore = $request->query->has('minScore') && $request->query->get('minScore') !== ''
+            ? max(0, min(100, $request->query->getInt('minScore')))
+            : null;
+        $sort = in_array($request->query->get('sort'), ['updated_desc', 'updated_asc', 'score_desc', 'score_asc'], true)
+            ? (string) $request->query->get('sort')
+            : null;
+
+        $filters = [
+            'verdict' => $verdict,
+            'mediaType' => $mediaType,
+            'source' => $source,
+            'minScore' => $minScore,
+            'sort' => $sort,
+        ];
+
         return $this->render('review/index.html.twig', [
-            'reviews' => $reviewRepository->findBy([], ['updatedAt' => 'DESC']),
+            'reviews' => $reviewRepository->findFiltered($filters),
+            'sources' => $sourceRepository->findAllOrdered(),
+            'media_types' => MediaType::cases(),
+            'verdicts' => ReviewVerdict::cases(),
+            'filters' => [
+                'verdict' => $verdict?->value,
+                'mediaType' => $mediaType?->value,
+                'source' => $source?->getId(),
+                'minScore' => $minScore,
+                'sort' => $sort ?? '',
+            ],
         ]);
     }
 

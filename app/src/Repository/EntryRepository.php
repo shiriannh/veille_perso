@@ -4,6 +4,8 @@ namespace App\Repository;
 
 use App\Entity\Entry;
 use App\Entity\Source;
+use App\Enum\EntryStatus;
+use App\Enum\MediaType;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -39,6 +41,107 @@ class EntryRepository extends ServiceEntityRepository
             ->andWhere('review.id IS NULL')
             ->getQuery()
             ->getSingleScalarResult();
+    }
+
+    /**
+     * @param array{
+     *     q?: ?string,
+     *     source?: ?Source,
+     *     mediaType?: ?MediaType,
+     *     status?: ?EntryStatus,
+     *     interestLevel?: ?int,
+     *     reviewState?: ?string,
+     *     sort?: ?string
+     * } $filters
+     *
+     * @return Entry[]
+     */
+    public function findFiltered(array $filters): array
+    {
+        $queryBuilder = $this->createQueryBuilder('entry')
+            ->leftJoin('entry.source', 'source')
+            ->addSelect('source')
+            ->leftJoin('entry.review', 'review')
+            ->addSelect('review');
+
+        if (($filters['q'] ?? null) !== null && trim((string) $filters['q']) !== '') {
+            $queryBuilder
+                ->andWhere('LOWER(entry.title) LIKE :query')
+                ->setParameter('query', '%'.mb_strtolower(trim((string) $filters['q'])).'%');
+        }
+
+        if (($filters['source'] ?? null) instanceof Source) {
+            $queryBuilder
+                ->andWhere('entry.source = :sourceFilter')
+                ->setParameter('sourceFilter', $filters['source']);
+        }
+
+        if (($filters['mediaType'] ?? null) instanceof MediaType) {
+            $queryBuilder
+                ->andWhere('entry.mediaType = :mediaType')
+                ->setParameter('mediaType', $filters['mediaType']);
+        }
+
+        if (($filters['status'] ?? null) instanceof EntryStatus) {
+            $queryBuilder
+                ->andWhere('entry.status = :status')
+                ->setParameter('status', $filters['status']);
+        }
+
+        if (($filters['interestLevel'] ?? null) !== null) {
+            $queryBuilder
+                ->andWhere('entry.interestLevel = :interestLevel')
+                ->setParameter('interestLevel', $filters['interestLevel']);
+        }
+
+        if (($filters['reviewState'] ?? null) === 'with') {
+            $queryBuilder->andWhere('review.id IS NOT NULL');
+        }
+
+        if (($filters['reviewState'] ?? null) === 'without') {
+            $queryBuilder->andWhere('review.id IS NULL');
+        }
+
+        match ($filters['sort'] ?? null) {
+            'published_asc' => $queryBuilder->orderBy('entry.publishedAt', 'ASC')->addOrderBy('entry.createdAt', 'DESC'),
+            'published_desc' => $queryBuilder->orderBy('entry.publishedAt', 'DESC')->addOrderBy('entry.createdAt', 'DESC'),
+            'imported_asc' => $queryBuilder->orderBy('entry.importedAt', 'ASC')->addOrderBy('entry.createdAt', 'DESC'),
+            'imported_desc' => $queryBuilder->orderBy('entry.importedAt', 'DESC')->addOrderBy('entry.createdAt', 'DESC'),
+            default => $queryBuilder->orderBy('entry.createdAt', 'DESC'),
+        };
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * @return Entry[]
+     */
+    public function findLatestImported(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('entry')
+            ->leftJoin('entry.source', 'source')
+            ->addSelect('source')
+            ->andWhere('entry.importedAt IS NOT NULL')
+            ->orderBy('entry.importedAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Entry[]
+     */
+    public function findWithoutReview(int $limit = 5): array
+    {
+        return $this->createQueryBuilder('entry')
+            ->leftJoin('entry.source', 'source')
+            ->addSelect('source')
+            ->leftJoin('entry.review', 'review')
+            ->andWhere('review.id IS NULL')
+            ->orderBy('entry.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 
     public function findImportedDuplicate(Source $source, ?string $externalId, ?string $canonicalUrl, string $sourceHash): ?Entry
