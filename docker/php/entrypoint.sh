@@ -3,7 +3,7 @@ set -e
 
 cd /var/www/app
 
-if [ ! -d vendor ]; then
+if [ ! -f vendor/autoload_runtime.php ]; then
     composer install --no-interaction --prefer-dist
 fi
 
