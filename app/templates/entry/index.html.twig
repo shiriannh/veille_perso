@@ -42,7 +42,7 @@
                             {% endif %}
                         </td>
                         <td class="table-actions">
-                            <a href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
+                            <a class="button button-secondary" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
                             {{ include('entry/_delete_form.html.twig') }}
                         </td>
                     </tr>

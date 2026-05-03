@@ -36,7 +36,7 @@
                         <td>{{ source.active ? 'Oui' : 'Non' }}</td>
                         <td>{{ source.entries|length }}</td>
                         <td class="table-actions">
-                            <a href="{{ path('app_source_edit', {id: source.id}) }}">Modifier</a>
+                            <a class="button button-secondary" href="{{ path('app_source_edit', {id: source.id}) }}">Modifier</a>
                             {{ include('source/_delete_form.html.twig') }}
                         </td>
                     </tr>
