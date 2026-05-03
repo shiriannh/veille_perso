@@ -8,6 +8,7 @@ use App\Enum\ReviewVerdict;
 use App\Repository\EntryRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
@@ -68,6 +69,14 @@ class ReviewType extends AbstractType
                 'label' => 'Score (0-100)',
                 'required' => false,
                 'attr' => ['min' => 0, 'max' => 100],
+            ])
+            ->add('isDraft', CheckboxType::class, [
+                'label' => 'Brouillon',
+                'required' => false,
+            ])
+            ->add('isAutoCreated', CheckboxType::class, [
+                'label' => 'Créée automatiquement',
+                'required' => false,
             ]);
     }
 

@@ -185,6 +185,8 @@
                         <td>
                             {% if entry.review %}
                                 <span class="badge">Fichée</span>
+                                {% if entry.review.draft %}<span class="badge badge-muted">Brouillon</span>{% endif %}
+                                {% if entry.review.autoCreated %}<span class="badge badge-muted">Auto</span>{% endif %}
                             {% else %}
                                 <span class="badge badge-muted">À ficher</span>
                             {% endif %}

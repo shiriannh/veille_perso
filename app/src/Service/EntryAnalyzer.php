@@ -113,6 +113,9 @@ class EntryAnalyzer
         private readonly OptionalAiEntryAnalyzer $aiAnalyzer,
         private readonly EntryTagDetector $entryTagDetector,
         private readonly RssCategoryMapper $rssCategoryMapper,
+        private readonly AutoTagEnricher $autoTagEnricher,
+        private readonly InterestLevelCalculator $interestLevelCalculator,
+        private readonly DraftReviewCreator $draftReviewCreator,
     ) {
     }
 
@@ -195,6 +198,10 @@ class EntryAnalyzer
             ->setClickbaitSignals($clickbaitSignals)
             ->setAnalysisVersion(self::VERSION)
             ->setAnalyzedAt(new \DateTimeImmutable());
+
+        $entry->setInterestLevel($this->interestLevelCalculator->calculate($entry));
+        $this->autoTagEnricher->enrich($entry, array_merge($categories, $entry->getDetectedTags()));
+        $this->draftReviewCreator->createIfNeeded($entry);
 
         if ($aiResult !== null) {
             $entry
@@ -449,22 +456,22 @@ class EntryAnalyzer
             return $suggestedDecision;
         }
 
-        if ($clickbaitLevel === ClickbaitLevel::Clickbait && $relevanceScore < 52) {
+        if ($clickbaitLevel === ClickbaitLevel::Clickbait && $relevanceScore < 45 && $sourceProfileBonus === 0) {
             return AnalysisDecision::Clickbait;
         }
 
-        if ($relevanceScore >= 66 && $editorialQualityScore >= 40) {
+        if ($relevanceScore >= 62 && $editorialQualityScore >= 38) {
             return AnalysisDecision::Relevant;
         }
 
-        if (count($negativeMatches) >= 3 && $relevanceScore < 60 && $sourceProfileBonus === 0) {
+        if (count($negativeMatches) >= 4 && $relevanceScore < 48 && $sourceProfileBonus === 0) {
             return AnalysisDecision::Ignored;
         }
 
         if (
-            $relevanceScore >= $this->profile->minimumRelevanceScore()
+            $relevanceScore >= max(35, $this->profile->minimumRelevanceScore() - 8)
             || ($mediaScore >= 58 && $thematicScore >= 35)
-            || ($sourceProfileBonus >= 20 && $mediaScore >= 45)
+            || ($sourceProfileBonus >= 20 && $mediaScore >= 38)
         ) {
             return AnalysisDecision::MaybeRelevant;
         }

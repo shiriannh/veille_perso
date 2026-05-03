@@ -78,7 +78,11 @@
                 {% for review in reviews %}
                     <tr>
                         <td><a href="{{ path('app_review_show', {id: review.id}) }}">{{ review.entry.title }}</a></td>
-                        <td><span class="badge">{{ review.verdict.label() }}</span></td>
+                        <td>
+                            <span class="badge">{{ review.verdict.label() }}</span>
+                            {% if review.draft %}<span class="badge badge-muted">Brouillon</span>{% endif %}
+                            {% if review.autoCreated %}<span class="badge badge-muted">Auto</span>{% endif %}
+                        </td>
                         <td>{{ review.score is not null ? review.score ~ '/100' : '-' }}</td>
                         <td>{{ review.updatedAt|date('d/m/Y H:i') }}</td>
                         <td class="table-actions">

@@ -23,6 +23,11 @@
         <dd>{{ review.weaknesses|default('Non renseignés')|nl2br }}</dd>
         <dt>Note personnelle</dt>
         <dd>{{ review.personalNote|default('Aucune note')|nl2br }}</dd>
+        <dt>Etat</dt>
+        <dd>
+            {% if review.draft %}<span class="badge badge-muted">Brouillon</span>{% else %}<span class="badge">Fiche active</span>{% endif %}
+            {% if review.autoCreated %}<span class="badge badge-muted">Créée automatiquement</span>{% endif %}
+        </dd>
         <dt>Créée le</dt>
         <dd>{{ review.createdAt|date('d/m/Y H:i') }}</dd>
         <dt>Mise à jour le</dt>

@@ -41,6 +41,12 @@ class Review
     private ?int $score = null;
 
     #[ORM\Column]
+    private bool $isDraft = false;
+
+    #[ORM\Column]
+    private bool $isAutoCreated = false;
+
+    #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column]
@@ -136,6 +142,30 @@ class Review
     public function setScore(?int $score): self
     {
         $this->score = $score;
+
+        return $this;
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->isDraft;
+    }
+
+    public function setIsDraft(bool $isDraft): self
+    {
+        $this->isDraft = $isDraft;
+
+        return $this;
+    }
+
+    public function isAutoCreated(): bool
+    {
+        return $this->isAutoCreated;
+    }
+
+    public function setIsAutoCreated(bool $isAutoCreated): self
+    {
+        $this->isAutoCreated = $isAutoCreated;
 
         return $this;
     }

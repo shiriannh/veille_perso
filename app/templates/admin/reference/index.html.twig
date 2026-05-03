@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ label }} - Admin{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>{{ label }}</h1>
+            <p>Référentiel administrable. La désactivation est préférée à la suppression.</p>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_admin_index') }}">Admin</a>
+            <a class="button" href="{{ path('app_admin_reference_new', {type: type}) }}">Nouvelle référence</a>
+        </div>
+    </section>
+
+    {% if items is empty %}
+        <p class="empty">Aucune référence.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Slug</th>
+                    <th>Statut</th>
+                    <th>Description</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.name }}</td>
+                        <td><code>{{ item.slug }}</code></td>
+                        <td><span class="badge {{ item.active ? '' : 'badge-muted' }}">{{ item.active ? 'Actif' : 'Inactif' }}</span></td>
+                        <td>{{ item.description|default('-') }}</td>
+                        <td class="table-actions">
+                            <a class="button button-secondary" href="{{ path('app_admin_reference_edit', {type: type, id: item.id}) }}">Modifier</a>
+                            {% if item.active %}
+                                <form method="post" action="{{ path('app_admin_reference_disable', {type: type, id: item.id}) }}" class="inline-form" onsubmit="return confirm('Désactiver cette référence ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('disable_reference_' ~ type ~ '_' ~ item.id) }}">
+                                    <button class="button button-danger">Désactiver</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

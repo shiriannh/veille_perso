@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tag - Admin{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>{{ tag.id ? 'Modifier' : 'Créer' }} un tag</h1>
+            <p>Les tags auto-générés peuvent rester inactifs jusqu'à validation.</p>
+        </div>
+    </section>
+
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <div class="actions">
+            <button class="button">Enregistrer</button>
+            <a class="button button-secondary" href="{{ path('app_admin_tag_index') }}">Annuler</a>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}

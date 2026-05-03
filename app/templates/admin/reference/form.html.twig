@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ label }} - Admin{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>{{ item.id ? 'Modifier' : 'Créer' }} une référence</h1>
+            <p>{{ label }}</p>
+        </div>
+    </section>
+
+    {{ form_start(form) }}
+        {{ form_widget(form) }}
+        <div class="actions">
+            <button class="button">Enregistrer</button>
+            <a class="button button-secondary" href="{{ path('app_admin_reference_index', {type: type}) }}">Annuler</a>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Admin</h1>
+            <p>Tables de référence utilisées par l'analyse et les formulaires.</p>
+        </div>
+    </section>
+
+    <div class="metric-grid">
+        {% for section in sections %}
+            <a class="metric" href="{{ path(section.route, section.params) }}">
+                <span>{{ section.class|split('\\\\')|last }}</span>
+                <strong>{{ section.label }}</strong>
+            </a>
+        {% endfor %}
+    </div>
+{% endblock %}

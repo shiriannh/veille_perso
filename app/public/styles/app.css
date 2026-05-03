@@ -148,6 +148,8 @@ form[name="source"],
 form[name="entry"],
 form[name="review"],
 form[name="synthesis_report_generate"],
+form[name="reference_value"],
+form[name="tag"],
 .upload-form {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -277,6 +279,8 @@ form[name="source"],
 form[name="entry"],
 form[name="review"],
 form[name="synthesis_report_generate"],
+form[name="reference_value"],
+form[name="tag"],
 .upload-form {
     display: grid;
     gap: 16px;
