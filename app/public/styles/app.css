@@ -240,6 +240,10 @@ tr:last-child td {
 }
 
 .table-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 10px;
     text-align: right;
 }
 
@@ -277,6 +281,12 @@ form[name="review"] {
 
 .inline-form {
     display: inline-flex;
+}
+
+.table-actions .button {
+    min-height: 30px;
+    padding: 5px 10px;
+    font-size: .9rem;
 }
 
 .section-block {

@@ -1,4 +1,4 @@
-<form method="post" action="{{ path('app_entry_delete', {id: entry.id}) }}" onsubmit="return confirm('Supprimer cette entrée et sa fiche éventuelle ?');">
+<form class="inline-form" method="post" action="{{ path('app_entry_delete', {id: entry.id}) }}" onsubmit="return confirm('Supprimer cette entrée et sa fiche éventuelle ?');">
     <input type="hidden" name="_token" value="{{ csrf_token('delete_entry_' ~ entry.id) }}">
     <button class="button button-danger">Supprimer</button>
 </form>

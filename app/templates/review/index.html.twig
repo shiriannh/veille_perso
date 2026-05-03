@@ -33,6 +33,7 @@
                         <td>{{ review.updatedAt|date('d/m/Y H:i') }}</td>
                         <td class="table-actions">
                             <a href="{{ path('app_review_edit', {id: review.id}) }}">Modifier</a>
+                            {{ include('review/_delete_form.html.twig') }}
                         </td>
                     </tr>
                 {% endfor %}
