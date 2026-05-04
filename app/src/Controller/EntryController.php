@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\AnalysisCorrection;
 use App\Entity\Entry;
 use App\Enum\AnalysisDecision;
 use App\Enum\ClickbaitLevel;
@@ -144,7 +145,120 @@ class EntryController extends AbstractController
     {
         return $this->render('entry/show.html.twig', [
             'entry' => $entry,
+            'media_types' => MediaType::cases(),
+            'decisions' => AnalysisDecision::cases(),
         ]);
+    }
+
+    #[Route('/{id}/correct-media', name: 'app_entry_correct_media', methods: ['POST'])]
+    public function correctMedia(
+        Request $request,
+        Entry $entry,
+        ReferenceFieldSynchronizer $referenceFieldSynchronizer,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        if (!$this->isCsrfTokenValid('correct_entry_media_'.$entry->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, correction non enregistree.');
+
+            return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+        }
+
+        $mediaType = MediaType::tryFrom((string) $request->request->get('mediaType'));
+        if (!$mediaType instanceof MediaType) {
+            $this->addFlash('error', 'Media final invalide.');
+
+            return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+        }
+
+        $oldValue = [
+            'mediaType' => $entry->getMediaType()->value,
+            'origin' => $entry->getMediaTypeOrigin(),
+        ];
+        $entry
+            ->setMediaType($mediaType)
+            ->setMediaTypeOrigin('manual')
+            ->setMediaDetectionConfidence(100);
+        $this->appendManualSignal($entry, sprintf('correction manuelle media: %s', $mediaType->value));
+        $referenceFieldSynchronizer->syncEntryToReferences($entry);
+
+        $this->recordCorrection($entry, 'media_type', $oldValue, [
+            'mediaType' => $mediaType->value,
+            'origin' => 'manual',
+        ], $request, $entityManager);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Media final corrige. Les promotions automatiques ne l ecraseront plus.');
+
+        return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+    }
+
+    #[Route('/{id}/correct-decision', name: 'app_entry_correct_decision', methods: ['POST'])]
+    public function correctDecision(
+        Request $request,
+        Entry $entry,
+        ReferenceFieldSynchronizer $referenceFieldSynchronizer,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        if (!$this->isCsrfTokenValid('correct_entry_decision_'.$entry->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, correction non enregistree.');
+
+            return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+        }
+
+        $decision = AnalysisDecision::tryFrom((string) $request->request->get('decision'));
+        if (!$decision instanceof AnalysisDecision) {
+            $this->addFlash('error', 'Decision invalide.');
+
+            return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+        }
+
+        $oldValue = [
+            'decision' => $entry->getDecision()?->value,
+            'decisionReason' => $entry->getDecisionReason(),
+        ];
+        $reason = trim((string) $request->request->get('reason'));
+        $entry->setDecision($decision);
+        if ($reason !== '') {
+            $entry->setDecisionReason(trim(($entry->getDecisionReason() ?? '')."\nCorrection manuelle: ".$reason));
+        }
+        $this->appendManualSignal($entry, sprintf('correction manuelle decision: %s', $decision->value));
+        $referenceFieldSynchronizer->syncEntryToReferences($entry);
+
+        $this->recordCorrection($entry, 'decision', $oldValue, [
+            'decision' => $decision->value,
+            'decisionReason' => $entry->getDecisionReason(),
+        ], $request, $entityManager);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Decision corrigee et tracee dans les signaux.');
+
+        return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+    }
+
+    #[Route('/{id}/correct-detected-tags', name: 'app_entry_correct_detected_tags', methods: ['POST'])]
+    public function correctDetectedTags(Request $request, Entry $entry, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid('correct_entry_detected_tags_'.$entry->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, correction non enregistree.');
+
+            return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
+        }
+
+        $oldTags = $entry->getDetectedTags();
+        $newTags = $this->normalizeTags((string) $request->request->get('detectedTags'));
+        $entry->setDetectedTags($newTags);
+        $this->appendManualSignal($entry, 'correction manuelle tags detectes');
+
+        $this->recordCorrection($entry, 'detected_tags', [
+            'detectedTags' => $oldTags,
+        ], [
+            'detectedTags' => $newTags,
+        ], $request, $entityManager);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'Tags detectes corriges.');
+
+        return $this->redirectToRoute('app_entry_show', ['id' => $entry->getId()]);
     }
 
     #[Route('/{id}/edit', name: 'app_entry_edit', methods: ['GET', 'POST'])]
@@ -288,5 +402,54 @@ class EntryController extends AbstractController
             'pages' => $pages,
             'allowed' => $allowed,
         ]];
+    }
+
+    /**
+     * @param array<string, mixed>|null $oldValue
+     * @param array<string, mixed>|null $newValue
+     */
+    private function recordCorrection(
+        Entry $entry,
+        string $fieldName,
+        ?array $oldValue,
+        ?array $newValue,
+        Request $request,
+        EntityManagerInterface $entityManager,
+    ): void {
+        $reason = trim((string) $request->request->get('reason'));
+        $correction = (new AnalysisCorrection())
+            ->setEntry($entry)
+            ->setFieldName($fieldName)
+            ->setOldValue($oldValue)
+            ->setNewValue($newValue)
+            ->setReason($reason !== '' ? $reason : null);
+
+        $entityManager->persist($correction);
+    }
+
+    private function appendManualSignal(Entry $entry, string $signal): void
+    {
+        $signals = $entry->getAnalysisSignals();
+        $signals[] = $signal;
+        $entry->setAnalysisSignals($signals);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function normalizeTags(string $tags): array
+    {
+        $normalized = [];
+
+        foreach (explode(',', $tags) as $tag) {
+            $tag = trim(mb_strtolower($tag));
+            $tag = preg_replace('/\s+/', '-', $tag) ?? $tag;
+            $tag = trim($tag, '-');
+            if ($tag !== '') {
+                $normalized[] = $tag;
+            }
+        }
+
+        return array_values(array_unique($normalized));
     }
 }

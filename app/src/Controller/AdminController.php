@@ -12,6 +12,7 @@ use App\Entity\MediaTypeReference;
 use App\Entity\ReferenceEntityInterface;
 use App\Entity\SourceTypeReference;
 use App\Entity\Tag;
+use App\Repository\AnalysisCorrectionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -36,6 +37,7 @@ class AdminController extends AbstractController
                 ['label' => 'References inactives', 'route' => 'app_admin_inactive_references', 'params' => [], 'class' => ReferenceEntityInterface::class],
                 ['label' => 'Diagnostic media final', 'route' => 'app_admin_media_diagnostic', 'params' => [], 'class' => Entry::class],
                 ['label' => 'Mappings media actifs', 'route' => 'app_admin_media_mappings', 'params' => [], 'class' => MediaTypeReference::class],
+                ['label' => 'Corrections analyse', 'route' => 'app_admin_analysis_corrections', 'params' => [], 'class' => Entry::class],
             ],
         ]);
     }
@@ -67,6 +69,14 @@ class AdminController extends AbstractController
 
         return $this->render('admin/inactive_references.html.twig', [
             'items' => $items,
+        ]);
+    }
+
+    #[Route('/analysis-corrections', name: 'app_admin_analysis_corrections', methods: ['GET'])]
+    public function analysisCorrections(AnalysisCorrectionRepository $analysisCorrectionRepository): Response
+    {
+        return $this->render('admin/analysis_correction/index.html.twig', [
+            'corrections' => $analysisCorrectionRepository->findLatest(200),
         ]);
     }
 }

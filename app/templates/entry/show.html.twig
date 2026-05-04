@@ -151,9 +151,73 @@
                 <span class="muted">Non utilisée</span>
             {% endif %}
         </dd>
-        <dt>Contenu brut</dt>
-        <dd>{{ entry.rawContent|default('Aucun contenu brut')|nl2br }}</dd>
     </dl>
+
+    <section class="section-block correction-panel">
+        <div class="section-title">
+            <div>
+                <h2>Corrections manuelles</h2>
+                <p class="muted">Ces corrections sont tracees et protegent les choix manuels des promotions automatiques.</p>
+            </div>
+        </div>
+
+        <div class="correction-grid">
+            <form method="post" action="{{ path('app_entry_correct_media', {id: entry.id}) }}" class="compact-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('correct_entry_media_' ~ entry.id) }}">
+                <div>
+                    <label for="correct-media">Media final</label>
+                    <select id="correct-media" name="mediaType">
+                        {% for media_type in media_types %}
+                            <option value="{{ media_type.value }}" {{ entry.mediaType.value == media_type.value ? 'selected' : '' }}>{{ media_type.label() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="correct-media-reason">Raison</label>
+                    <input id="correct-media-reason" name="reason" placeholder="ex: categorie RSS fiable">
+                </div>
+                <button class="button">Corriger le media</button>
+            </form>
+
+            <form method="post" action="{{ path('app_entry_correct_decision', {id: entry.id}) }}" class="compact-form">
+                <input type="hidden" name="_token" value="{{ csrf_token('correct_entry_decision_' ~ entry.id) }}">
+                <div>
+                    <label for="correct-decision">Decision</label>
+                    <select id="correct-decision" name="decision">
+                        {% for decision in decisions %}
+                            <option value="{{ decision.value }}" {{ entry.decision and entry.decision.value == decision.value ? 'selected' : '' }}>{{ decision.label() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="correct-decision-reason">Raison</label>
+                    <input id="correct-decision-reason" name="reason" placeholder="ex: faux ignored">
+                </div>
+                <button class="button">Corriger la decision</button>
+            </form>
+
+            <form method="post" action="{{ path('app_entry_correct_detected_tags', {id: entry.id}) }}" class="compact-form compact-form-wide">
+                <input type="hidden" name="_token" value="{{ csrf_token('correct_entry_detected_tags_' ~ entry.id) }}">
+                <div>
+                    <label for="correct-tags">Tags detectes</label>
+                    <textarea id="correct-tags" name="detectedTags" rows="3">{{ entry.detectedTags|join(', ') }}</textarea>
+                    <small>Liste separee par des virgules. Supprimer un tag ici revient a le masquer pour cette Entry.</small>
+                </div>
+                <div>
+                    <label for="correct-tags-reason">Raison</label>
+                    <input id="correct-tags-reason" name="reason" placeholder="ex: tag trop vague">
+                </div>
+                <button class="button">Corriger les tags</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <h2>Contenu brut</h2>
+        </div>
+        <div class="content-block">{{ entry.rawContent|default('Aucun contenu brut')|nl2br }}</div>
+    </section>
 
     <div class="actions">
         <a class="button button-secondary" href="{{ path('app_entry_index') }}">Retour</a>

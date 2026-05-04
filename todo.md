@@ -57,16 +57,21 @@ Etat :
 - pagination ajoutee sur l'ecran Entrées avec choix 5/10/25/tout ;
 - boutons de la liste Entrées harmonises pour eviter les libelles sur deux lignes.
 
-## Priorite 4 - Exploiter les corrections manuelles
+## Priorite 4 - Finalisee
 
-- Ajouter une action "Corriger le media final" directement depuis la fiche Entry.
-- Quand un media est corrige manuellement, fixer `media_type_origin = manual` et empecher les futures promotions automatiques de l'ecraser.
-- Ajouter une action "Corriger la decision" depuis Entry detail, avec trace dans les signaux.
-- Ajouter une action "Corriger les tags detectes" ou "masquer ce tag pour cette Entry".
-- Ajouter une page de suivi des faux positifs et faux negatifs corriges manuellement.
-- Utiliser les corrections manuelles comme donnees de calibration deterministe, sans ML.
-- Ajouter une commande `app:export-analysis-corrections` pour documenter les corrections utiles.
-- Ajouter une section README expliquant comment une correction manuelle influence les futures analyses.
+Corrections manuelles d'analyse ajoutees.
+
+Etat :
+
+- action "Corriger le media final" disponible depuis la fiche Entry ;
+- correction media marquee avec `media_type_origin = manual`, confiance media 100, et protection contre les promotions automatiques futures ;
+- action "Corriger la decision" disponible depuis la fiche Entry, avec trace dans les signaux ;
+- action "Corriger les tags detectes" disponible depuis la fiche Entry, utilisable aussi pour masquer un tag sur cette Entry ;
+- table `analysis_correction` ajoutee pour journaliser ancienne valeur, nouvelle valeur, raison et date ;
+- page Admin "Corrections analyse" ajoutee pour suivre les faux positifs et faux negatifs corriges ;
+- commande `app:export-analysis-corrections` ajoutee ;
+- README mis a jour sur l'influence des corrections manuelles ;
+- passe UI flat design ajoutee : marges desktop limitees a 5vw/80px, pager Entry centre, tableau Entry mieux aligne, panneaux de correction harmonises.
 
 ## Priorite 5 - Ameliorer l'exploitation quotidienne
 
@@ -210,6 +215,10 @@ Etat :
 - Profil et poids de Source.
 - Validation Admin des tags auto-generes.
 - Pagination et boutons harmonises sur la liste Entrées.
+- Corrections manuelles de media, decision et tags depuis la fiche Entry.
+- Page Admin "Corrections analyse".
+- Commande `app:export-analysis-corrections`.
+- Passe UI flat design : marges desktop plus lisibles, pager centre, tableau Entry aligne, panneaux sobres.
 
 ## Hors perimetre volontaire
 

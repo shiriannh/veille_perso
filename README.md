@@ -65,6 +65,7 @@ docker compose exec app php bin/console app:seed-reference-data
 docker compose exec app php bin/console app:generate-draft-reviews
 docker compose exec app php bin/console app:media-type-report
 docker compose exec app php bin/console app:promote-media-types --dry-run
+docker compose exec app php bin/console app:export-analysis-corrections
 docker compose exec app vendor/bin/phpunit
 ```
 
@@ -126,6 +127,32 @@ Pour fiabiliser le socle 1.6 au quotidien :
 - `app:media-type-report` affiche la repartition des medias finaux et des origines ;
 - `app:media-type-report --output=var/media-type-report.txt` exporte le meme rapport en texte ;
 - `app:promote-media-types --dry-run` simule les promotions possibles sans ecriture.
+
+## Corrections manuelles d'analyse
+
+La fiche Entry permet de corriger trois points sans repasser par le formulaire complet :
+
+- media final ;
+- decision finale ;
+- tags detectes.
+
+Chaque correction ajoute une ligne dans `analysis_correction` avec l'ancienne valeur, la nouvelle valeur, la raison optionnelle et la date. L'Admin expose la page `Corrections analyse` pour suivre les faux positifs, faux negatifs et ajustements utiles.
+
+Regles d'influence :
+
+- une correction de media force `mediaTypeOrigin` a `manual` et fixe la confiance media a 100 ;
+- les futures analyses ne doivent pas ecraser un media final marque `manual` ;
+- une correction de decision ajoute un signal d'analyse et complete la raison si une note est saisie ;
+- une correction de tags remplace la liste `detectedTags` de cette Entry seulement, ce qui permet de masquer un tag bruité localement.
+
+Ces corrections ne declenchent pas de ML et ne modifient pas automatiquement les dictionnaires. Elles servent de calibration deterministe : on les exporte, on observe les motifs recurrents, puis on enrichit les mappings ou le profil d'interet explicitement.
+
+Export :
+
+```bash
+docker compose exec app php bin/console app:export-analysis-corrections
+docker compose exec app php bin/console app:export-analysis-corrections --output=var/analysis-corrections.csv
+```
 
 ## Structure
 

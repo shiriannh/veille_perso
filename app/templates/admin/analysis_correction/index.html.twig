@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Corrections analyse - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Corrections analyse</h1>
+            <p>Faux positifs, faux nÃ©gatifs et ajustements manuels utilisables comme calibration dÃ©terministe.</p>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_admin_index') }}">Admin</a>
+        </div>
+    </section>
+
+    {% if corrections is empty %}
+        <p class="empty">Aucune correction manuelle enregistrÃ©e.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Entry</th>
+                    <th>Champ</th>
+                    <th>Ancienne valeur</th>
+                    <th>Nouvelle valeur</th>
+                    <th>Raison</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for correction in corrections %}
+                    <tr>
+                        <td>{{ correction.createdAt|date('d/m/Y H:i') }}</td>
+                        <td>
+                            {% if correction.entry %}
+                                <a href="{{ path('app_entry_show', {id: correction.entry.id}) }}">{{ correction.entry.title }}</a>
+                                <small>{{ correction.entry.source.name }}</small>
+                            {% else %}
+                                <span class="muted">Entry supprimee</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge">{{ correction.fieldName }}</span></td>
+                        <td><code>{{ correction.oldValue ? correction.oldValue|json_encode(constant('JSON_UNESCAPED_UNICODE')) : '-' }}</code></td>
+                        <td><code>{{ correction.newValue ? correction.newValue|json_encode(constant('JSON_UNESCAPED_UNICODE')) : '-' }}</code></td>
+                        <td>{{ correction.reason|default('Non renseignee') }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}
