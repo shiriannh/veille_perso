@@ -38,7 +38,7 @@ a:hover {
     align-items: center;
     justify-content: space-between;
     gap: 24px;
-    padding: 16px clamp(24px, 5vw, 80px);
+    padding: 16px clamp(18px, 2.5vw, 36px);
     background: var(--surface);
     border-bottom: 1px solid var(--line);
 }
@@ -61,9 +61,9 @@ a:hover {
 }
 
 .page {
-    width: auto;
-    max-width: none;
-    margin: 28px clamp(24px, 5vw, 80px) 56px;
+    width: calc(100% - clamp(28px, 4vw, 56px));
+    max-width: 1480px;
+    margin: 28px auto 56px;
 }
 
 .page-heading {
@@ -393,6 +393,24 @@ form[name="tag"],
     display: flex;
     align-items: flex-end;
     gap: 10px;
+}
+
+.action-strip {
+    margin: 0 0 16px;
+}
+
+.checkbox-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 22px;
+}
+
+.checkbox-line label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
 }
 
 .pager {

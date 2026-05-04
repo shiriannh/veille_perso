@@ -22,10 +22,29 @@ class SourceRepository extends ServiceEntityRepository
      */
     public function findAllOrdered(): array
     {
-        return $this->createQueryBuilder('source')
-            ->orderBy('source.name', 'ASC')
-            ->getQuery()
-            ->getResult();
+        return $this->findFiltered();
+    }
+
+    /**
+     * @return Source[]
+     */
+    public function findFiltered(bool $activeRssOnly = false, bool $lastImportError = false): array
+    {
+        $queryBuilder = $this->createQueryBuilder('source')
+            ->orderBy('source.name', 'ASC');
+
+        if ($activeRssOnly) {
+            $queryBuilder
+                ->andWhere('source.isActive = true')
+                ->andWhere('source.fetchMode = :rssFetchMode')
+                ->setParameter('rssFetchMode', FetchMode::Rss);
+        }
+
+        if ($lastImportError) {
+            $queryBuilder->andWhere('source.lastErrorAt IS NOT NULL');
+        }
+
+        return $queryBuilder->getQuery()->getResult();
     }
 
     /**

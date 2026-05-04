@@ -6,20 +6,37 @@
     <section class="page-heading">
         <div>
             <h1>Sources</h1>
-            <p>Origines de veille à consulter ou à alimenter manuellement.</p>
+            <p>Origines de veille a consulter ou a alimenter manuellement.</p>
         </div>
         <div class="actions">
             <a class="button button-secondary" href="{{ path('app_source_import_csv') }}">Importer un CSV</a>
             <a class="button" href="{{ path('app_source_new') }}">Nouvelle source</a>
-            <form method="post" action="{{ path('app_source_reset_database') }}" class="inline-form" onsubmit="return confirm('Cette action supprime toutes les sources, entrées, fiches, synthèses et historiques d’import. Continuer ?');">
+            <form method="post" action="{{ path('app_source_reset_database') }}" class="inline-form" onsubmit="return confirm('Cette action supprime toutes les sources, entrees, fiches, syntheses et historiques d import. Continuer ?');">
                 <input type="hidden" name="_token" value="{{ csrf_token('reset_database') }}">
                 <button class="button button-danger">Raz</button>
             </form>
         </div>
     </section>
 
+    <form method="get" class="filter-form filter-form-small">
+        <div class="checkbox-line">
+            <label>
+                <input type="checkbox" name="activeRssOnly" value="1" {{ filters.activeRssOnly ? 'checked' : '' }}>
+                Sources RSS actives uniquement
+            </label>
+            <label>
+                <input type="checkbox" name="lastImportError" value="1" {{ filters.lastImportError ? 'checked' : '' }}>
+                Dernier import en erreur
+            </label>
+        </div>
+        <div class="filter-actions">
+            <button class="button">Filtrer</button>
+            <a class="button button-secondary" href="{{ path('app_source_index') }}">Reinitialiser</a>
+        </div>
+    </form>
+
     {% if sources is empty %}
-        <p class="empty">Aucune source enregistrée.</p>
+        <p class="empty">Aucune source enregistree.</p>
     {% else %}
         <table>
             <thead>
@@ -28,10 +45,11 @@
                     <th>Type</th>
                     <th>Import</th>
                     <th>Dernier import</th>
-                    <th>Dernier succès</th>
+                    <th>Historique</th>
+                    <th>Dernier succes</th>
                     <th>Erreur</th>
                     <th>Active</th>
-                    <th>Entrées</th>
+                    <th>Entrees</th>
                     <th></th>
                 </tr>
             </thead>
@@ -42,6 +60,15 @@
                         <td>{{ source.type.label() }}</td>
                         <td>{{ source.fetchMode.label() }}</td>
                         <td>{{ source.lastFetchedAt ? source.lastFetchedAt|date('d/m/Y H:i') : '-' }}</td>
+                        <td>
+                            {% set last_run = last_import_runs[source.id]|default(null) %}
+                            {% if last_run %}
+                                <span class="badge">{{ last_run.status.label() }}</span>
+                                <small>{{ last_run.createdCount }} creee(s), {{ last_run.skippedCount }} ignoree(s)</small>
+                            {% else %}
+                                <span class="muted">Aucun import</span>
+                            {% endif %}
+                        </td>
                         <td>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : '-' }}</td>
                         <td>{{ source.lastErrorAt ? source.lastErrorAt|date('d/m/Y H:i') : '-' }}</td>
                         <td>{{ source.active ? 'Oui' : 'Non' }}</td>
@@ -54,5 +81,6 @@
                 {% endfor %}
             </tbody>
         </table>
+        {{ include('partials/_pager.html.twig', {pagination: pagination, route: 'app_source_index', label: 'Pagination des sources'}) }}
     {% endif %}
 {% endblock %}

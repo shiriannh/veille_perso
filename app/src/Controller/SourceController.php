@@ -9,6 +9,7 @@ use App\Form\SourceType;
 use App\Repository\ImportRunRepository;
 use App\Repository\SourceRepository;
 use App\Service\DatabaseResetter;
+use App\Service\ArrayPaginator;
 use App\Service\ReferenceFieldSynchronizer;
 use App\Service\RssImporter;
 use App\Service\SourceCsvImporter;
@@ -22,10 +23,31 @@ use Symfony\Component\Routing\Attribute\Route;
 class SourceController extends AbstractController
 {
     #[Route('', name: 'app_source_index', methods: ['GET'])]
-    public function index(SourceRepository $sourceRepository): Response
+    public function index(
+        Request $request,
+        SourceRepository $sourceRepository,
+        ImportRunRepository $importRunRepository,
+        ArrayPaginator $arrayPaginator,
+    ): Response
     {
+        $activeRssOnly = $request->query->getBoolean('activeRssOnly');
+        $lastImportError = $request->query->getBoolean('lastImportError');
+        $sources = $sourceRepository->findFiltered($activeRssOnly, $lastImportError);
+        [$paginatedSources, $pagination] = $arrayPaginator->paginate($request, $sources, '25');
+        $lastImportRuns = [];
+
+        foreach ($paginatedSources as $source) {
+            $lastImportRuns[$source->getId()] = $importRunRepository->findLatestForSource($source, 1)[0] ?? null;
+        }
+
         return $this->render('source/index.html.twig', [
-            'sources' => $sourceRepository->findAllOrdered(),
+            'sources' => $paginatedSources,
+            'pagination' => $pagination,
+            'last_import_runs' => $lastImportRuns,
+            'filters' => [
+                'activeRssOnly' => $activeRssOnly,
+                'lastImportError' => $lastImportError,
+            ],
         ]);
     }
 
@@ -45,7 +67,7 @@ class SourceController extends AbstractController
 
             $this->addFlash('success', 'Source créée.');
 
-            return $this->redirectToRoute('app_source_index');
+            return $this->redirectToRoute('app_source_index', $request->query->all());
         }
 
         return $this->render('source/new.html.twig', [
@@ -86,7 +108,7 @@ class SourceController extends AbstractController
         if (!$this->isCsrfTokenValid('reset_database', (string) $request->request->get('_token'))) {
             $this->addFlash('error', 'Jeton CSRF invalide, remise a zero annulee.');
 
-            return $this->redirectToRoute('app_source_index');
+            return $this->redirectToRoute('app_source_index', $request->query->all());
         }
 
         $counts = $databaseResetter->reset();
@@ -100,7 +122,7 @@ class SourceController extends AbstractController
             $counts['importRuns'],
         ));
 
-        return $this->redirectToRoute('app_source_index');
+        return $this->redirectToRoute('app_source_index', $request->query->all());
     }
 
     #[Route('/{id}', name: 'app_source_show', methods: ['GET'])]
@@ -180,6 +202,6 @@ class SourceController extends AbstractController
         $entityManager->flush();
         $this->addFlash('success', 'Source supprimée.');
 
-        return $this->redirectToRoute('app_source_index');
+        return $this->redirectToRoute('app_source_index', $request->query->all());
     }
 }

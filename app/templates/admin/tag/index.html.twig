@@ -62,5 +62,6 @@
                 {% endfor %}
             </tbody>
         </table>
+        {{ include('partials/_pager.html.twig', {pagination: pagination, route: pager_route, label: 'Pagination des tags'}) }}
     {% endif %}
 {% endblock %}

@@ -561,9 +561,20 @@ La liste des entrées accepte des filtres transmis en query string :
 - présence ou absence de fiche ;
 - tri par date de publication ou date d’import.
 
+La V1.6 ajoute une pagination sobre avec choix 5 / 10 / 25 / tout sur les listes longues : entrees, sources, imports, fiches, tags Admin et syntheses.
+
+Actions rapides Entry :
+
+- raccourcis de vue `A verifier`, `Medias other` et `Putaclic suspect` ;
+- reanalyse du filtre courant ;
+- recalcul des tags detectes du filtre courant ;
+- marquage manuel `Pertinent` ou `Ignore` depuis la liste, avec CSRF et retour sur les filtres actifs.
+
+La liste Source propose les filtres `Sources RSS actives uniquement` et `Dernier import en erreur`. Elle affiche aussi le dernier ImportRun connu avec statut et compteurs, ainsi que le nombre d'entrees par source.
+
 La liste des fiches accepte aussi des filtres par verdict, score minimum, type de média, source et tri par score ou date de modification.
 
-Le tableau de bord affiche les compteurs principaux, les dernières entrées importées, les entrées sans fiche, les dernières fiches modifiées et les sources dont le dernier import est en erreur.
+Le tableau de bord affiche les compteurs principaux, les dernieres entrees importees, les entrees sans fiche, les dernieres fiches modifiees, les sources dont le dernier import est en erreur, les entrees non analysees, les entrees pertinentes sans fiche et les entrees pertinentes jamais synthetisees.
 
 ## Suppressions
 

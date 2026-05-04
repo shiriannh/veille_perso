@@ -9,7 +9,9 @@
             <p>Contenus bruts repérés avant synthèse personnelle.</p>
         </div>
         <div class="actions">
-            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'other'}) }}">Médias other</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {decision: 'maybe_relevant', sort: 'imported_desc'}) }}">A verifier</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'other'}) }}">Medias other</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {clickbaitLevel: 'suspicious', sort: 'imported_desc'}) }}">Putaclic suspect</a>
             <a class="button" href="{{ path('app_entry_new') }}">Nouvelle entrée</a>
         </div>
     </section>
@@ -133,10 +135,16 @@
         </div>
     </form>
 
-    <form method="post" action="{{ path('app_entry_reanalyze_filtered', app.request.query.all) }}" class="actions" onsubmit="return confirm('Ré-analyser toutes les entrées du filtre courant ?');">
-        <input type="hidden" name="_token" value="{{ csrf_token('reanalyze_filtered_entries') }}">
-        <button class="button button-secondary">Ré-analyser le filtre courant</button>
-    </form>
+    <div class="actions action-strip">
+        <form method="post" action="{{ path('app_entry_reanalyze_filtered', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Ré-analyser toutes les entrées du filtre courant ?');">
+            <input type="hidden" name="_token" value="{{ csrf_token('reanalyze_filtered_entries') }}">
+            <button class="button button-secondary">Ré-analyser le filtre courant</button>
+        </form>
+        <form method="post" action="{{ path('app_entry_detect_tags_filtered', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Recalculer les tags des entrées du filtre courant ?');">
+            <input type="hidden" name="_token" value="{{ csrf_token('detect_tags_filtered_entries') }}">
+            <button class="button button-secondary">Détecter les tags du filtre</button>
+        </form>
+    </div>
 
     {% if entries is empty %}
         <p class="empty">Aucune entrée enregistrée.</p>
@@ -218,6 +226,14 @@
                                 <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Créer fiche</a>
                             {% endif %}
                             <a class="button button-secondary" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
+                            <form method="post" action="{{ path('app_entry_mark_relevant', app.request.query.all|merge({id: entry.id})) }}" class="inline-form">
+                                <input type="hidden" name="_token" value="{{ csrf_token('mark_entry_relevant_' ~ entry.id) }}">
+                                <button class="button button-secondary">Pertinent</button>
+                            </form>
+                            <form method="post" action="{{ path('app_entry_mark_ignored', app.request.query.all|merge({id: entry.id})) }}" class="inline-form" onsubmit="return confirm('Marquer cette entree comme ignoree ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('mark_entry_ignored_' ~ entry.id) }}">
+                                <button class="button button-danger">Ignorer</button>
+                            </form>
                             {{ include('entry/_delete_form.html.twig') }}
                         </td>
                     </tr>
@@ -225,22 +241,6 @@
             </tbody>
         </table>
 
-        <nav class="pager" aria-label="Pagination des entrées">
-            <div class="pager-pages">
-                {% if pagination.pages > 1 %}
-                    {% for page in 1..pagination.pages %}
-                        <a class="button {{ page == pagination.page ? '' : 'button-secondary' }}" href="{{ path('app_entry_index', app.request.query.all|merge({page: page})) }}">{{ page }}</a>
-                    {% endfor %}
-                {% else %}
-                    <span class="muted">{{ pagination.total }} entrée(s)</span>
-                {% endif %}
-            </div>
-            <div class="pager-size">
-                <span class="muted">Afficher</span>
-                {% for size in pagination.allowed %}
-                    <a class="button {{ pagination.perPage == size ? '' : 'button-secondary' }}" href="{{ path('app_entry_index', app.request.query.all|merge({perPage: size, page: 1})) }}">{{ size == 'all' ? 'tout' : size }}</a>
-                {% endfor %}
-            </div>
-        </nav>
+        {{ include('partials/_pager.html.twig', {pagination: pagination, route: 'app_entry_index', label: 'Pagination des entrees'}) }}
     {% endif %}
 {% endblock %}

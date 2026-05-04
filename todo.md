@@ -31,6 +31,8 @@ Migration progressive enums -> references effectuee sans suppression des colonne
 
 Etat :
 
+- Realisation : pagination partagee, actions Entry de masse, raccourcis de vues, filtres Source, dernier ImportRun par Source, compteurs dashboard et ajustement CSS `.page` ont ete implementes.
+
 - les formulaires Entry et Source utilisent les references actives pour les choix metier principaux ;
 - `Entry` possede des relations nullable vers media type, decision, clickbait level et analysis language ;
 - `Source` possede des relations nullable vers source type et fetch mode ;
@@ -73,24 +75,29 @@ Etat :
 - README mis a jour sur l'influence des corrections manuelles ;
 - passe UI flat design ajoutee : marges desktop limitees a 5vw/80px, pager Entry centre, tableau Entry mieux aligne, panneaux de correction harmonises.
 
-## Priorite 5 - Ameliorer l'exploitation quotidienne
+## Priorite 5 - Finalisee
 
-- Etendre la pagination deja posee sur Entrées aux autres listes longues : Source, ImportRun, Review, Tag et SynthesisReport.
-- Conserver les filtres actifs apres une action de masse ou une navigation retour depuis une fiche detail.
-- Ajouter un bouton "Reanalyser les resultats filtres" sur la liste Entry.
-- Ajouter un bouton "Detecter les tags des resultats filtres" sur la liste Entry.
-- Ajouter une vue dediee "A verifier" pour les Entry `maybe_relevant`, triees par score et `interest_level`.
-- Ajouter une vue dediee "Other / non classe" pour surveiller les medias non resolus.
-- Ajouter une vue dediee "Putaclic suspect" pour les Entry `suspicious` ou `clickbait`.
-- Ajouter une action "Marquer comme ignore" depuis la liste Entry, avec confirmation et CSRF.
-- Ajouter une action "Marquer comme pertinent" depuis la liste Entry, sans creer de Review finale.
-- Afficher le dernier ImportRun directement dans la liste Source avec statut, date et compteurs.
-- Afficher le nombre d'Entry par Source dans la liste Source.
-- Ajouter un filtre Source "dernier import en erreur".
-- Ajouter un filtre Source "active RSS uniquement".
-- Ajouter un compteur dashboard d'Entry non analysees.
-- Ajouter un compteur dashboard d'Entry pertinentes sans Review.
-- Ajouter un compteur dashboard d'Entry jamais synthetisees.
+Exploitation quotidienne renforcee.
+
+Etat :
+
+- Pagination etendue aux autres listes longues : Source, ImportRun, Review, Tag et SynthesisReport.
+- Conservation des filtres actifs apres les actions de masse et suppressions depuis les listes.
+- Bouton "Reanalyser les resultats filtres" disponible sur la liste Entry.
+- Bouton "Detecter les tags des resultats filtres" disponible sur la liste Entry.
+- Raccourci de vue "A verifier" ajoute pour les Entry `maybe_relevant`.
+- Raccourci de vue "Other / non classe" ajoute pour surveiller les medias non resolus.
+- Raccourci de vue "Putaclic suspect" ajoute pour les Entry bruitees.
+- Action "Marquer comme ignore" ajoutee depuis la liste Entry, avec confirmation et CSRF.
+- Action "Marquer comme pertinent" ajoutee depuis la liste Entry, sans creer de Review finale.
+- Dernier ImportRun affiche directement dans la liste Source avec statut et compteurs.
+- Nombre d'Entry par Source affiche dans la liste Source.
+- Filtre Source "dernier import en erreur" ajoute.
+- Filtre Source "active RSS uniquement" ajoute.
+- Compteur dashboard d'Entry non analysees ajoute.
+- Compteur dashboard d'Entry pertinentes sans Review ajoute.
+- Compteur dashboard d'Entry jamais synthetisees ajoute.
+- `.page` recentree avec largeur maximale et marges horizontales reduites pour mieux exploiter l'ecran desktop.
 
 ## Priorite 6 - Fiches brouillon et workflow Review
 
@@ -219,6 +226,12 @@ Etat :
 - Page Admin "Corrections analyse".
 - Commande `app:export-analysis-corrections`.
 - Passe UI flat design : marges desktop plus lisibles, pager centre, tableau Entry aligne, panneaux sobres.
+- Pagination partagee sur Sources, Imports, Fiches, Tags Admin et Syntheses.
+- Actions Entry de masse : reanalyse, detection de tags, marquage pertinent/ignore.
+- Filtres Source RSS active / dernier import en erreur.
+- Dernier ImportRun affiche dans la liste Source.
+- Nouveaux compteurs dashboard d'exploitation quotidienne.
+- Marges `.page` reduites et recentrees.
 
 ## Hors perimetre volontaire
 

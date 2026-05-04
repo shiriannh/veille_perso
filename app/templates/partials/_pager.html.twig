@@ -1,0 +1,19 @@
+{% if pagination.total > 0 %}
+    <nav class="pager" aria-label="{{ label|default('Pagination') }}">
+        <div class="pager-pages">
+            {% if pagination.pages > 1 %}
+                {% for page in 1..pagination.pages %}
+                    <a class="button {{ page == pagination.page ? '' : 'button-secondary' }}" href="{{ path(route, app.request.query.all|merge({page: page})) }}">{{ page }}</a>
+                {% endfor %}
+            {% else %}
+                <span class="muted">{{ pagination.total }} element(s)</span>
+            {% endif %}
+        </div>
+        <div class="pager-size">
+            <span class="muted">Afficher</span>
+            {% for size in pagination.allowed %}
+                <a class="button {{ pagination.perPage == size ? '' : 'button-secondary' }}" href="{{ path(route, app.request.query.all|merge({perPage: size, page: 1})) }}">{{ size == 'all' ? 'tout' : size }}</a>
+            {% endfor %}
+        </div>
+    </nav>
+{% endif %}

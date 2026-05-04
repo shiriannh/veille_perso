@@ -35,6 +35,18 @@
             <span>Fiches</span>
             <strong>{{ review_count }}</strong>
         </article>
+        <a class="metric" href="{{ path('app_entry_index', {sort: 'imported_desc'}) }}">
+            <span>Non analysees</span>
+            <strong>{{ pending_analysis_entry_count }}</strong>
+        </a>
+        <a class="metric" href="{{ path('app_entry_index', {reviewState: 'without', decision: 'relevant'}) }}">
+            <span>Pertinentes sans fiche</span>
+            <strong>{{ relevant_without_review_count }}</strong>
+        </a>
+        <a class="metric" href="{{ path('app_synthesis_report_index') }}">
+            <span>Jamais synthetisees</span>
+            <strong>{{ unsynthesized_entry_count }}</strong>
+        </a>
     </section>
 
     <section class="two-columns">

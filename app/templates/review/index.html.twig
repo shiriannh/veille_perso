@@ -93,5 +93,6 @@
                 {% endfor %}
             </tbody>
         </table>
+        {{ include('partials/_pager.html.twig', {pagination: pagination, route: 'app_review_index', label: 'Pagination des fiches'}) }}
     {% endif %}
 {% endblock %}

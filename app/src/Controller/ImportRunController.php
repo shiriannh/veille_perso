@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Repository\ImportRunRepository;
 use App\Repository\SourceRepository;
+use App\Service\ArrayPaginator;
 use App\Service\RssImporter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,13 +15,21 @@ use Symfony\Component\Routing\Attribute\Route;
 class ImportRunController extends AbstractController
 {
     #[Route('', name: 'app_import_run_index', methods: ['GET'])]
-    public function index(Request $request, ImportRunRepository $importRunRepository, SourceRepository $sourceRepository): Response
+    public function index(
+        Request $request,
+        ImportRunRepository $importRunRepository,
+        SourceRepository $sourceRepository,
+        ArrayPaginator $arrayPaginator,
+    ): Response
     {
         $sourceId = (string) $request->query->get('source', '');
         $source = ctype_digit($sourceId) && (int) $sourceId > 0 ? $sourceRepository->find((int) $sourceId) : null;
+        $runs = $importRunRepository->findLatestFiltered($source);
+        [$paginatedRuns, $pagination] = $arrayPaginator->paginate($request, $runs, '25');
 
         return $this->render('import_run/index.html.twig', [
-            'runs' => $importRunRepository->findLatestFiltered($source),
+            'runs' => $paginatedRuns,
+            'pagination' => $pagination,
             'sources' => $sourceRepository->findAllOrdered(),
             'filters' => [
                 'source' => $source?->getId(),
@@ -32,7 +41,7 @@ class ImportRunController extends AbstractController
     public function importSources(Request $request, SourceRepository $sourceRepository, RssImporter $rssImporter): Response
     {
         if (!$this->isCsrfTokenValid('import_sources', (string) $request->request->get('_token'))) {
-            return $this->redirectToRoute('app_import_run_index');
+            return $this->redirectToRoute('app_import_run_index', $request->query->all());
         }
 
         $sources = $sourceRepository->findActiveRssSources();
@@ -40,7 +49,7 @@ class ImportRunController extends AbstractController
         if ($sources === []) {
             $this->addFlash('error', 'Aucune source RSS active à importer.');
 
-            return $this->redirectToRoute('app_import_run_index');
+            return $this->redirectToRoute('app_import_run_index', $request->query->all());
         }
 
         $createdCount = 0;
@@ -73,6 +82,6 @@ class ImportRunController extends AbstractController
             ));
         }
 
-        return $this->redirectToRoute('app_import_run_index');
+        return $this->redirectToRoute('app_import_run_index', $request->query->all());
     }
 }

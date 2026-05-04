@@ -9,6 +9,7 @@ use App\Form\ReviewType;
 use App\Repository\EntryRepository;
 use App\Repository\ReviewRepository;
 use App\Repository\SourceRepository;
+use App\Service\ArrayPaginator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,7 +20,12 @@ use Symfony\Component\Routing\Attribute\Route;
 class ReviewController extends AbstractController
 {
     #[Route('', name: 'app_review_index', methods: ['GET'])]
-    public function index(Request $request, ReviewRepository $reviewRepository, SourceRepository $sourceRepository): Response
+    public function index(
+        Request $request,
+        ReviewRepository $reviewRepository,
+        SourceRepository $sourceRepository,
+        ArrayPaginator $arrayPaginator,
+    ): Response
     {
         $verdict = ReviewVerdict::tryFrom((string) $request->query->get('verdict'));
         $mediaType = MediaType::tryFrom((string) $request->query->get('mediaType'));
@@ -41,8 +47,12 @@ class ReviewController extends AbstractController
             'sort' => $sort,
         ];
 
+        $reviews = $reviewRepository->findFiltered($filters);
+        [$paginatedReviews, $pagination] = $arrayPaginator->paginate($request, $reviews, '25');
+
         return $this->render('review/index.html.twig', [
-            'reviews' => $reviewRepository->findFiltered($filters),
+            'reviews' => $paginatedReviews,
+            'pagination' => $pagination,
             'sources' => $sourceRepository->findAllOrdered(),
             'media_types' => MediaType::cases(),
             'verdicts' => ReviewVerdict::cases(),
@@ -71,7 +81,7 @@ class ReviewController extends AbstractController
         if ($entryRepository->countWithoutReview() === 0 && $entryId === 0) {
             $this->addFlash('error', 'Toutes les entrées ont déjà une fiche.');
 
-            return $this->redirectToRoute('app_review_index');
+            return $this->redirectToRoute('app_review_index', $request->query->all());
         }
 
         $review = new Review();
@@ -103,7 +113,7 @@ class ReviewController extends AbstractController
 
             $this->addFlash('success', 'Fiche créée.');
 
-            return $this->redirectToRoute('app_review_index');
+            return $this->redirectToRoute('app_review_index', $request->query->all());
         }
 
         return $this->render('review/new.html.twig', [
@@ -151,6 +161,6 @@ class ReviewController extends AbstractController
             $this->addFlash('success', 'Fiche supprimée.');
         }
 
-        return $this->redirectToRoute('app_review_index');
+        return $this->redirectToRoute('app_review_index', $request->query->all());
     }
 }

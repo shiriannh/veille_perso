@@ -56,6 +56,39 @@ class EntryRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    public function countPendingAnalysisEntries(): int
+    {
+        return (int) $this->createQueryBuilder('entry')
+            ->select('COUNT(entry.id)')
+            ->andWhere('entry.analysisStatus = :pending OR entry.decision IS NULL')
+            ->setParameter('pending', AnalysisStatus::Pending)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countRelevantWithoutReview(): int
+    {
+        return (int) $this->createQueryBuilder('entry')
+            ->select('COUNT(entry.id)')
+            ->leftJoin('entry.review', 'review')
+            ->andWhere('review.id IS NULL')
+            ->andWhere('entry.decision IN (:decisions)')
+            ->setParameter('decisions', [AnalysisDecision::Relevant, AnalysisDecision::MaybeRelevant])
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function countUnsynthesizedRelevantEntries(): int
+    {
+        return (int) $this->createQueryBuilder('entry')
+            ->select('COUNT(entry.id)')
+            ->andWhere('entry.lastSynthesizedAt IS NULL')
+            ->andWhere('entry.decision IN (:decisions)')
+            ->setParameter('decisions', [AnalysisDecision::Relevant, AnalysisDecision::MaybeRelevant])
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     /**
      * @param array{
      *     q?: ?string,

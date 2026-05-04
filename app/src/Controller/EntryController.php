@@ -74,6 +74,53 @@ class EntryController extends AbstractController
         return $this->redirectToRoute('app_entry_index', $request->query->all());
     }
 
+    #[Route('/detect-tags-filtered', name: 'app_entry_detect_tags_filtered', methods: ['POST'])]
+    public function detectTagsFiltered(
+        Request $request,
+        EntryRepository $entryRepository,
+        SourceRepository $sourceRepository,
+        EntryTagDetector $entryTagDetector,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        if (!$this->isCsrfTokenValid('detect_tags_filtered_entries', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, detection non lancee.');
+
+            return $this->redirectToRoute('app_entry_index', $request->query->all());
+        }
+
+        [$filters] = $this->filtersFromRequest($request, $sourceRepository);
+        $entries = $entryRepository->findFiltered($filters);
+
+        foreach ($entries as $entry) {
+            $entryTagDetector->detect($entry);
+        }
+
+        $entityManager->flush();
+        $this->addFlash('success', sprintf('Tags detectes recalcules pour %d entree(s) filtrees.', count($entries)));
+
+        return $this->redirectToRoute('app_entry_index', $request->query->all());
+    }
+
+    #[Route('/{id}/mark-ignored', name: 'app_entry_mark_ignored', methods: ['POST'])]
+    public function markIgnored(
+        Request $request,
+        Entry $entry,
+        ReferenceFieldSynchronizer $referenceFieldSynchronizer,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        return $this->markDecision($request, $entry, AnalysisDecision::Ignored, 'ignoree', $referenceFieldSynchronizer, $entityManager);
+    }
+
+    #[Route('/{id}/mark-relevant', name: 'app_entry_mark_relevant', methods: ['POST'])]
+    public function markRelevant(
+        Request $request,
+        Entry $entry,
+        ReferenceFieldSynchronizer $referenceFieldSynchronizer,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        return $this->markDecision($request, $entry, AnalysisDecision::Relevant, 'pertinente', $referenceFieldSynchronizer, $entityManager);
+    }
+
     #[Route('/{id}/analyze', name: 'app_entry_analyze', methods: ['POST'])]
     public function analyze(Request $request, Entry $entry, EntryAnalyzer $entryAnalyzer, EntityManagerInterface $entityManager): Response
     {
@@ -292,7 +339,7 @@ class EntryController extends AbstractController
             if ($entry->getReview() !== null) {
                 $this->addFlash('error', 'Impossible de supprimer une entrée qui possède une fiche. Supprime d’abord la fiche associée.');
 
-                return $this->redirectToRoute('app_entry_index');
+                return $this->redirectToRoute('app_entry_index', $request->query->all());
             }
 
             $entityManager->remove($entry);
@@ -300,7 +347,7 @@ class EntryController extends AbstractController
             $this->addFlash('success', 'Entrée supprimée.');
         }
 
-        return $this->redirectToRoute('app_entry_index');
+        return $this->redirectToRoute('app_entry_index', $request->query->all());
     }
 
     /**
@@ -451,5 +498,32 @@ class EntryController extends AbstractController
         }
 
         return array_values(array_unique($normalized));
+    }
+
+    private function markDecision(
+        Request $request,
+        Entry $entry,
+        AnalysisDecision $decision,
+        string $label,
+        ReferenceFieldSynchronizer $referenceFieldSynchronizer,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        if (!$this->isCsrfTokenValid('mark_entry_'.$decision->value.'_'.$entry->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, action annulee.');
+
+            return $this->redirectToRoute('app_entry_index', $request->query->all());
+        }
+
+        $oldValue = ['decision' => $entry->getDecision()?->value];
+        $entry->setDecision($decision);
+        $entry->setDecisionReason(trim(($entry->getDecisionReason() ?? '')."\nAction manuelle liste: entree marquee ".$label.'.'));
+        $this->appendManualSignal($entry, 'action manuelle liste: '.$decision->value);
+        $referenceFieldSynchronizer->syncEntryToReferences($entry);
+        $this->recordCorrection($entry, 'decision', $oldValue, ['decision' => $decision->value], $request, $entityManager);
+
+        $entityManager->flush();
+        $this->addFlash('success', sprintf('Entree marquee %s.', $label));
+
+        return $this->redirectToRoute('app_entry_index', $request->query->all());
     }
 }

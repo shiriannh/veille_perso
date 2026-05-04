@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\SynthesisReport;
 use App\Form\SynthesisReportGenerateType;
 use App\Repository\SynthesisReportRepository;
+use App\Service\ArrayPaginator;
 use App\Service\SynthesisReportGenerator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,10 +16,14 @@ use Symfony\Component\Routing\Attribute\Route;
 class SynthesisReportController extends AbstractController
 {
     #[Route('', name: 'app_synthesis_report_index', methods: ['GET'])]
-    public function index(SynthesisReportRepository $synthesisReportRepository): Response
+    public function index(Request $request, SynthesisReportRepository $synthesisReportRepository, ArrayPaginator $arrayPaginator): Response
     {
+        $reports = $synthesisReportRepository->findLatest();
+        [$paginatedReports, $pagination] = $arrayPaginator->paginate($request, $reports, '25');
+
         return $this->render('synthesis_report/index.html.twig', [
-            'reports' => $synthesisReportRepository->findLatest(),
+            'reports' => $paginatedReports,
+            'pagination' => $pagination,
         ]);
     }
 
