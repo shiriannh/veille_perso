@@ -398,14 +398,27 @@ La migration `Version20260503220000` introduit des tables de reference administr
 - `clickbait_level_reference` ;
 - `analysis_language_reference`.
 
-Strategie de migration retenue : les colonnes enum historiques restent en place pour ne pas casser les formulaires et les donnees existantes. Les nouvelles tables servent de referentiels administrables et de point d'extension. Les valeurs existantes sont migrees/seedées, puis l'application peut progressivement remplacer les usages directs des enums par ces references.
+Strategie de migration retenue : les colonnes enum historiques restent en place pour ne pas casser les filtres, imports, analyses et donnees existantes. Les nouvelles tables servent de referentiels administrables et de point d'extension. Les valeurs existantes sont migrees/seedees, puis l'application remplace progressivement les usages directs des enums par ces references.
 
-Un onglet `Admin` donne acces aux CRUD sobres de ces referentiels. La suppression est volontairement remplacee par une desactivation quand la valeur peut deja etre liee a des donnees metier.
+Depuis `Version20260504120000` et `Version20260504121000`, `Entry` et `Source` possedent aussi des relations nullable vers ces references :
+
+- `Entry.mediaTypeReference`, synchronise avec `mediaType` ;
+- `Entry.decisionTypeReference`, synchronise avec `decision` ;
+- `Entry.clickbaitLevelReference`, synchronise avec `clickbaitLevel` ;
+- `Entry.analysisLanguageReference`, synchronise avec `analysisLanguage` ;
+- `Source.sourceTypeReference`, synchronise avec `type` ;
+- `Source.fetchModeReference`, synchronise avec `fetchMode`.
+
+Les formulaires Entry et Source utilisent deja les references actives pour les champs `media type`, `source type` et `fetch mode`, tout en recopiant la valeur choisie dans l'ancien enum compatible.
+
+Un onglet `Admin` donne acces aux CRUD sobres de ces referentiels. La suppression est volontairement remplacee par une desactivation quand la valeur peut deja etre liee a des donnees metier. La page `References inactives` permet de retrouver rapidement les valeurs desactivees.
 
 Commande de synchronisation :
 
 ```bash
 docker compose exec app php bin/console app:seed-reference-data
+docker compose exec app php bin/console app:sync-reference-fields
+docker compose exec app php bin/console app:sync-reference-fields --dry-run
 ```
 
 ## Enrichissement automatique des tags

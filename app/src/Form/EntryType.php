@@ -3,9 +3,11 @@
 namespace App\Form;
 
 use App\Entity\Entry;
+use App\Entity\MediaTypeReference;
 use App\Entity\Source;
 use App\Enum\EntryStatus;
 use App\Enum\MediaType;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -32,10 +34,14 @@ class EntryType extends AbstractType
             ->add('title', TextType::class, [
                 'label' => 'Titre',
             ])
-            ->add('mediaType', ChoiceType::class, [
+            ->add('mediaTypeReference', EntityType::class, [
                 'label' => "Type d'oeuvre",
-                'choices' => MediaType::cases(),
-                'choice_label' => static fn (MediaType $type): string => $type->label(),
+                'class' => MediaTypeReference::class,
+                'choice_label' => 'name',
+                'placeholder' => 'Choisir un type',
+                'query_builder' => static fn (EntityRepository $repository) => $repository->createQueryBuilder('reference')
+                    ->andWhere('reference.isActive = true')
+                    ->orderBy('reference.name', 'ASC'),
             ])
             ->add('authorOrStudio', TextType::class, [
                 'label' => 'Auteur / studio',
@@ -87,6 +93,13 @@ class EntryType extends AbstractType
             }
 
             $entry->setPersonalTagsFromString($event->getForm()->get('personalTagsText')->getData());
+            $mediaTypeReference = $entry->getMediaTypeReference();
+            if ($mediaTypeReference instanceof MediaTypeReference) {
+                $mediaType = MediaType::tryFrom($mediaTypeReference->getSlug());
+                if ($mediaType instanceof MediaType) {
+                    $entry->setMediaType($mediaType);
+                }
+            }
         });
     }
 

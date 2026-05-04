@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Références inactives - Admin{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Références inactives</h1>
+            <p>Valeurs désactivées, conservées pour éviter les suppressions destructives.</p>
+        </div>
+        <a class="button button-secondary" href="{{ path('app_admin_index') }}">Admin</a>
+    </section>
+
+    {% if items is empty %}
+        <p class="empty">Aucune référence inactive.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Référentiel</th>
+                    <th>Nom</th>
+                    <th>Slug</th>
+                    <th>Description</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                    <tr>
+                        <td>{{ item.label }}</td>
+                        <td>{{ item.reference.name }}</td>
+                        <td><code>{{ item.reference.slug }}</code></td>
+                        <td>{{ item.reference.description|default('-') }}</td>
+                        <td>
+                            <a class="button button-secondary" href="{{ path('app_admin_reference_edit', {type: item.type, id: item.reference.id}) }}">Modifier</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

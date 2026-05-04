@@ -25,18 +25,19 @@ Etat de suivi apres validation :
 - les prochains enrichissements de mappings devront partir de cas reels vus dans le diagnostic, pas de suppositions larges ;
 - un export `app:media-type-report --output=...` est disponible pour conserver un avant/apres des recalibrations.
 
-## Priorite 2 - Terminer la migration progressive enums -> references
+## Priorite 2 - Finalisee
 
-- Remplacer progressivement les `ChoiceType` bases sur enums par des `EntityType` bases sur les tables de reference administrables.
-- Commencer par `MediaTypeReference` sur le formulaire Entry, en conservant une compatibilite avec l'ancien enum tant que necessaire.
-- Ajouter sur Entry une vraie relation nullable vers `MediaTypeReference` quand la transition est stabilisee.
-- Ajouter une relation vers `DecisionTypeReference` si les decisions doivent devenir entierement configurables.
-- Ajouter une relation vers `ClickbaitLevelReference` si les niveaux clickbait doivent etre administres au-dela des labels.
-- Ajouter une relation vers `AnalysisLanguageReference` si les langues doivent etre enrichies ou filtrees via Admin.
-- Eviter de supprimer les colonnes enum avant une migration de donnees complete et verifiee.
-- Ajouter une commande `app:sync-reference-fields` pour aligner les valeurs enum historiques avec les references.
-- Ajouter des contraintes d'unicite et de coherence sur les references critiques si elles manquent.
-- Ajouter une vue Admin "References inactives" pour retrouver rapidement les valeurs desactivees.
+Migration progressive enums -> references effectuee sans suppression des colonnes historiques.
+
+Etat :
+
+- les formulaires Entry et Source utilisent les references actives pour les choix metier principaux ;
+- `Entry` possede des relations nullable vers media type, decision, clickbait level et analysis language ;
+- `Source` possede des relations nullable vers source type et fetch mode ;
+- les anciennes colonnes enum restent la source de compatibilite pour les filtres, imports et analyses existants ;
+- `app:sync-reference-fields` synchronise les anciennes valeurs vers les nouvelles relations ;
+- les slugs des referentiels restent uniques ;
+- l'Admin expose une vue "References inactives".
 
 ## Priorite 3 - Administrer le profil d'interet
 
@@ -197,6 +198,9 @@ Etat de suivi apres validation :
 - Filtre rapide "Medias other" sur la liste Entry.
 - Action "Re-analyser le filtre courant" sur la liste Entry.
 - Export texte du rapport media avec `app:media-type-report --output=...`.
+- Migration progressive enums vers references sur Entry et Source.
+- Commande `app:sync-reference-fields`.
+- Vue Admin "References inactives".
 
 ## Hors perimetre volontaire
 

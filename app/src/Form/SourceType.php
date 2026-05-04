@@ -3,11 +3,12 @@
 namespace App\Form;
 
 use App\Entity\Source;
-use App\Enum\FetchMode;
-use App\Enum\SourceType as SourceTypeEnum;
+use App\Entity\FetchModeReference;
+use App\Entity\SourceTypeReference;
+use Doctrine\ORM\EntityRepository;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
@@ -22,10 +23,13 @@ class SourceType extends AbstractType
             ->add('name', TextType::class, [
                 'label' => 'Nom',
             ])
-            ->add('type', ChoiceType::class, [
+            ->add('sourceTypeReference', EntityType::class, [
                 'label' => 'Type',
-                'choices' => SourceTypeEnum::cases(),
-                'choice_label' => static fn (SourceTypeEnum $type): string => $type->label(),
+                'class' => SourceTypeReference::class,
+                'choice_label' => 'name',
+                'query_builder' => static fn (EntityRepository $repository) => $repository->createQueryBuilder('reference')
+                    ->andWhere('reference.isActive = true')
+                    ->orderBy('reference.name', 'ASC'),
             ])
             ->add('url', UrlType::class, [
                 'label' => 'URL',
@@ -35,10 +39,13 @@ class SourceType extends AbstractType
                 'label' => 'Source active',
                 'required' => false,
             ])
-            ->add('fetchMode', ChoiceType::class, [
+            ->add('fetchModeReference', EntityType::class, [
                 'label' => 'Mode d’import',
-                'choices' => FetchMode::cases(),
-                'choice_label' => static fn (FetchMode $fetchMode): string => $fetchMode->label(),
+                'class' => FetchModeReference::class,
+                'choice_label' => 'name',
+                'query_builder' => static fn (EntityRepository $repository) => $repository->createQueryBuilder('reference')
+                    ->andWhere('reference.isActive = true')
+                    ->orderBy('reference.name', 'ASC'),
             ])
             ->add('feedUrl', UrlType::class, [
                 'label' => 'URL du flux RSS',

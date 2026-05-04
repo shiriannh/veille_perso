@@ -35,6 +35,9 @@ class Entry
     #[ORM\Column(enumType: MediaType::class)]
     private MediaType $mediaType = MediaType::VideoGame;
 
+    #[ORM\ManyToOne]
+    private ?MediaTypeReference $mediaTypeReference = null;
+
     #[ORM\Column(length: 30, nullable: true)]
     private ?string $mediaTypeOrigin = null;
 
@@ -92,6 +95,9 @@ class Entry
     #[ORM\Column(enumType: AnalysisDecision::class, nullable: true)]
     private ?AnalysisDecision $decision = null;
 
+    #[ORM\ManyToOne]
+    private ?DecisionTypeReference $decisionTypeReference = null;
+
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $decisionReason = null;
 
@@ -116,6 +122,9 @@ class Entry
     #[ORM\Column(enumType: ClickbaitLevel::class, nullable: true)]
     private ?ClickbaitLevel $clickbaitLevel = null;
 
+    #[ORM\ManyToOne]
+    private ?ClickbaitLevelReference $clickbaitLevelReference = null;
+
     #[ORM\Column(nullable: true)]
     private ?int $mediaDetectionConfidence = null;
 
@@ -133,6 +142,9 @@ class Entry
 
     #[ORM\Column(length: 10, nullable: true)]
     private ?string $analysisLanguage = null;
+
+    #[ORM\ManyToOne]
+    private ?AnalysisLanguageReference $analysisLanguageReference = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
     private ?\DateTimeImmutable $analyzedAt = null;
@@ -237,6 +249,18 @@ class Entry
     public function setMediaType(MediaType $mediaType): self
     {
         $this->mediaType = $mediaType;
+
+        return $this;
+    }
+
+    public function getMediaTypeReference(): ?MediaTypeReference
+    {
+        return $this->mediaTypeReference;
+    }
+
+    public function setMediaTypeReference(?MediaTypeReference $mediaTypeReference): self
+    {
+        $this->mediaTypeReference = $mediaTypeReference;
 
         return $this;
     }
@@ -454,6 +478,18 @@ class Entry
         return $this;
     }
 
+    public function getDecisionTypeReference(): ?DecisionTypeReference
+    {
+        return $this->decisionTypeReference;
+    }
+
+    public function setDecisionTypeReference(?DecisionTypeReference $decisionTypeReference): self
+    {
+        $this->decisionTypeReference = $decisionTypeReference;
+
+        return $this;
+    }
+
     public function getDecisionReason(): ?string
     {
         return $this->decisionReason;
@@ -532,6 +568,18 @@ class Entry
         return $this;
     }
 
+    public function getClickbaitLevelReference(): ?ClickbaitLevelReference
+    {
+        return $this->clickbaitLevelReference;
+    }
+
+    public function setClickbaitLevelReference(?ClickbaitLevelReference $clickbaitLevelReference): self
+    {
+        $this->clickbaitLevelReference = $clickbaitLevelReference;
+
+        return $this;
+    }
+
     public function getMediaDetectionConfidence(): ?int
     {
         return $this->mediaDetectionConfidence;
@@ -594,6 +642,18 @@ class Entry
     public function setAnalysisLanguage(?string $analysisLanguage): self
     {
         $this->analysisLanguage = $analysisLanguage;
+
+        return $this;
+    }
+
+    public function getAnalysisLanguageReference(): ?AnalysisLanguageReference
+    {
+        return $this->analysisLanguageReference;
+    }
+
+    public function setAnalysisLanguageReference(?AnalysisLanguageReference $analysisLanguageReference): self
+    {
+        $this->analysisLanguageReference = $analysisLanguageReference;
 
         return $this;
     }

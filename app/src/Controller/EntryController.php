@@ -13,6 +13,7 @@ use App\Repository\SourceRepository;
 use App\Service\EntryAnalyzer;
 use App\Service\EntryTagDetector;
 use App\Service\MediaTypeResolver;
+use App\Service\ReferenceFieldSynchronizer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -101,7 +102,7 @@ class EntryController extends AbstractController
     }
 
     #[Route('/new', name: 'app_entry_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, SourceRepository $sourceRepository, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, SourceRepository $sourceRepository, ReferenceFieldSynchronizer $referenceFieldSynchronizer, EntityManagerInterface $entityManager): Response
     {
         if ($sourceRepository->count([]) === 0) {
             $this->addFlash('error', 'Crée au moins une source avant de saisir une entrée.');
@@ -110,10 +111,13 @@ class EntryController extends AbstractController
         }
 
         $entry = new Entry();
+        $referenceFieldSynchronizer->syncEntryToReferences($entry);
         $form = $this->createForm(EntryType::class, $entry);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $referenceFieldSynchronizer->syncEntryFromReferences($entry);
+            $referenceFieldSynchronizer->syncEntryToReferences($entry);
             $entry->setMediaTypeOrigin('manual');
             $entityManager->persist($entry);
             $entityManager->flush();
@@ -138,12 +142,15 @@ class EntryController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_entry_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Entry $entry, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Entry $entry, ReferenceFieldSynchronizer $referenceFieldSynchronizer, EntityManagerInterface $entityManager): Response
     {
+        $referenceFieldSynchronizer->syncEntryToReferences($entry);
         $form = $this->createForm(EntryType::class, $entry);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $referenceFieldSynchronizer->syncEntryFromReferences($entry);
+            $referenceFieldSynchronizer->syncEntryToReferences($entry);
             $entry->setMediaTypeOrigin('manual');
             $entityManager->flush();
 

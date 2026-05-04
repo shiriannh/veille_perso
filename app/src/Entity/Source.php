@@ -28,6 +28,9 @@ class Source
     #[ORM\Column(enumType: SourceType::class)]
     private SourceType $type = SourceType::Website;
 
+    #[ORM\ManyToOne]
+    private ?SourceTypeReference $sourceTypeReference = null;
+
     #[ORM\Column(length: 500, nullable: true)]
     #[Assert\Url]
     #[Assert\Length(max: 500)]
@@ -38,6 +41,9 @@ class Source
 
     #[ORM\Column(enumType: FetchMode::class)]
     private FetchMode $fetchMode = FetchMode::Manual;
+
+    #[ORM\ManyToOne]
+    private ?FetchModeReference $fetchModeReference = null;
 
     #[ORM\Column(length: 500, nullable: true)]
     #[Assert\Url]
@@ -117,6 +123,18 @@ class Source
         return $this;
     }
 
+    public function getSourceTypeReference(): ?SourceTypeReference
+    {
+        return $this->sourceTypeReference;
+    }
+
+    public function setSourceTypeReference(?SourceTypeReference $sourceTypeReference): self
+    {
+        $this->sourceTypeReference = $sourceTypeReference;
+
+        return $this;
+    }
+
     public function getUrl(): ?string
     {
         return $this->url;
@@ -149,6 +167,18 @@ class Source
     public function setFetchMode(FetchMode $fetchMode): self
     {
         $this->fetchMode = $fetchMode;
+
+        return $this;
+    }
+
+    public function getFetchModeReference(): ?FetchModeReference
+    {
+        return $this->fetchModeReference;
+    }
+
+    public function setFetchModeReference(?FetchModeReference $fetchModeReference): self
+    {
+        $this->fetchModeReference = $fetchModeReference;
 
         return $this;
     }

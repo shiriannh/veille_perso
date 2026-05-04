@@ -9,6 +9,7 @@ use App\Form\SourceType;
 use App\Repository\ImportRunRepository;
 use App\Repository\SourceRepository;
 use App\Service\DatabaseResetter;
+use App\Service\ReferenceFieldSynchronizer;
 use App\Service\RssImporter;
 use App\Service\SourceCsvImporter;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,13 +30,16 @@ class SourceController extends AbstractController
     }
 
     #[Route('/new', name: 'app_source_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, ReferenceFieldSynchronizer $referenceFieldSynchronizer, EntityManagerInterface $entityManager): Response
     {
         $source = new Source();
+        $referenceFieldSynchronizer->syncSourceToReferences($source);
         $form = $this->createForm(SourceType::class, $source);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $referenceFieldSynchronizer->syncSourceFromReferences($source);
+            $referenceFieldSynchronizer->syncSourceToReferences($source);
             $entityManager->persist($source);
             $entityManager->flush();
 
@@ -137,12 +141,15 @@ class SourceController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_source_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Source $source, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Source $source, ReferenceFieldSynchronizer $referenceFieldSynchronizer, EntityManagerInterface $entityManager): Response
     {
+        $referenceFieldSynchronizer->syncSourceToReferences($source);
         $form = $this->createForm(SourceType::class, $source);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $referenceFieldSynchronizer->syncSourceFromReferences($source);
+            $referenceFieldSynchronizer->syncSourceToReferences($source);
             $entityManager->flush();
 
             $this->addFlash('success', 'Source mise à jour.');

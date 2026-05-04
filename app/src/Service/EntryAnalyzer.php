@@ -117,6 +117,7 @@ class EntryAnalyzer
         private readonly AutoTagEnricher $autoTagEnricher,
         private readonly InterestLevelCalculator $interestLevelCalculator,
         private readonly DraftReviewCreator $draftReviewCreator,
+        private readonly ReferenceFieldSynchronizer $referenceFieldSynchronizer,
     ) {
     }
 
@@ -204,6 +205,7 @@ class EntryAnalyzer
             ->setAnalyzedAt(new \DateTimeImmutable());
 
         $entry->setInterestLevel($this->interestLevelCalculator->calculate($entry));
+        $this->referenceFieldSynchronizer->syncEntryToReferences($entry);
         $this->autoTagEnricher->enrich($entry, array_merge($categories, $entry->getDetectedTags()));
         $this->draftReviewCreator->createIfNeeded($entry);
 
