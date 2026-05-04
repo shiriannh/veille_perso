@@ -46,6 +46,16 @@ class EntryRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    public function countStoredOtherMediaEntries(): int
+    {
+        return (int) $this->createQueryBuilder('entry')
+            ->select('COUNT(entry.id)')
+            ->andWhere('entry.mediaType = :other')
+            ->setParameter('other', MediaType::Other)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
     /**
      * @param array{
      *     q?: ?string,

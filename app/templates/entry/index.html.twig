@@ -8,7 +8,10 @@
             <h1>Entrées</h1>
             <p>Contenus bruts repérés avant synthèse personnelle.</p>
         </div>
-        <a class="button" href="{{ path('app_entry_new') }}">Nouvelle entrée</a>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'other'}) }}">Médias other</a>
+            <a class="button" href="{{ path('app_entry_new') }}">Nouvelle entrée</a>
+        </div>
     </section>
 
     <form method="get" class="filter-form">
@@ -128,6 +131,11 @@
             <button class="button">Filtrer</button>
             <a class="button button-secondary" href="{{ path('app_entry_index') }}">Réinitialiser</a>
         </div>
+    </form>
+
+    <form method="post" action="{{ path('app_entry_reanalyze_filtered', app.request.query.all) }}" class="actions" onsubmit="return confirm('Ré-analyser toutes les entrées du filtre courant ?');">
+        <input type="hidden" name="_token" value="{{ csrf_token('reanalyze_filtered_entries') }}">
+        <button class="button button-secondary">Ré-analyser le filtre courant</button>
     </form>
 
     {% if entries is empty %}

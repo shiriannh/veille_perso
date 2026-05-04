@@ -65,6 +65,7 @@ docker compose exec app php bin/console app:seed-reference-data
 docker compose exec app php bin/console app:generate-draft-reviews
 docker compose exec app php bin/console app:media-type-report
 docker compose exec app php bin/console app:promote-media-types --dry-run
+docker compose exec app vendor/bin/phpunit
 ```
 
 ## Media final 1.6
@@ -123,6 +124,7 @@ Pour fiabiliser le socle 1.6 au quotidien :
 - l'Admin expose `Diagnostic media final`, qui liste les Entry encore stockees en `media_type = other` et propose une reanalyse ciblee ;
 - l'Admin expose `Mappings media actifs`, qui documente les categories RSS, tags, profils source et origines reconnus ;
 - `app:media-type-report` affiche la repartition des medias finaux et des origines ;
+- `app:media-type-report --output=var/media-type-report.txt` exporte le meme rapport en texte ;
 - `app:promote-media-types --dry-run` simule les promotions possibles sans ecriture.
 
 ## Structure

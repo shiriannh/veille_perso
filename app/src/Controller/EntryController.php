@@ -25,46 +25,7 @@ class EntryController extends AbstractController
     #[Route('', name: 'app_entry_index', methods: ['GET'])]
     public function index(Request $request, EntryRepository $entryRepository, SourceRepository $sourceRepository): Response
     {
-        $sourceId = (string) $request->query->get('source', '');
-        $source = ctype_digit($sourceId) && (int) $sourceId > 0 ? $sourceRepository->find((int) $sourceId) : null;
-        $mediaType = MediaType::tryFrom((string) $request->query->get('mediaType'));
-        $detectedMediaType = MediaType::tryFrom((string) $request->query->get('detectedMediaType'));
-        $mediaTypeOrigin = in_array($request->query->get('mediaTypeOrigin'), MediaTypeResolver::origins(), true)
-            ? (string) $request->query->get('mediaTypeOrigin')
-            : null;
-        $status = EntryStatus::tryFrom((string) $request->query->get('status'));
-        $interestLevelValue = (string) $request->query->get('interestLevel', '');
-        $interestLevel = ctype_digit($interestLevelValue)
-            ? max(0, min(5, (int) $interestLevelValue))
-            : null;
-        $reviewState = in_array($request->query->get('reviewState'), ['with', 'without'], true)
-            ? (string) $request->query->get('reviewState')
-            : null;
-        $decision = AnalysisDecision::tryFrom((string) $request->query->get('decision'));
-        $clickbaitLevel = ClickbaitLevel::tryFrom((string) $request->query->get('clickbaitLevel'));
-        $analysisLanguage = in_array($request->query->get('analysisLanguage'), ['fr', 'en', 'mixed', 'unknown'], true)
-            ? (string) $request->query->get('analysisLanguage')
-            : null;
-        $sort = in_array($request->query->get('sort'), ['published_desc', 'published_asc', 'imported_desc', 'imported_asc'], true)
-            ? (string) $request->query->get('sort')
-            : null;
-
-        $filters = [
-            'q' => $request->query->get('q'),
-            'source' => $source,
-            'mediaType' => $mediaType,
-            'detectedMediaType' => $detectedMediaType,
-            'mediaTypeOrigin' => $mediaTypeOrigin,
-            'status' => $status,
-            'interestLevel' => $interestLevel,
-            'reviewState' => $reviewState,
-            'decision' => $decision,
-            'clickbaitLevel' => $clickbaitLevel,
-            'keyword' => $request->query->get('keyword'),
-            'detectedTag' => $request->query->get('detectedTag'),
-            'analysisLanguage' => $analysisLanguage,
-            'sort' => $sort,
-        ];
+        [$filters, $viewFilters] = $this->filtersFromRequest($request, $sourceRepository);
 
         return $this->render('entry/index.html.twig', [
             'entries' => $entryRepository->findFiltered($filters),
@@ -74,23 +35,35 @@ class EntryController extends AbstractController
             'decisions' => AnalysisDecision::cases(),
             'clickbait_levels' => ClickbaitLevel::cases(),
             'media_type_origins' => MediaTypeResolver::origins(),
-            'filters' => [
-                'q' => (string) $request->query->get('q', ''),
-                'source' => $source?->getId(),
-                'mediaType' => $mediaType?->value,
-                'detectedMediaType' => $detectedMediaType?->value,
-                'mediaTypeOrigin' => $mediaTypeOrigin ?? '',
-                'status' => $status?->value,
-                'interestLevel' => $interestLevel,
-                'reviewState' => $reviewState,
-                'decision' => $decision?->value,
-                'clickbaitLevel' => $clickbaitLevel?->value,
-                'keyword' => (string) $request->query->get('keyword', ''),
-                'detectedTag' => (string) $request->query->get('detectedTag', ''),
-                'analysisLanguage' => $analysisLanguage ?? '',
-                'sort' => $sort ?? '',
-            ],
+            'filters' => $viewFilters,
         ]);
+    }
+
+    #[Route('/reanalyze-filtered', name: 'app_entry_reanalyze_filtered', methods: ['POST'])]
+    public function reanalyzeFiltered(
+        Request $request,
+        EntryRepository $entryRepository,
+        SourceRepository $sourceRepository,
+        EntryAnalyzer $entryAnalyzer,
+        EntityManagerInterface $entityManager,
+    ): Response {
+        if (!$this->isCsrfTokenValid('reanalyze_filtered_entries', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, reanalyse non lancee.');
+
+            return $this->redirectToRoute('app_entry_index', $request->query->all());
+        }
+
+        [$filters] = $this->filtersFromRequest($request, $sourceRepository);
+        $entries = $entryRepository->findFiltered($filters);
+
+        foreach ($entries as $entry) {
+            $entryAnalyzer->analyze($entry);
+        }
+
+        $entityManager->flush();
+        $this->addFlash('success', sprintf('%d entree(s) filtrees reanalysees.', count($entries)));
+
+        return $this->redirectToRoute('app_entry_index', $request->query->all());
     }
 
     #[Route('/{id}/analyze', name: 'app_entry_analyze', methods: ['POST'])]
@@ -201,5 +174,70 @@ class EntryController extends AbstractController
         }
 
         return $this->redirectToRoute('app_entry_index');
+    }
+
+    /**
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private function filtersFromRequest(Request $request, SourceRepository $sourceRepository): array
+    {
+        $sourceId = (string) $request->query->get('source', '');
+        $source = ctype_digit($sourceId) && (int) $sourceId > 0 ? $sourceRepository->find((int) $sourceId) : null;
+        $mediaType = MediaType::tryFrom((string) $request->query->get('mediaType'));
+        $detectedMediaType = MediaType::tryFrom((string) $request->query->get('detectedMediaType'));
+        $mediaTypeOrigin = in_array($request->query->get('mediaTypeOrigin'), MediaTypeResolver::origins(), true)
+            ? (string) $request->query->get('mediaTypeOrigin')
+            : null;
+        $status = EntryStatus::tryFrom((string) $request->query->get('status'));
+        $interestLevelValue = (string) $request->query->get('interestLevel', '');
+        $interestLevel = ctype_digit($interestLevelValue)
+            ? max(0, min(5, (int) $interestLevelValue))
+            : null;
+        $reviewState = in_array($request->query->get('reviewState'), ['with', 'without'], true)
+            ? (string) $request->query->get('reviewState')
+            : null;
+        $decision = AnalysisDecision::tryFrom((string) $request->query->get('decision'));
+        $clickbaitLevel = ClickbaitLevel::tryFrom((string) $request->query->get('clickbaitLevel'));
+        $analysisLanguage = in_array($request->query->get('analysisLanguage'), ['fr', 'en', 'mixed', 'unknown'], true)
+            ? (string) $request->query->get('analysisLanguage')
+            : null;
+        $sort = in_array($request->query->get('sort'), ['published_desc', 'published_asc', 'imported_desc', 'imported_asc'], true)
+            ? (string) $request->query->get('sort')
+            : null;
+
+        return [
+            [
+                'q' => $request->query->get('q'),
+                'source' => $source,
+                'mediaType' => $mediaType,
+                'detectedMediaType' => $detectedMediaType,
+                'mediaTypeOrigin' => $mediaTypeOrigin,
+                'status' => $status,
+                'interestLevel' => $interestLevel,
+                'reviewState' => $reviewState,
+                'decision' => $decision,
+                'clickbaitLevel' => $clickbaitLevel,
+                'keyword' => $request->query->get('keyword'),
+                'detectedTag' => $request->query->get('detectedTag'),
+                'analysisLanguage' => $analysisLanguage,
+                'sort' => $sort,
+            ],
+            [
+                'q' => (string) $request->query->get('q', ''),
+                'source' => $source?->getId(),
+                'mediaType' => $mediaType?->value,
+                'detectedMediaType' => $detectedMediaType?->value,
+                'mediaTypeOrigin' => $mediaTypeOrigin ?? '',
+                'status' => $status?->value,
+                'interestLevel' => $interestLevel,
+                'reviewState' => $reviewState,
+                'decision' => $decision?->value,
+                'clickbaitLevel' => $clickbaitLevel?->value,
+                'keyword' => (string) $request->query->get('keyword', ''),
+                'detectedTag' => (string) $request->query->get('detectedTag', ''),
+                'analysisLanguage' => $analysisLanguage ?? '',
+                'sort' => $sort ?? '',
+            ],
+        ];
     }
 }

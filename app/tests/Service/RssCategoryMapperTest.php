@@ -5,6 +5,7 @@ namespace App\Tests\Service;
 use App\Entity\Entry;
 use App\Enum\MediaType;
 use App\Service\RssCategoryMapper;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class RssCategoryMapperTest extends TestCase
@@ -16,9 +17,7 @@ class RssCategoryMapperTest extends TestCase
         $this->mapper = new RssCategoryMapper();
     }
 
-    /**
-     * @dataProvider mediaCategoryProvider
-     */
+    #[DataProvider('mediaCategoryProvider')]
     public function testItMapsRssCategoriesToMedia(string $category, MediaType $expectedMedia): void
     {
         self::assertSame($expectedMedia, $this->mapper->mediaTypeForCategory($category));

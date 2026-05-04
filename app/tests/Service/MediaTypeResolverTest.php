@@ -7,6 +7,7 @@ use App\Entity\Source;
 use App\Enum\MediaType;
 use App\Service\MediaTypeResolver;
 use App\Service\RssCategoryMapper;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 class MediaTypeResolverTest extends TestCase
@@ -19,10 +20,9 @@ class MediaTypeResolverTest extends TestCase
     }
 
     /**
-     * @dataProvider detectedTagProvider
-     *
      * @param array<int, string> $tags
      */
+    #[DataProvider('detectedTagProvider')]
     public function testItPromotesMediaFromDetectedTags(array $tags, MediaType $expectedMedia): void
     {
         $entry = $this->entry(tags: $tags);
@@ -52,10 +52,9 @@ class MediaTypeResolverTest extends TestCase
     }
 
     /**
-     * @dataProvider rssCategoryProvider
-     *
      * @param array<int, string> $categories
      */
+    #[DataProvider('rssCategoryProvider')]
     public function testItPromotesMediaFromRssCategories(array $categories, MediaType $expectedMedia): void
     {
         $entry = $this->entry();

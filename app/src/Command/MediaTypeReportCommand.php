@@ -7,6 +7,7 @@ use App\Repository\EntryRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -17,6 +18,11 @@ class MediaTypeReportCommand extends Command
         private readonly EntryRepository $entryRepository,
     ) {
         parent::__construct();
+    }
+
+    protected function configure(): void
+    {
+        $this->addOption('output', null, InputOption::VALUE_REQUIRED, 'Chemin d export texte du rapport.');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
@@ -40,6 +46,35 @@ class MediaTypeReportCommand extends Command
         $io->writeln(sprintf('Total entries: %d', $total));
         $io->writeln(sprintf('Entries encore stockees en other: %d', $otherCount));
 
+        $outputPath = $input->getOption('output');
+        if (is_string($outputPath) && trim($outputPath) !== '') {
+            file_put_contents($outputPath, $this->renderTextReport($rows, $total, $otherCount));
+            $io->success(sprintf('Rapport exporte dans %s.', $outputPath));
+        }
+
         return Command::SUCCESS;
+    }
+
+    /**
+     * @param array<int, array{0: string, 1: string, 2: int}> $rows
+     */
+    private function renderTextReport(array $rows, int $total, int $otherCount): string
+    {
+        $lines = [
+            'Rapport media final',
+            '===================',
+            '',
+            'media_final;origine;entries',
+        ];
+
+        foreach ($rows as $row) {
+            $lines[] = implode(';', $row);
+        }
+
+        $lines[] = '';
+        $lines[] = sprintf('total_entries;%d', $total);
+        $lines[] = sprintf('entries_other;%d', $otherCount);
+
+        return implode("\n", $lines)."\n";
     }
 }

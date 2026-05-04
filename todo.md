@@ -14,13 +14,16 @@ Cette liste tient compte de l'etat courant apres les evolutions 1.6 :
 
 La philosophie reste : local first, monolithe Symfony/Twig, pas de scraping, pas d'API publique, pas de workers distribues, pas de moteur vectoriel, pas de suppression automatique destructive.
 
-## Priorite 1 - Suite immediate apres fiabilisation 1.6
+## Priorite 1 - Finalisee
 
-- Installer ou ajouter proprement un runner de tests PHP (`phpunit/phpunit` ou Symfony PHPUnit Bridge) pour executer les tests deja poses sous `app/tests`.
-- Ajouter un raccourci depuis le dashboard vers le diagnostic media final quand des Entry restent en `media_type = other`.
-- Ajouter un filtre rapide "media other" sur la liste Entry pour retrouver les cas non classes sans passer par Admin.
-- Ajouter une action de reanalyse ciblee depuis la liste Entry pour retraiter uniquement le resultat filtre courant.
-- Ajouter un export texte du rapport `app:media-type-report` pour conserver l'etat avant/apres recalibration.
+Aucun chantier bloquant ouvert sur le socle 1.6.
+
+Etat de suivi apres validation :
+
+- 40 Entry restent stockees en `media_type = other` dans la base locale testee ;
+- `app:promote-media-types --dry-run` ne trouve actuellement aucune promotion automatique fiable ;
+- les prochains enrichissements de mappings devront partir de cas reels vus dans le diagnostic, pas de suppositions larges ;
+- un export `app:media-type-report --output=...` est disponible pour conserver un avant/apres des recalibrations.
 
 ## Priorite 2 - Terminer la migration progressive enums -> references
 
@@ -189,6 +192,11 @@ La philosophie reste : local first, monolithe Symfony/Twig, pas de scraping, pas
 - Commande `app:promote-media-types --dry-run` pour simuler les promotions sans ecriture.
 - Page Admin "Mappings media actifs" documentant categories RSS, tags, profils source et origines.
 - Tests unitaires ajoutes pour `MediaTypeResolver` et `RssCategoryMapper` sur les mappings critiques.
+- Runner PHPUnit installe en dependance dev et valide avec `vendor/bin/phpunit`.
+- Raccourci dashboard vers le diagnostic des medias `other`.
+- Filtre rapide "Medias other" sur la liste Entry.
+- Action "Re-analyser le filtre courant" sur la liste Entry.
+- Export texte du rapport media avec `app:media-type-report --output=...`.
 
 ## Hors perimetre volontaire
 

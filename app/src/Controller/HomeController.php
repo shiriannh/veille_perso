@@ -21,6 +21,7 @@ class HomeController extends AbstractController
             'source_count' => $sourceRepository->count([]),
             'active_source_count' => $sourceRepository->countActive(),
             'entry_count' => $entryRepository->count([]),
+            'other_media_entry_count' => $entryRepository->countStoredOtherMediaEntries(),
             'unreviewed_entry_count' => $entryRepository->countWithoutReview(),
             'review_count' => $reviewRepository->count([]),
             'latest_entries' => $entryRepository->findLatest(5),
