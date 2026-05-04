@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profil d'intérêt - Admin{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Profil d'intérêt</h1>
+            <p>Règles simples utilisées par l'analyse pour ajuster les centres d'intérêt.</p>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_admin_index') }}">Admin</a>
+            <a class="button" href="{{ path('app_admin_interest_profile_new') }}">Nouvelle règle</a>
+        </div>
+    </section>
+
+    {% if rules is empty %}
+        <p class="empty">Aucune règle de profil.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Catégorie</th>
+                    <th>Valeur</th>
+                    <th>Poids</th>
+                    <th>Statut</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rule in rules %}
+                    <tr>
+                        <td>{{ rule.categoryLabel() }}</td>
+                        <td><code>{{ rule.value }}</code></td>
+                        <td><span class="badge">{{ rule.weightLabel() }}</span></td>
+                        <td><span class="badge {{ rule.active ? '' : 'badge-muted' }}">{{ rule.active ? 'Active' : 'Inactive' }}</span></td>
+                        <td class="table-actions">
+                            <a class="button button-secondary" href="{{ path('app_admin_interest_profile_edit', {id: rule.id}) }}">Modifier</a>
+                            <form method="post" action="{{ path('app_admin_interest_profile_toggle', {id: rule.id}) }}" class="inline-form">
+                                <input type="hidden" name="_token" value="{{ csrf_token('toggle_interest_rule_' ~ rule.id) }}">
+                                <button class="button {{ rule.active ? 'button-danger' : 'button-secondary' }}">{{ rule.active ? 'Désactiver' : 'Activer' }}</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

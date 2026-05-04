@@ -28,8 +28,14 @@ class EntryController extends AbstractController
     {
         [$filters, $viewFilters] = $this->filtersFromRequest($request, $sourceRepository);
 
+        $entries = $entryRepository->findFiltered($filters);
+        [$paginatedEntries, $pagination] = $this->paginateEntries($request, $entries);
+        $viewFilters['page'] = $pagination['page'];
+        $viewFilters['perPage'] = $pagination['perPage'];
+
         return $this->render('entry/index.html.twig', [
-            'entries' => $entryRepository->findFiltered($filters),
+            'entries' => $paginatedEntries,
+            'pagination' => $pagination,
             'sources' => $sourceRepository->findAllOrdered(),
             'media_types' => MediaType::cases(),
             'statuses' => EntryStatus::cases(),
@@ -246,5 +252,41 @@ class EntryController extends AbstractController
                 'sort' => $sort ?? '',
             ],
         ];
+    }
+
+    /**
+     * @param array<int, Entry> $entries
+     *
+     * @return array{0: array<int, Entry>, 1: array<string, mixed>}
+     */
+    private function paginateEntries(Request $request, array $entries): array
+    {
+        $allowed = ['5', '10', '25', 'all'];
+        $perPage = in_array($request->query->get('perPage'), $allowed, true) ? (string) $request->query->get('perPage') : '25';
+        $total = count($entries);
+
+        if ($perPage === 'all') {
+            return [$entries, [
+                'page' => 1,
+                'perPage' => 'all',
+                'total' => $total,
+                'pages' => 1,
+                'allowed' => $allowed,
+            ]];
+        }
+
+        $limit = (int) $perPage;
+        $pages = max(1, (int) ceil($total / $limit));
+        $pageValue = (string) $request->query->get('page', '1');
+        $page = ctype_digit($pageValue) ? max(1, min($pages, (int) $pageValue)) : 1;
+        $offset = ($page - 1) * $limit;
+
+        return [array_slice($entries, $offset, $limit), [
+            'page' => $page,
+            'perPage' => $perPage,
+            'total' => $total,
+            'pages' => $pages,
+            'allowed' => $allowed,
+        ]];
     }
 }

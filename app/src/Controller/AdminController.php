@@ -7,6 +7,7 @@ use App\Entity\ClickbaitLevelReference;
 use App\Entity\DecisionTypeReference;
 use App\Entity\Entry;
 use App\Entity\FetchModeReference;
+use App\Entity\InterestProfileRule;
 use App\Entity\MediaTypeReference;
 use App\Entity\ReferenceEntityInterface;
 use App\Entity\SourceTypeReference;
@@ -25,6 +26,7 @@ class AdminController extends AbstractController
         return $this->render('admin/index.html.twig', [
             'sections' => [
                 ['label' => 'Media types', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'media-types'], 'class' => MediaTypeReference::class],
+                ['label' => 'Profil d interet', 'route' => 'app_admin_interest_profile_index', 'params' => [], 'class' => InterestProfileRule::class],
                 ['label' => 'Tags', 'route' => 'app_admin_tag_index', 'params' => [], 'class' => Tag::class],
                 ['label' => 'Source types', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'source-types'], 'class' => SourceTypeReference::class],
                 ['label' => 'Fetch modes', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'fetch-modes'], 'class' => FetchModeReference::class],

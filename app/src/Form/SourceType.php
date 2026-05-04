@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
@@ -56,6 +57,15 @@ class SourceType extends AbstractType
                 'label' => 'Notes',
                 'required' => false,
                 'attr' => ['rows' => 4],
+            ])
+            ->add('sourceProfile', ChoiceType::class, [
+                'label' => 'Profil de source',
+                'choices' => array_flip(Source::SOURCE_PROFILES),
+                'required' => false,
+            ])
+            ->add('sourceWeight', ChoiceType::class, [
+                'label' => 'Poids de source',
+                'choices' => array_flip(Source::SOURCE_WEIGHTS),
             ]);
     }
 

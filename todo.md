@@ -39,18 +39,23 @@ Etat :
 - les slugs des referentiels restent uniques ;
 - l'Admin expose une vue "References inactives".
 
-## Priorite 3 - Administrer le profil d'interet
+## Priorite 3 - Finalisee
 
-- Ajouter un ecran Admin "Profil d'interet" pour eviter de modifier uniquement le code ou le YAML.
-- Permettre d'ajouter des mots-cles positifs, negatifs, licences, studios, auteurs et medias preferes depuis l'interface.
-- Ajouter un poids simple par mot-cle : faible, normal, fort.
-- Ajouter un poids par Source : faible, normal, forte, source bruyante.
-- Ajouter un champ "profil de source" administrable : livres SFF, jeux video, BD/manga/comics, manga, JDR, figurines, generaliste.
-- Permettre d'associer un profil de source a une Source depuis le formulaire Source.
-- Utiliser le profil de source administre dans `MediaTypeResolver` et `EntryAnalyzer`.
-- Ajouter une page listant les tags actifs lies aux centres d'interet.
-- Ajouter un workflow de validation des tags auto-generes : activer, renommer, fusionner, ignorer.
-- Ajouter une trace simple indiquant quels tags ont ete auto-crees pendant une analyse.
+Profil d'interet administre en base et exploite par l'analyse.
+
+Etat :
+
+- ecran Admin "Profil d'interet" ajoute ;
+- mots-cles positifs, negatifs, expressions, licences, studios, auteurs et medias preferes administrables ;
+- poids simple par regle : faible, normal, fort ;
+- profil et poids de Source ajoutés au formulaire Source ;
+- profils de Source utilises par `MediaTypeResolver` et `EntryAnalyzer` ;
+- page "Tags d'interet" ajoutee ;
+- page "Tags auto-generes a valider" ajoutee ;
+- action de validation des tags auto-generes ajoutee ;
+- trace conservee dans les notes du tag valide ;
+- pagination ajoutee sur l'ecran Entrées avec choix 5/10/25/tout ;
+- boutons de la liste Entrées harmonises pour eviter les libelles sur deux lignes.
 
 ## Priorite 4 - Exploiter les corrections manuelles
 
@@ -65,7 +70,7 @@ Etat :
 
 ## Priorite 5 - Ameliorer l'exploitation quotidienne
 
-- Ajouter une pagination simple sur les listes longues d'Entry, Source, ImportRun, Review, Tag et SynthesisReport.
+- Etendre la pagination deja posee sur Entrées aux autres listes longues : Source, ImportRun, Review, Tag et SynthesisReport.
 - Conserver les filtres actifs apres une action de masse ou une navigation retour depuis une fiche detail.
 - Ajouter un bouton "Reanalyser les resultats filtres" sur la liste Entry.
 - Ajouter un bouton "Detecter les tags des resultats filtres" sur la liste Entry.
@@ -201,6 +206,10 @@ Etat :
 - Migration progressive enums vers references sur Entry et Source.
 - Commande `app:sync-reference-fields`.
 - Vue Admin "References inactives".
+- Profil d'interet administrable.
+- Profil et poids de Source.
+- Validation Admin des tags auto-generes.
+- Pagination et boutons harmonises sur la liste Entrées.
 
 ## Hors perimetre volontaire
 

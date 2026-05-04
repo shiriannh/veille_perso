@@ -107,6 +107,18 @@ class MediaTypeResolver
         'warhammer community' => ['media' => MediaType::Figurines, 'label' => 'profil source figurines'],
     ];
 
+    /**
+     * @var array<string, array{media: MediaType, label: string}>
+     */
+    private const ADMIN_SOURCE_PROFILES = [
+        'sff_books' => ['media' => MediaType::Book, 'label' => 'profil source admin livres SFF'],
+        'video_games' => ['media' => MediaType::VideoGame, 'label' => 'profil source admin jeux video'],
+        'sequential_art' => ['media' => MediaType::Bd, 'label' => 'profil source admin BD'],
+        'manga_sources' => ['media' => MediaType::Manga, 'label' => 'profil source admin manga'],
+        'ttrpg' => ['media' => MediaType::Ttrpg, 'label' => 'profil source admin JDR'],
+        'miniatures' => ['media' => MediaType::Figurines, 'label' => 'profil source admin figurines'],
+    ];
+
     public function __construct(
         private readonly RssCategoryMapper $rssCategoryMapper,
     ) {
@@ -153,6 +165,13 @@ class MediaTypeResolver
             $entry->getSource()?->getFeedUrl(),
             $entry->getSource()?->getNotes(),
         ])));
+
+        $sourceProfile = $entry->getSource()?->getSourceProfile();
+        if (is_string($sourceProfile) && isset(self::ADMIN_SOURCE_PROFILES[$sourceProfile])) {
+            $profile = self::ADMIN_SOURCE_PROFILES[$sourceProfile];
+            $this->addCandidate($scores, $origins, $profile['media'], 36, 'source_profile');
+            $signals[] = $profile['label'].': '.$profile['media']->label();
+        }
 
         foreach (self::SOURCE_PROFILES as $needle => $profile) {
             if (str_contains($sourceText, $this->normalize($needle))) {

@@ -213,9 +213,9 @@
                         </td>
                         <td class="table-actions">
                             {% if entry.review %}
-                                <a class="button button-secondary" href="{{ path('app_review_edit', {id: entry.review.id}) }}">Review</a>
+                                <a class="button button-secondary" href="{{ path('app_review_edit', {id: entry.review.id}) }}">Fiche</a>
                             {% else %}
-                                <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Créer review</a>
+                                <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Créer fiche</a>
                             {% endif %}
                             <a class="button button-secondary" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
                             {{ include('entry/_delete_form.html.twig') }}
@@ -224,5 +224,23 @@
                 {% endfor %}
             </tbody>
         </table>
+
+        <nav class="pager" aria-label="Pagination des entrées">
+            <div class="pager-pages">
+                {% if pagination.pages > 1 %}
+                    {% for page in 1..pagination.pages %}
+                        <a class="button {{ page == pagination.page ? '' : 'button-secondary' }}" href="{{ path('app_entry_index', app.request.query.all|merge({page: page})) }}">{{ page }}</a>
+                    {% endfor %}
+                {% else %}
+                    <span class="muted">{{ pagination.total }} entrée(s)</span>
+                {% endif %}
+            </div>
+            <div class="pager-size">
+                <span class="muted">Afficher</span>
+                {% for size in pagination.allowed %}
+                    <a class="button {{ pagination.perPage == size ? '' : 'button-secondary' }}" href="{{ path('app_entry_index', app.request.query.all|merge({perPage: size, page: 1})) }}">{{ size == 'all' ? 'tout' : size }}</a>
+                {% endfor %}
+            </div>
+        </nav>
     {% endif %}
 {% endblock %}

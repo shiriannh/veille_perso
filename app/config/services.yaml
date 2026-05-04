@@ -69,3 +69,4 @@ services:
             $minimumRelevanceScore: '%app.analysis.minimum_relevance_score%'
             $clickbaitSuspicionThreshold: '%app.analysis.clickbait_suspicion_threshold%'
             $clickbaitThreshold: '%app.analysis.clickbait_threshold%'
+            $ruleRepository: '@App\Repository\InterestProfileRuleRepository'

@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profil d'intérêt - Admin{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>{{ rule.id ? 'Modifier une règle' : 'Nouvelle règle' }}</h1>
+            <p>Les poids restent volontairement simples : faible, normal ou fort.</p>
+        </div>
+        <a class="button button-secondary" href="{{ path('app_admin_interest_profile_index') }}">Retour</a>
+    </section>
+
+    {{ form_start(form) }}
+        {{ form_row(form.category) }}
+        {{ form_row(form.value) }}
+        {{ form_row(form.weight) }}
+        {{ form_row(form.isActive) }}
+        <button class="button">Enregistrer</button>
+    {{ form_end(form) }}
+{% endblock %}

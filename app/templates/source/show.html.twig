@@ -54,6 +54,8 @@
         </dd>
         <dt>Notes</dt>
         <dd>{{ source.notes|default('Aucune note')|nl2br }}</dd>
+        <dt>Profil de source</dt>
+        <dd>{{ source.sourceProfileLabel() }} · poids {{ source.sourceWeightLabel() }}</dd>
         <dt>Créée le</dt>
         <dd>{{ source.createdAt|date('d/m/Y H:i') }}</dd>
         <dt>Mise à jour le</dt>

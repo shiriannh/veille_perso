@@ -110,6 +110,8 @@ button {
     color: #fff;
     font: inherit;
     font-weight: 700;
+    line-height: 1.15;
+    white-space: nowrap;
     cursor: pointer;
 }
 
@@ -249,6 +251,7 @@ tr:last-child td {
     align-items: center;
     gap: 10px;
     text-align: right;
+    white-space: nowrap;
 }
 
 .details {
@@ -361,6 +364,29 @@ form[name="tag"],
     display: flex;
     align-items: flex-end;
     gap: 10px;
+}
+
+.pager {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding: 12px 0;
+}
+
+.pager-pages,
+.pager-size {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.pager .button {
+    min-width: 38px;
+    min-height: 34px;
+    padding: 6px 10px;
 }
 
 .badge-muted {

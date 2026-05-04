@@ -15,6 +15,24 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\HasLifecycleCallbacks]
 class Source
 {
+    public const SOURCE_PROFILES = [
+        'none' => 'Aucun',
+        'sff_books' => 'Livres SFF',
+        'video_games' => 'Jeux video',
+        'sequential_art' => 'BD / manga / comics',
+        'manga_sources' => 'Manga',
+        'ttrpg' => 'JDR',
+        'miniatures' => 'Figurines',
+        'noisy_generalist' => 'Generaliste bruyant',
+    ];
+
+    public const SOURCE_WEIGHTS = [
+        'low' => 'Faible',
+        'normal' => 'Normal',
+        'high' => 'Fort',
+        'noisy' => 'Source bruyante',
+    ];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
@@ -64,6 +82,12 @@ class Source
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
+
+    #[ORM\Column(length: 40, nullable: true)]
+    private ?string $sourceProfile = null;
+
+    #[ORM\Column(length: 20)]
+    private string $sourceWeight = 'normal';
 
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
@@ -253,6 +277,40 @@ class Source
         $this->notes = $notes;
 
         return $this;
+    }
+
+    public function getSourceProfile(): ?string
+    {
+        return $this->sourceProfile;
+    }
+
+    public function setSourceProfile(?string $sourceProfile): self
+    {
+        $this->sourceProfile = $sourceProfile === 'none' ? null : $sourceProfile;
+
+        return $this;
+    }
+
+    public function sourceProfileLabel(): string
+    {
+        return self::SOURCE_PROFILES[$this->sourceProfile ?? 'none'] ?? (string) $this->sourceProfile;
+    }
+
+    public function getSourceWeight(): string
+    {
+        return $this->sourceWeight;
+    }
+
+    public function setSourceWeight(string $sourceWeight): self
+    {
+        $this->sourceWeight = $sourceWeight;
+
+        return $this;
+    }
+
+    public function sourceWeightLabel(): string
+    {
+        return self::SOURCE_WEIGHTS[$this->sourceWeight] ?? $this->sourceWeight;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

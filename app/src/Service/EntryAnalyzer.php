@@ -87,6 +87,14 @@ class EntryAnalyzer
             'relevanceBonus' => 20,
             'mediaBonus' => 28,
         ],
+        'noisy_generalist' => [
+            'label' => 'source generaliste bruyante',
+            'needles' => [],
+            'media' => [],
+            'tags' => [],
+            'relevanceBonus' => -10,
+            'mediaBonus' => 0,
+        ],
     ];
 
     /**
@@ -316,11 +324,11 @@ class EntryAnalyzer
             }
         }
 
-        foreach (array_merge($this->profile->positiveKeywords(), $this->profile->boostedPhrases()) as $needle) {
+        foreach (($this->profile->weightedPositiveTerms() + $this->profile->weightedBoostedPhrases()) as $needle => $weight) {
             if ($this->matches($haystack, $needle) || in_array($this->slug($needle), $detectedTags, true) || in_array($this->slug($needle), $categorySlugs, true)) {
                 $positive[] = $needle;
                 $signals[] = 'profil interet: '.$needle;
-                $score += 7;
+                $score += $weight;
             }
         }
 
@@ -339,11 +347,19 @@ class EntryAnalyzer
             }
         }
 
-        foreach (array_merge(self::INTERESTS['avoid'], $this->profile->negativeKeywords(), $this->profile->excludedPhrases()) as $needle) {
+        foreach (self::INTERESTS['avoid'] as $needle) {
             if ($this->matches($haystack, $needle)) {
                 $negative[] = $needle;
                 $signals[] = 'eviter: '.$needle;
                 $score -= 18;
+            }
+        }
+
+        foreach (($this->profile->weightedNegativeTerms() + $this->profile->weightedExcludedPhrases()) as $needle => $weight) {
+            if ($this->matches($haystack, $needle)) {
+                $negative[] = $needle;
+                $signals[] = 'profil exclusion: '.$needle;
+                $score -= $weight;
             }
         }
 
@@ -551,6 +567,11 @@ class EntryAnalyzer
     private function sourceProfile(Entry $entry): ?array
     {
         $source = $entry->getSource();
+        $sourceProfile = $source?->getSourceProfile();
+        if (is_string($sourceProfile) && isset(self::SOURCE_PROFILES[$sourceProfile])) {
+            return $this->weightedSourceProfile(self::SOURCE_PROFILES[$sourceProfile], $source?->getSourceWeight() ?? 'normal');
+        }
+
         $haystack = $this->normalize(implode(' ', array_filter([
             $source?->getName(),
             $source?->getUrl(),
@@ -561,7 +582,7 @@ class EntryAnalyzer
         foreach (self::SOURCE_PROFILES as $profile) {
             foreach ($profile['needles'] as $needle) {
                 if ($this->matches($haystack, (string) $needle)) {
-                    return $profile;
+                    return $this->weightedSourceProfile($profile, $source?->getSourceWeight() ?? 'normal');
                 }
             }
         }
@@ -631,6 +652,27 @@ class EntryAnalyzer
     private function sourceProfileBonus(?array $sourceProfile): int
     {
         return $sourceProfile === null ? 0 : (int) $sourceProfile['relevanceBonus'];
+    }
+
+    /**
+     * @param array<string, mixed> $profile
+     *
+     * @return array<string, mixed>
+     */
+    private function weightedSourceProfile(array $profile, string $sourceWeight): array
+    {
+        $multiplier = match ($sourceWeight) {
+            'low' => 0.65,
+            'high' => 1.35,
+            'noisy' => 0.45,
+            default => 1.0,
+        };
+
+        $profile['relevanceBonus'] = (int) round(((int) $profile['relevanceBonus']) * $multiplier);
+        $profile['mediaBonus'] = (int) round(((int) $profile['mediaBonus']) * $multiplier);
+        $profile['label'] = $profile['label'].' / poids '.$sourceWeight;
+
+        return $profile;
     }
 
     /**
