@@ -44,6 +44,15 @@
             </select>
         </div>
         <div>
+            <label for="mediaTypeOrigin">Origine média</label>
+            <select id="mediaTypeOrigin" name="mediaTypeOrigin">
+                <option value="">Toutes</option>
+                {% for origin in media_type_origins %}
+                    <option value="{{ origin }}" {{ filters.mediaTypeOrigin == origin ? 'selected' : '' }}>{{ origin }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
             <label for="status">Statut</label>
             <select id="status" name="status">
                 <option value="">Tous</option>

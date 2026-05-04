@@ -58,17 +58,22 @@
                 {% endfor %}
             {% endif %}
         </dd>
-        <dt>Type détecté</dt>
+        <dt>Média final</dt>
         <dd>
-            {{ entry.detectedMediaType ? entry.detectedMediaType.label() : 'Non détecté' }}
+            <span class="badge {{ entry.finalMediaType.value == 'other' ? 'badge-muted' : '' }}">{{ entry.finalMediaType.label() }}</span>
+            <span class="score">Origine {{ entry.mediaTypeOrigin|default('unknown') }}</span>
             {% if entry.mediaDetectionConfidence is not null %}
                 <span class="score">Confiance {{ entry.mediaDetectionConfidence }}/100</span>
             {% endif %}
         </dd>
-        <dt>Média final</dt>
+        <dt>Média détecté</dt>
         <dd>
-            <span class="badge">{{ entry.finalMediaType.label() }}</span>
-            {% if entry.mediaTypeOrigin %}<span class="score">Origine {{ entry.mediaTypeOrigin }}</span>{% endif %}
+            {% if entry.detectedMediaType %}
+                <span class="badge {{ entry.detectedMediaType.value == 'other' ? 'badge-muted' : '' }}">{{ entry.detectedMediaType.label() }}</span>
+            {% else %}
+                <span class="badge badge-muted">Non détecté</span>
+            {% endif %}
+            <span class="score">Stocké final {{ entry.mediaType.label() }}</span>
         </dd>
         <dt>Catégories RSS</dt>
         <dd>

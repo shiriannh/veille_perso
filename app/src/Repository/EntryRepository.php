@@ -52,6 +52,7 @@ class EntryRepository extends ServiceEntityRepository
      *     source?: ?Source,
      *     mediaType?: ?MediaType,
      *     detectedMediaType?: ?MediaType,
+     *     mediaTypeOrigin?: ?string,
      *     status?: ?EntryStatus,
      *     interestLevel?: ?int,
      *     reviewState?: ?string,
@@ -96,6 +97,17 @@ class EntryRepository extends ServiceEntityRepository
             $queryBuilder
                 ->andWhere('entry.detectedMediaType = :detectedMediaType')
                 ->setParameter('detectedMediaType', $filters['detectedMediaType']);
+        }
+
+        if (($filters['mediaTypeOrigin'] ?? null) !== null && trim((string) $filters['mediaTypeOrigin']) !== '') {
+            $origin = trim((string) $filters['mediaTypeOrigin']);
+            if ($origin === 'unknown') {
+                $queryBuilder->andWhere('entry.mediaTypeOrigin IS NULL OR entry.mediaTypeOrigin = :mediaTypeOrigin');
+            } else {
+                $queryBuilder->andWhere('entry.mediaTypeOrigin = :mediaTypeOrigin');
+            }
+
+            $queryBuilder->setParameter('mediaTypeOrigin', $origin);
         }
 
         if (($filters['status'] ?? null) instanceof EntryStatus) {
@@ -298,5 +310,47 @@ class EntryRepository extends ServiceEntityRepository
             ->addOrderBy('entry.importedAt', 'DESC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @return Entry[]
+     */
+    public function findStoredOtherMediaEntries(?int $limit = null): array
+    {
+        $queryBuilder = $this->createQueryBuilder('entry')
+            ->leftJoin('entry.source', 'source')
+            ->addSelect('source')
+            ->andWhere('entry.mediaType = :other')
+            ->setParameter('other', MediaType::Other)
+            ->orderBy('entry.relevanceScore', 'DESC')
+            ->addOrderBy('entry.importedAt', 'DESC')
+            ->addOrderBy('entry.createdAt', 'DESC');
+
+        if ($limit !== null) {
+            $queryBuilder->setMaxResults($limit);
+        }
+
+        return $queryBuilder->getQuery()->getResult();
+    }
+
+    /**
+     * @return array<string, array<string, int>>
+     */
+    public function summarizeMediaTypes(): array
+    {
+        $summary = [];
+
+        foreach ($this->createQueryBuilder('entry')->getQuery()->getResult() as $entry) {
+            \assert($entry instanceof Entry);
+            $media = $entry->getMediaType()->value;
+            $origin = $entry->getMediaTypeOrigin() ?: 'unknown';
+
+            $summary[$media] ??= [];
+            $summary[$media][$origin] = ($summary[$media][$origin] ?? 0) + 1;
+        }
+
+        ksort($summary);
+
+        return $summary;
     }
 }

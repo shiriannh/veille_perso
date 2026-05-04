@@ -12,6 +12,7 @@ use App\Repository\EntryRepository;
 use App\Repository\SourceRepository;
 use App\Service\EntryAnalyzer;
 use App\Service\EntryTagDetector;
+use App\Service\MediaTypeResolver;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,6 +29,9 @@ class EntryController extends AbstractController
         $source = ctype_digit($sourceId) && (int) $sourceId > 0 ? $sourceRepository->find((int) $sourceId) : null;
         $mediaType = MediaType::tryFrom((string) $request->query->get('mediaType'));
         $detectedMediaType = MediaType::tryFrom((string) $request->query->get('detectedMediaType'));
+        $mediaTypeOrigin = in_array($request->query->get('mediaTypeOrigin'), MediaTypeResolver::origins(), true)
+            ? (string) $request->query->get('mediaTypeOrigin')
+            : null;
         $status = EntryStatus::tryFrom((string) $request->query->get('status'));
         $interestLevelValue = (string) $request->query->get('interestLevel', '');
         $interestLevel = ctype_digit($interestLevelValue)
@@ -50,6 +54,7 @@ class EntryController extends AbstractController
             'source' => $source,
             'mediaType' => $mediaType,
             'detectedMediaType' => $detectedMediaType,
+            'mediaTypeOrigin' => $mediaTypeOrigin,
             'status' => $status,
             'interestLevel' => $interestLevel,
             'reviewState' => $reviewState,
@@ -68,11 +73,13 @@ class EntryController extends AbstractController
             'statuses' => EntryStatus::cases(),
             'decisions' => AnalysisDecision::cases(),
             'clickbait_levels' => ClickbaitLevel::cases(),
+            'media_type_origins' => MediaTypeResolver::origins(),
             'filters' => [
                 'q' => (string) $request->query->get('q', ''),
                 'source' => $source?->getId(),
                 'mediaType' => $mediaType?->value,
                 'detectedMediaType' => $detectedMediaType?->value,
+                'mediaTypeOrigin' => $mediaTypeOrigin ?? '',
                 'status' => $status?->value,
                 'interestLevel' => $interestLevel,
                 'reviewState' => $reviewState,

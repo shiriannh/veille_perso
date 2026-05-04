@@ -1,0 +1,120 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mappings média - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Mappings média actifs</h1>
+            <p>Règles déterministes utilisées pour promouvoir un média final exploitable.</p>
+        </div>
+        <a class="button button-secondary" href="{{ path('app_admin_media_diagnostic') }}">Diagnostic other</a>
+    </section>
+
+    <section>
+        <h2>Hiérarchie appliquée</h2>
+        <ol>
+            <li>Catégories RSS explicites.</li>
+            <li>Tags détectés déjà stockés sur l'entrée.</li>
+            <li>Média détecté existant.</li>
+            <li>Profil de source.</li>
+            <li>Titre, contenu brut et URL.</li>
+        </ol>
+        <p>Une valeur manuelle garde l'origine <code>manual</code> et n'est pas écrasée automatiquement.</p>
+    </section>
+
+    <section>
+        <h2>Origines possibles</h2>
+        {% for origin in origins %}
+            <span class="badge badge-muted">{{ origin }}</span>
+        {% endfor %}
+    </section>
+
+    <section>
+        <h2>Catégories RSS vers média</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Catégorie normalisée</th>
+                    <th>Média</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category, media in rss_media_mappings %}
+                    <tr>
+                        <td><code>{{ category }}</code></td>
+                        <td><span class="badge">{{ media }}</span></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Catégories RSS vers tags</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Catégorie normalisée</th>
+                    <th>Tags ajoutés</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category, tags in rss_tag_mappings %}
+                    <tr>
+                        <td><code>{{ category }}</code></td>
+                        <td>
+                            {% for tag in tags %}
+                                <span class="badge badge-muted">{{ tag }}</span>
+                            {% endfor %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Tags détectés vers média</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tag</th>
+                    <th>Média</th>
+                    <th>Poids</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tag, mapping in tag_media_mappings %}
+                    <tr>
+                        <td><code>{{ tag }}</code></td>
+                        <td><span class="badge">{{ mapping.label }}</span> <small>{{ mapping.media }}</small></td>
+                        <td>{{ mapping.weight }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Profils de source</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Signal source</th>
+                    <th>Média</th>
+                    <th>Libellé</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for needle, profile in source_profiles %}
+                    <tr>
+                        <td><code>{{ needle }}</code></td>
+                        <td><span class="badge">{{ profile.media }}</span></td>
+                        <td>{{ profile.label }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+{% endblock %}

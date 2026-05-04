@@ -1,0 +1,68 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Diagnostic média - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Diagnostic média final</h1>
+            <p>Entrées dont la colonne finale <code>media_type</code> vaut encore <code>other</code>.</p>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_admin_media_mappings') }}">Voir les mappings</a>
+            <form method="post" action="{{ path('app_admin_media_reanalyze_other') }}" class="inline-form" onsubmit="return confirm('Reanalyser toutes les entrees media_type = other ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('reanalyze_other_media') }}">
+                <button class="button">Reanalyser les other</button>
+            </form>
+        </div>
+    </section>
+
+    {% if entries is empty %}
+        <p class="empty">Aucune entrée avec média final <code>other</code>.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Entrée</th>
+                    <th>Source</th>
+                    <th>Catégories RSS</th>
+                    <th>Tags détectés</th>
+                    <th>Score</th>
+                    <th>Origine</th>
+                    <th>Raison</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in entries %}
+                    {% set rss_categories = entry.rawPayload.categories|default([]) %}
+                    <tr>
+                        <td><a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a></td>
+                        <td>{{ entry.source.name }}</td>
+                        <td>
+                            {% for category in rss_categories|slice(0, 5) %}
+                                <span class="badge badge-muted">{{ category }}</span>
+                            {% else %}
+                                <span class="badge badge-muted">Aucune</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            {% for tag in entry.detectedTags|slice(0, 8) %}
+                                <span class="badge badge-muted">{{ tag }}</span>
+                            {% else %}
+                                <span class="badge badge-muted">Aucun</span>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <span class="score">Pertinence {{ entry.relevanceScore ?? 0 }}/100</span>
+                            <span class="score">Confiance {{ entry.mediaDetectionConfidence ?? 0 }}/100</span>
+                        </td>
+                        <td>{{ entry.mediaTypeOrigin|default('unknown') }}</td>
+                        <td>{{ entry.decisionReason|default('Aucune raison')|slice(0, 180) }}{% if entry.decisionReason|default('')|length > 180 %}...{% endif %}</td>
+                        <td><a class="button button-secondary" href="{{ path('app_entry_show', {id: entry.id}) }}">Ouvrir</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

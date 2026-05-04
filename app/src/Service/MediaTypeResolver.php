@@ -8,6 +8,51 @@ use App\Enum\MediaType;
 class MediaTypeResolver
 {
     /**
+     * @return array<int, string>
+     */
+    public static function origins(): array
+    {
+        return ['manual', 'rss_category', 'detected_tags', 'detected_media_type', 'source_profile', 'title_content', 'imported', 'detected', 'auto', 'unknown'];
+    }
+
+    /**
+     * @return array<string, array{media: string, label: string, weight: int}>
+     */
+    public static function tagMediaMappings(): array
+    {
+        $mappings = [];
+        foreach (self::TAG_MEDIA as $tag => $candidate) {
+            $mappings[$tag] = [
+                'media' => $candidate['media']->value,
+                'label' => $candidate['media']->label(),
+                'weight' => $candidate['weight'],
+            ];
+        }
+
+        ksort($mappings);
+
+        return $mappings;
+    }
+
+    /**
+     * @return array<string, array{media: string, label: string}>
+     */
+    public static function sourceProfiles(): array
+    {
+        $profiles = [];
+        foreach (self::SOURCE_PROFILES as $needle => $profile) {
+            $profiles[$needle] = [
+                'media' => $profile['media']->value,
+                'label' => $profile['label'],
+            ];
+        }
+
+        ksort($profiles);
+
+        return $profiles;
+    }
+
+    /**
      * @var array<string, array{media: MediaType, weight: int}>
      */
     private const TAG_MEDIA = [
@@ -30,6 +75,7 @@ class MediaTypeResolver
         'roman' => ['media' => MediaType::Book, 'weight' => 38],
         'romans' => ['media' => MediaType::Book, 'weight' => 38],
         'novel' => ['media' => MediaType::Book, 'weight' => 38],
+        'book' => ['media' => MediaType::Book, 'weight' => 38],
         'books' => ['media' => MediaType::Book, 'weight' => 38],
         'jdr' => ['media' => MediaType::Ttrpg, 'weight' => 42],
         'jeu-de-role' => ['media' => MediaType::Ttrpg, 'weight' => 42],

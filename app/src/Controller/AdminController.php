@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\AnalysisLanguageReference;
 use App\Entity\ClickbaitLevelReference;
 use App\Entity\DecisionTypeReference;
+use App\Entity\Entry;
 use App\Entity\FetchModeReference;
 use App\Entity\MediaTypeReference;
 use App\Entity\SourceTypeReference;
@@ -28,6 +29,8 @@ class AdminController extends AbstractController
                 ['label' => 'Decision types', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'decision-types'], 'class' => DecisionTypeReference::class],
                 ['label' => 'Clickbait levels', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'clickbait-levels'], 'class' => ClickbaitLevelReference::class],
                 ['label' => 'Analysis languages', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'analysis-languages'], 'class' => AnalysisLanguageReference::class],
+                ['label' => 'Diagnostic media final', 'route' => 'app_admin_media_diagnostic', 'params' => [], 'class' => Entry::class],
+                ['label' => 'Mappings media actifs', 'route' => 'app_admin_media_mappings', 'params' => [], 'class' => MediaTypeReference::class],
             ],
         ]);
     }

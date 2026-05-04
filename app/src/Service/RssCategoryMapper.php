@@ -8,6 +8,32 @@ use App\Enum\MediaType;
 class RssCategoryMapper
 {
     /**
+     * @return array<string, string>
+     */
+    public static function mediaMappings(): array
+    {
+        $mappings = [];
+        foreach (self::MEDIA_BY_CATEGORY as $category => $media) {
+            $mappings[$category] = $media->value;
+        }
+
+        ksort($mappings);
+
+        return $mappings;
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    public static function tagMappings(): array
+    {
+        $mappings = self::TAGS_BY_CATEGORY;
+        ksort($mappings);
+
+        return $mappings;
+    }
+
+    /**
      * @var array<string, MediaType>
      */
     private const MEDIA_BY_CATEGORY = [

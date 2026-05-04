@@ -14,18 +14,13 @@ Cette liste tient compte de l'etat courant apres les evolutions 1.6 :
 
 La philosophie reste : local first, monolithe Symfony/Twig, pas de scraping, pas d'API publique, pas de workers distribues, pas de moteur vectoriel, pas de suppression automatique destructive.
 
-## Priorite 1 - Fiabiliser le socle 1.6
+## Priorite 1 - Suite immediate apres fiabilisation 1.6
 
-- Ajouter une page de diagnostic "Media final" listant les Entry encore en `media_type = other`, avec source, categories RSS, detected tags, score et raison d'analyse.
-- Ajouter une action de reanalyse ciblee depuis cette page pour retraiter uniquement les Entry `other`.
-- Ajouter un filtre Entry par `mediaTypeOrigin` pour distinguer `manual`, `rss_category`, `detected_tags`, `detected_media_type`, `source_profile`, `unknown`.
-- Ajouter un badge plus lisible sur Entry detail : media final, media detecte, origine, confiance.
-- Ajouter une commande `app:media-type-report` pour afficher la repartition des medias finaux et des origines.
-- Ajouter une commande `app:promote-media-types --dry-run` pour simuler les promotions sans ecriture.
-- Ajouter des tests unitaires pour `MediaTypeResolver`.
-- Ajouter des cas de test pour les mappings critiques : `jeu-video`, `manga`, `anime`, `bd`, `comics`, `book`, `ttrpg`, `figurines`.
-- Ajouter des tests de non-regression sur la promotion depuis categories RSS : `Romans VF`, `Space Opera`, `Manga`, `Bande dessinee`, `Comics`, `TTRPG`.
-- Documenter dans une page Admin les slugs media attendus et les mappings actifs.
+- Installer ou ajouter proprement un runner de tests PHP (`phpunit/phpunit` ou Symfony PHPUnit Bridge) pour executer les tests deja poses sous `app/tests`.
+- Ajouter un raccourci depuis le dashboard vers le diagnostic media final quand des Entry restent en `media_type = other`.
+- Ajouter un filtre rapide "media other" sur la liste Entry pour retrouver les cas non classes sans passer par Admin.
+- Ajouter une action de reanalyse ciblee depuis la liste Entry pour retraiter uniquement le resultat filtre courant.
+- Ajouter un export texte du rapport `app:media-type-report` pour conserver l'etat avant/apres recalibration.
 
 ## Priorite 2 - Terminer la migration progressive enums -> references
 
@@ -186,6 +181,14 @@ La philosophie reste : local first, monolithe Symfony/Twig, pas de scraping, pas
 - Creation automatique de fiches brouillon pour `interest_level` 4 ou 5.
 - Promotion du media final dans `media_type` depuis tags, categories RSS, media detecte, source et contenu.
 - Ajout de `media_type_origin`.
+- Page Admin "Diagnostic media final" pour surveiller les Entry encore stockees en `media_type = other`.
+- Action Admin de reanalyse ciblee des Entry `other`.
+- Filtre Entry par origine du media final (`mediaTypeOrigin`).
+- Badge detail Entry enrichi avec media final, media detecte, origine et confiance.
+- Commande `app:media-type-report` pour afficher medias finaux et origines.
+- Commande `app:promote-media-types --dry-run` pour simuler les promotions sans ecriture.
+- Page Admin "Mappings media actifs" documentant categories RSS, tags, profils source et origines.
+- Tests unitaires ajoutes pour `MediaTypeResolver` et `RssCategoryMapper` sur les mappings critiques.
 
 ## Hors perimetre volontaire
 

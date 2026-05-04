@@ -63,6 +63,8 @@ docker compose exec app php bin/console app:reanalyze-entries --all
 docker compose exec app php bin/console app:detect-entry-tags
 docker compose exec app php bin/console app:seed-reference-data
 docker compose exec app php bin/console app:generate-draft-reviews
+docker compose exec app php bin/console app:media-type-report
+docker compose exec app php bin/console app:promote-media-types --dry-run
 ```
 
 ## Media final 1.6
@@ -74,7 +76,7 @@ Champs utilises sur `Entry` :
 - `mediaType` / colonne `media_type` : media final utilise par les filtres, le scoring, les syntheses et les fiches ;
 - `detectedMediaType` / colonne `detected_media_type` : media detecte automatiquement ;
 - `mediaDetectionConfidence` : confiance de detection ;
-- `mediaTypeOrigin` / colonne `media_type_origin` : origine du media final (`manual`, `rss_category`, `detected_tags`, `detected_media_type`, `source_profile`, `title_content`, `imported`, `unknown`).
+- `mediaTypeOrigin` / colonne `media_type_origin` : origine du media final (`manual`, `rss_category`, `detected_tags`, `detected_media_type`, `source_profile`, `title_content`, `imported`, `detected`, `auto`, `unknown`).
 
 Strategie retenue : l'ancien champ `media_type` n'est pas supprime. Il devient la valeur finale. S'il vaut `other` ou provient d'une origine automatique, l'analyse peut le promouvoir. S'il est defini manuellement depuis un formulaire, il est marque `manual` et n'est pas ecrase automatiquement.
 
@@ -112,7 +114,16 @@ Pour migrer l'existant :
 ```bash
 docker compose exec app php bin/console doctrine:migrations:migrate
 docker compose exec app php bin/console app:reanalyze-entries --all
+docker compose exec app php bin/console app:media-type-report
 ```
+
+Pour fiabiliser le socle 1.6 au quotidien :
+
+- la liste Entry permet de filtrer par origine du media final avec `mediaTypeOrigin` ;
+- l'Admin expose `Diagnostic media final`, qui liste les Entry encore stockees en `media_type = other` et propose une reanalyse ciblee ;
+- l'Admin expose `Mappings media actifs`, qui documente les categories RSS, tags, profils source et origines reconnus ;
+- `app:media-type-report` affiche la repartition des medias finaux et des origines ;
+- `app:promote-media-types --dry-run` simule les promotions possibles sans ecriture.
 
 ## Structure
 
@@ -290,7 +301,7 @@ docker compose exec app php bin/console app:reanalyze-entries --all
 docker compose exec app php bin/console app:reanalyze-entries <entryId> --force-ai
 ```
 
-L'interface Entry affiche les badges de decision, le score de pertinence, le niveau putaclic, le media detecte, les categories RSS exploitees, les raisons et les mots-cles detectes. La liste permet aussi de filtrer par media detecte, decision, niveau putaclic, source, tag detecte et langue.
+L'interface Entry affiche les badges de decision, le score de pertinence, le niveau putaclic, le media final, le media detecte, l'origine, la confiance, les categories RSS exploitees, les raisons et les mots-cles detectes. La liste permet aussi de filtrer par media final, media detecte, origine du media final, decision, niveau putaclic, source, tag detecte et langue.
 
 ### IA optionnelle
 
