@@ -61,8 +61,8 @@ a:hover {
 }
 
 .page {
-    width: calc(100% - clamp(28px, 4vw, 56px));
-    max-width: 1480px;
+    width: auto;
+    max-width: none;
     margin: 5em 5em 5em 5em;
 }
 
@@ -72,6 +72,24 @@ a:hover {
     justify-content: space-between;
     gap: 24px;
     margin-bottom: 24px;
+}
+
+.page-heading,
+.filter-form,
+.action-strip,
+.pager,
+.details,
+.content-block,
+form[name="source"],
+form[name="entry"],
+form[name="review"],
+form[name="synthesis_report_generate"],
+form[name="reference_value"],
+form[name="tag"],
+.upload-form {
+    max-width: 1480px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 h1,
@@ -419,7 +437,7 @@ form[name="tag"],
     justify-content: center;
     align-items: center;
     gap: 16px;
-    margin-top: 18px;
+    margin: 18px auto 0;
     padding: 18px 0 4px;
     border-top: 1px solid var(--line);
 }
@@ -567,6 +585,7 @@ input[type="checkbox"] {
     }
 
     .page {
+        width: auto;
         margin: 20px 16px 44px;
     }
 

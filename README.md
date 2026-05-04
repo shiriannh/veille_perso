@@ -154,6 +154,23 @@ docker compose exec app php bin/console app:export-analysis-corrections
 docker compose exec app php bin/console app:export-analysis-corrections --output=var/analysis-corrections.csv
 ```
 
+## Workflow des fiches
+
+Les fiches `Review` portent maintenant un workflow simple :
+
+- `draft` : brouillon, notamment les fiches creees automatiquement depuis les Entry a fort `interestLevel` ;
+- `to_complete` : fiche active a enrichir ;
+- `completed` : decision prise.
+
+Une fiche peut aussi porter une `nextAction` : acheter, regarder, lire, tester, attendre promo, surveiller ou ignorer. La date `decisionAt` est renseignee automatiquement quand une fiche passe en statut terminee si elle n'etait pas deja definie.
+
+La liste `Fiches` permet de traiter les brouillons auto-crees, de filtrer par statut, prochaine action, media final, decision initiale de l'Entry, tag detecte et source. Les raccourcis `A acheter`, `A lire` et `A tester` sont de simples vues filtrees, sans workflow supplementaire.
+
+Depuis un brouillon, deux actions rapides existent :
+
+- `Transformer en fiche active` : passe le brouillon en fiche a completer ;
+- `Refuser le brouillon` : marque la fiche comme terminee, verdict `Passer`, prochaine action `Ignorer`, sans supprimer l'Entry associee.
+
 ## Structure
 
 ```text

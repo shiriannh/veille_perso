@@ -4,12 +4,14 @@ namespace App\Form;
 
 use App\Entity\Entry;
 use App\Entity\Review;
+use App\Enum\ReviewNextAction;
+use App\Enum\ReviewStatus;
 use App\Enum\ReviewVerdict;
 use App\Repository\EntryRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -23,7 +25,7 @@ class ReviewType extends AbstractType
 
         $builder
             ->add('entry', EntityType::class, [
-                'label' => 'Entrée',
+                'label' => 'Entree',
                 'class' => Entry::class,
                 'choice_label' => 'title',
                 'query_builder' => static function (EntryRepository $repository) use ($currentEntry) {
@@ -41,7 +43,7 @@ class ReviewType extends AbstractType
                 },
             ])
             ->add('summary', TextareaType::class, [
-                'label' => 'Résumé',
+                'label' => 'Resume',
                 'required' => false,
                 'attr' => ['rows' => 5],
             ])
@@ -70,13 +72,22 @@ class ReviewType extends AbstractType
                 'required' => false,
                 'attr' => ['min' => 0, 'max' => 100],
             ])
-            ->add('isDraft', CheckboxType::class, [
-                'label' => 'Brouillon',
-                'required' => false,
+            ->add('status', ChoiceType::class, [
+                'label' => 'Statut de fiche',
+                'choices' => ReviewStatus::cases(),
+                'choice_label' => static fn (ReviewStatus $status): string => $status->label(),
             ])
-            ->add('isAutoCreated', CheckboxType::class, [
-                'label' => 'Créée automatiquement',
+            ->add('nextAction', ChoiceType::class, [
+                'label' => 'Prochaine action',
                 'required' => false,
+                'placeholder' => 'Non definie',
+                'choices' => ReviewNextAction::cases(),
+                'choice_label' => static fn (ReviewNextAction $action): string => $action->label(),
+            ])
+            ->add('decisionAt', DateTimeType::class, [
+                'label' => 'Date de decision',
+                'required' => false,
+                'widget' => 'single_text',
             ]);
     }
 

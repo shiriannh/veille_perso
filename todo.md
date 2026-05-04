@@ -99,19 +99,23 @@ Etat :
 - Compteur dashboard d'Entry jamais synthetisees ajoute.
 - `.page` recentree avec largeur maximale et marges horizontales reduites pour mieux exploiter l'ecran desktop.
 
-## Priorite 6 - Fiches brouillon et workflow Review
+## Priorite 6 - Finalisee
 
-- Ajouter une vue "Fiches brouillon auto-creees" pour traiter les brouillons generes par `interest_level` 4 ou 5.
-- Ajouter un statut de Review plus complet : brouillon, a completer, terminee.
-- Ajouter une date de decision sur Review.
-- Ajouter un champ "prochaine action" : acheter, surveiller, lire, tester, attendre promo, ignorer.
-- Ajouter une vue "A acheter / a lire / a tester" basee sur les Reviews.
-- Ajouter un filtre Review par tags detectes de l'Entry liee.
-- Ajouter un filtre Review par decision initiale de l'Entry liee.
-- Ajouter un filtre Review par media final de l'Entry liee.
-- Ajouter une comparaison entre `interest_level`, score d'analyse et verdict final de Review.
-- Ajouter un bouton "Transformer le brouillon en fiche active".
-- Ajouter un bouton "Refuser le brouillon" qui ne supprime pas l'Entry.
+Workflow Review enrichi.
+
+Etat :
+
+- vue "Brouillons auto" ajoutee via un raccourci filtre sur les fiches auto-creees ;
+- statut de Review ajoute : brouillon, a completer, terminee ;
+- date de decision ajoutee sur Review ;
+- champ "prochaine action" ajoute : acheter, regarder, lire, tester, attendre promo, surveiller, ignorer ;
+- vues rapides "A acheter", "A lire" et "A tester" ajoutees ;
+- filtre Review par tag detecte de l'Entry liee ajoute ;
+- filtre Review par decision initiale de l'Entry liee ajoute ;
+- filtre Review par media final conserve et enrichi dans la vue ;
+- comparaison `interest_level`, score d'analyse et verdict final affichee dans la liste et la fiche Review ;
+- bouton "Transformer le brouillon en fiche active" ajoute ;
+- bouton "Refuser le brouillon" ajoute, sans suppression de l'Entry associee.
 
 ## Priorite 7 - Imports et sources
 
@@ -232,6 +236,7 @@ Etat :
 - Dernier ImportRun affiche dans la liste Source.
 - Nouveaux compteurs dashboard d'exploitation quotidienne.
 - Marges `.page` reduites et recentrees.
+- Workflow Review : statuts, prochaine action, date de decision et traitement des brouillons auto-crees.
 
 ## Hors perimetre volontaire
 

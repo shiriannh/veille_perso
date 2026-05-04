@@ -6,10 +6,14 @@
     <section class="page-heading">
         <div>
             <h1>Fiches</h1>
-            <p>Synthèses enrichies et jugement personnel.</p>
+            <p>Syntheses enrichies, brouillons et prochaines actions.</p>
         </div>
         <div class="actions">
-            <a class="button button-secondary" href="{{ path('app_synthesis_report_new') }}">Générer une synthèse</a>
+            <a class="button button-secondary" href="{{ path('app_review_auto_drafts') }}">Brouillons auto</a>
+            <a class="button button-secondary" href="{{ path('app_review_index', {nextAction: 'buy'}) }}">A acheter</a>
+            <a class="button button-secondary" href="{{ path('app_review_index', {nextAction: 'read'}) }}">A lire</a>
+            <a class="button button-secondary" href="{{ path('app_review_index', {nextAction: 'play'}) }}">A tester</a>
+            <a class="button button-secondary" href="{{ path('app_synthesis_report_new') }}">Generer une synthese</a>
             <a class="button" href="{{ path('app_review_new') }}">Nouvelle fiche</a>
         </div>
     </section>
@@ -25,6 +29,24 @@
             </select>
         </div>
         <div>
+            <label for="status">Statut</label>
+            <select id="status" name="status">
+                <option value="">Tous</option>
+                {% for status in statuses %}
+                    <option value="{{ status.value }}" {{ filters.status == status.value ? 'selected' : '' }}>{{ status.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="nextAction">Prochaine action</label>
+            <select id="nextAction" name="nextAction">
+                <option value="">Toutes</option>
+                {% for action in next_actions %}
+                    <option value="{{ action.value }}" {{ filters.nextAction == action.value ? 'selected' : '' }}>{{ action.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
             <label for="source">Source</label>
             <select id="source" name="source">
                 <option value="">Toutes</option>
@@ -34,7 +56,7 @@
             </select>
         </div>
         <div>
-            <label for="mediaType">Média</label>
+            <label for="mediaType">Media</label>
             <select id="mediaType" name="mediaType">
                 <option value="">Tous</option>
                 {% for media_type in media_types %}
@@ -43,34 +65,51 @@
             </select>
         </div>
         <div>
+            <label for="entryDecision">Decision Entry</label>
+            <select id="entryDecision" name="entryDecision">
+                <option value="">Toutes</option>
+                {% for decision in entry_decisions %}
+                    <option value="{{ decision.value }}" {{ filters.entryDecision == decision.value ? 'selected' : '' }}>{{ decision.label() }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label for="detectedTag">Tag detecte</label>
+            <input id="detectedTag" type="search" name="detectedTag" value="{{ filters.detectedTag }}" placeholder="sf, manga, battlefield...">
+        </div>
+        <div>
             <label for="minScore">Score min.</label>
             <input id="minScore" type="number" name="minScore" min="0" max="100" value="{{ filters.minScore }}">
         </div>
         <div>
             <label for="sort">Tri</label>
             <select id="sort" name="sort">
-                <option value="">Modification récente</option>
+                <option value="">Modification recente</option>
+                <option value="interest_desc" {{ filters.sort == 'interest_desc' ? 'selected' : '' }}>Interet fort</option>
                 <option value="updated_asc" {{ filters.sort == 'updated_asc' ? 'selected' : '' }}>Modification ancienne</option>
-                <option value="score_desc" {{ filters.sort == 'score_desc' ? 'selected' : '' }}>Score décroissant</option>
+                <option value="score_desc" {{ filters.sort == 'score_desc' ? 'selected' : '' }}>Score decroissant</option>
                 <option value="score_asc" {{ filters.sort == 'score_asc' ? 'selected' : '' }}>Score croissant</option>
             </select>
         </div>
         <div class="filter-actions">
             <button class="button">Filtrer</button>
-            <a class="button button-secondary" href="{{ path('app_review_index') }}">Réinitialiser</a>
+            <a class="button button-secondary" href="{{ path('app_review_index') }}">Reinitialiser</a>
         </div>
     </form>
 
     {% if reviews is empty %}
-        <p class="empty">Aucune fiche enregistrée.</p>
+        <p class="empty">Aucune fiche enregistree.</p>
     {% else %}
         <table>
             <thead>
                 <tr>
-                    <th>Œuvre</th>
+                    <th>Oeuvre</th>
+                    <th>Statut</th>
                     <th>Verdict</th>
                     <th>Score</th>
-                    <th>Mise à jour</th>
+                    <th>Entry</th>
+                    <th>Action</th>
+                    <th>Mise a jour</th>
                     <th></th>
                 </tr>
             </thead>
@@ -78,14 +117,30 @@
                 {% for review in reviews %}
                     <tr>
                         <td><a href="{{ path('app_review_show', {id: review.id}) }}">{{ review.entry.title }}</a></td>
+                        <td><span class="badge {{ review.status.value == 'draft' ? 'badge-muted' : '' }}">{{ review.status.label() }}</span></td>
                         <td>
                             <span class="badge">{{ review.verdict.label() }}</span>
-                            {% if review.draft %}<span class="badge badge-muted">Brouillon</span>{% endif %}
                             {% if review.autoCreated %}<span class="badge badge-muted">Auto</span>{% endif %}
                         </td>
                         <td>{{ review.score is not null ? review.score ~ '/100' : '-' }}</td>
+                        <td>
+                            <span class="score">Interet {{ review.entry.interestLevel }}/5</span>
+                            {% if review.entry.decision %}<span class="badge badge-decision-{{ review.entry.decision.value }}">{{ review.entry.decision.label() }}</span>{% endif %}
+                            {% if review.entry.relevanceScore is not null %}<small>{{ review.entry.relevanceScore }}/100</small>{% endif %}
+                        </td>
+                        <td>{{ review.nextAction ? review.nextAction.label() : '-' }}</td>
                         <td>{{ review.updatedAt|date('d/m/Y H:i') }}</td>
                         <td class="table-actions">
+                            {% if review.draft %}
+                                <form method="post" action="{{ path('app_review_activate_draft', app.request.query.all|merge({id: review.id})) }}" class="inline-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('activate_review_' ~ review.id) }}">
+                                    <button class="button">Activer</button>
+                                </form>
+                                <form method="post" action="{{ path('app_review_refuse_draft', app.request.query.all|merge({id: review.id})) }}" class="inline-form" onsubmit="return confirm('Refuser ce brouillon sans supprimer l entree ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('refuse_review_' ~ review.id) }}">
+                                    <button class="button button-danger">Refuser</button>
+                                </form>
+                            {% endif %}
                             <a class="button button-secondary" href="{{ path('app_review_edit', {id: review.id}) }}">Modifier</a>
                             {{ include('review/_delete_form.html.twig') }}
                         </td>

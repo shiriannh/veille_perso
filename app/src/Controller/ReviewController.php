@@ -3,7 +3,10 @@
 namespace App\Controller;
 
 use App\Entity\Review;
+use App\Enum\AnalysisDecision;
 use App\Enum\MediaType;
+use App\Enum\ReviewNextAction;
+use App\Enum\ReviewStatus;
 use App\Enum\ReviewVerdict;
 use App\Form\ReviewType;
 use App\Repository\EntryRepository;
@@ -29,6 +32,9 @@ class ReviewController extends AbstractController
     {
         $verdict = ReviewVerdict::tryFrom((string) $request->query->get('verdict'));
         $mediaType = MediaType::tryFrom((string) $request->query->get('mediaType'));
+        $entryDecision = AnalysisDecision::tryFrom((string) $request->query->get('entryDecision'));
+        $status = ReviewStatus::tryFrom((string) $request->query->get('status'));
+        $nextAction = ReviewNextAction::tryFrom((string) $request->query->get('nextAction'));
         $sourceId = (string) $request->query->get('source', '');
         $source = ctype_digit($sourceId) && (int) $sourceId > 0 ? $sourceRepository->find((int) $sourceId) : null;
         $minScoreValue = (string) $request->query->get('minScore', '');
@@ -42,6 +48,11 @@ class ReviewController extends AbstractController
         $filters = [
             'verdict' => $verdict,
             'mediaType' => $mediaType,
+            'entryDecision' => $entryDecision,
+            'detectedTag' => (string) $request->query->get('detectedTag', ''),
+            'status' => $status,
+            'nextAction' => $nextAction,
+            'autoCreatedDrafts' => $request->query->getBoolean('autoCreatedDrafts'),
             'source' => $source,
             'minScore' => $minScore,
             'sort' => $sort,
@@ -56,13 +67,30 @@ class ReviewController extends AbstractController
             'sources' => $sourceRepository->findAllOrdered(),
             'media_types' => MediaType::cases(),
             'verdicts' => ReviewVerdict::cases(),
+            'entry_decisions' => AnalysisDecision::cases(),
+            'statuses' => ReviewStatus::cases(),
+            'next_actions' => ReviewNextAction::cases(),
             'filters' => [
                 'verdict' => $verdict?->value,
                 'mediaType' => $mediaType?->value,
+                'entryDecision' => $entryDecision?->value,
+                'detectedTag' => (string) $request->query->get('detectedTag', ''),
+                'status' => $status?->value,
+                'nextAction' => $nextAction?->value,
+                'autoCreatedDrafts' => $request->query->getBoolean('autoCreatedDrafts'),
                 'source' => $source?->getId(),
                 'minScore' => $minScore,
                 'sort' => $sort ?? '',
             ],
+        ]);
+    }
+
+    #[Route('/drafts/auto-created', name: 'app_review_auto_drafts', methods: ['GET'])]
+    public function autoDrafts(): Response
+    {
+        return $this->redirectToRoute('app_review_index', [
+            'autoCreatedDrafts' => 1,
+            'sort' => 'interest_desc',
         ]);
     }
 
@@ -108,6 +136,7 @@ class ReviewController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->normalizeReviewWorkflow($review);
             $entityManager->persist($review);
             $entityManager->flush();
 
@@ -130,6 +159,46 @@ class ReviewController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/activate-draft', name: 'app_review_activate_draft', methods: ['POST'])]
+    public function activateDraft(Request $request, Review $review, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid('activate_review_'.$review->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, fiche non transformee.');
+
+            return $this->redirectToRoute('app_review_index', $request->query->all());
+        }
+
+        $review
+            ->setStatus(ReviewStatus::ToComplete)
+            ->setDecisionAt(new \DateTimeImmutable())
+            ->setPersonalNote(trim(($review->getPersonalNote() ?? '')."\nBrouillon auto transforme en fiche active."));
+        $entityManager->flush();
+        $this->addFlash('success', 'Brouillon transforme en fiche active.');
+
+        return $this->redirectToRoute('app_review_index', $request->query->all());
+    }
+
+    #[Route('/{id}/refuse-draft', name: 'app_review_refuse_draft', methods: ['POST'])]
+    public function refuseDraft(Request $request, Review $review, EntityManagerInterface $entityManager): Response
+    {
+        if (!$this->isCsrfTokenValid('refuse_review_'.$review->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, brouillon non refuse.');
+
+            return $this->redirectToRoute('app_review_index', $request->query->all());
+        }
+
+        $review
+            ->setStatus(ReviewStatus::Completed)
+            ->setVerdict(ReviewVerdict::Skip)
+            ->setNextAction(ReviewNextAction::Ignore)
+            ->setDecisionAt(new \DateTimeImmutable())
+            ->setPersonalNote(trim(($review->getPersonalNote() ?? '')."\nBrouillon refuse manuellement. L'entree source est conservee."));
+        $entityManager->flush();
+        $this->addFlash('success', 'Brouillon refuse. L entree associee est conservee.');
+
+        return $this->redirectToRoute('app_review_index', $request->query->all());
+    }
+
     #[Route('/{id}/edit', name: 'app_review_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Review $review, EntityManagerInterface $entityManager): Response
     {
@@ -139,6 +208,7 @@ class ReviewController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $this->normalizeReviewWorkflow($review);
             $entityManager->flush();
 
             $this->addFlash('success', 'Fiche mise à jour.');
@@ -162,5 +232,12 @@ class ReviewController extends AbstractController
         }
 
         return $this->redirectToRoute('app_review_index', $request->query->all());
+    }
+
+    private function normalizeReviewWorkflow(Review $review): void
+    {
+        if ($review->getStatus() === ReviewStatus::Completed && $review->getDecisionAt() === null) {
+            $review->setDecisionAt(new \DateTimeImmutable());
+        }
     }
 }

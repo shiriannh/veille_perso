@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Enum\ReviewVerdict;
+use App\Enum\ReviewNextAction;
+use App\Enum\ReviewStatus;
 use App\Repository\ReviewRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -39,6 +41,15 @@ class Review
     #[ORM\Column(nullable: true)]
     #[Assert\Range(min: 0, max: 100)]
     private ?int $score = null;
+
+    #[ORM\Column(enumType: ReviewStatus::class)]
+    private ReviewStatus $status = ReviewStatus::ToComplete;
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $decisionAt = null;
+
+    #[ORM\Column(enumType: ReviewNextAction::class, nullable: true)]
+    private ?ReviewNextAction $nextAction = null;
 
     #[ORM\Column]
     private bool $isDraft = false;
@@ -146,6 +157,43 @@ class Review
         return $this;
     }
 
+    public function getStatus(): ReviewStatus
+    {
+        return $this->status;
+    }
+
+    public function setStatus(ReviewStatus $status): self
+    {
+        $this->status = $status;
+        $this->isDraft = $status === ReviewStatus::Draft;
+
+        return $this;
+    }
+
+    public function getDecisionAt(): ?\DateTimeImmutable
+    {
+        return $this->decisionAt;
+    }
+
+    public function setDecisionAt(?\DateTimeImmutable $decisionAt): self
+    {
+        $this->decisionAt = $decisionAt;
+
+        return $this;
+    }
+
+    public function getNextAction(): ?ReviewNextAction
+    {
+        return $this->nextAction;
+    }
+
+    public function setNextAction(?ReviewNextAction $nextAction): self
+    {
+        $this->nextAction = $nextAction;
+
+        return $this;
+    }
+
     public function isDraft(): bool
     {
         return $this->isDraft;
@@ -154,6 +202,7 @@ class Review
     public function setIsDraft(bool $isDraft): self
     {
         $this->isDraft = $isDraft;
+        $this->status = $isDraft ? ReviewStatus::Draft : ReviewStatus::ToComplete;
 
         return $this;
     }

@@ -4,7 +4,10 @@ namespace App\Repository;
 
 use App\Entity\Review;
 use App\Entity\Source;
+use App\Enum\AnalysisDecision;
 use App\Enum\MediaType;
+use App\Enum\ReviewNextAction;
+use App\Enum\ReviewStatus;
 use App\Enum\ReviewVerdict;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -39,6 +42,11 @@ class ReviewRepository extends ServiceEntityRepository
      *     minScore?: ?int,
      *     source?: ?Source,
      *     mediaType?: ?MediaType,
+     *     entryDecision?: ?AnalysisDecision,
+     *     detectedTag?: ?string,
+     *     status?: ?ReviewStatus,
+     *     nextAction?: ?ReviewNextAction,
+     *     autoCreatedDrafts?: ?bool,
      *     sort?: ?string
      * } $filters
      *
@@ -77,13 +85,54 @@ class ReviewRepository extends ServiceEntityRepository
                 ->setParameter('otherMediaType', MediaType::Other);
         }
 
+        if (($filters['entryDecision'] ?? null) instanceof AnalysisDecision) {
+            $queryBuilder
+                ->andWhere('entry.decision = :entryDecision')
+                ->setParameter('entryDecision', $filters['entryDecision']);
+        }
+
+        if (($filters['status'] ?? null) instanceof ReviewStatus) {
+            $queryBuilder
+                ->andWhere('review.status = :reviewStatus')
+                ->setParameter('reviewStatus', $filters['status']);
+        }
+
+        if (($filters['nextAction'] ?? null) instanceof ReviewNextAction) {
+            $queryBuilder
+                ->andWhere('review.nextAction = :nextAction')
+                ->setParameter('nextAction', $filters['nextAction']);
+        }
+
+        if (($filters['autoCreatedDrafts'] ?? false) === true) {
+            $queryBuilder
+                ->andWhere('review.isAutoCreated = true')
+                ->andWhere('review.isDraft = true');
+        }
+
         match ($filters['sort'] ?? null) {
+            'interest_desc' => $queryBuilder->orderBy('entry.interestLevel', 'DESC')->addOrderBy('entry.relevanceScore', 'DESC')->addOrderBy('review.updatedAt', 'DESC'),
             'score_desc' => $queryBuilder->orderBy('review.score', 'DESC')->addOrderBy('review.updatedAt', 'DESC'),
             'score_asc' => $queryBuilder->orderBy('review.score', 'ASC')->addOrderBy('review.updatedAt', 'DESC'),
             'updated_asc' => $queryBuilder->orderBy('review.updatedAt', 'ASC'),
             default => $queryBuilder->orderBy('review.updatedAt', 'DESC'),
         };
 
-        return $queryBuilder->getQuery()->getResult();
+        $reviews = $queryBuilder->getQuery()->getResult();
+
+        if (($filters['detectedTag'] ?? null) !== null && trim((string) $filters['detectedTag']) !== '') {
+            $tag = mb_strtolower(trim((string) $filters['detectedTag']));
+
+            return array_values(array_filter($reviews, static function (Review $review) use ($tag): bool {
+                foreach ($review->getEntry()?->getDetectedTags() ?? [] as $detectedTag) {
+                    if (mb_strtolower($detectedTag) === $tag) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }));
+        }
+
+        return $reviews;
     }
 }

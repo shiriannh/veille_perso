@@ -6,31 +6,62 @@
     <section class="page-heading">
         <div>
             <h1>{{ review.entry.title }}</h1>
-            <p>{{ review.verdict.label() }}{% if review.score is not null %} · {{ review.score }}/100{% endif %}</p>
+            <p>{{ review.verdict.label() }}{% if review.score is not null %} - {{ review.score }}/100{% endif %}</p>
         </div>
         <div class="actions">
+            {% if review.draft %}
+                <form method="post" action="{{ path('app_review_activate_draft', {id: review.id}) }}" class="inline-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('activate_review_' ~ review.id) }}">
+                    <button class="button">Transformer en fiche active</button>
+                </form>
+                <form method="post" action="{{ path('app_review_refuse_draft', {id: review.id}) }}" class="inline-form" onsubmit="return confirm('Refuser ce brouillon sans supprimer l entree ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('refuse_review_' ~ review.id) }}">
+                    <button class="button button-danger">Refuser le brouillon</button>
+                </form>
+            {% endif %}
             <a class="button" href="{{ path('app_review_edit', {id: review.id}) }}">Modifier</a>
-            <a class="button button-secondary" href="{{ path('app_entry_show', {id: review.entry.id}) }}">Voir l'entrée</a>
+            <a class="button button-secondary" href="{{ path('app_entry_show', {id: review.entry.id}) }}">Voir l'entree</a>
         </div>
     </section>
 
     <dl class="details">
-        <dt>Résumé</dt>
-        <dd>{{ review.summary|default('Aucun résumé')|nl2br }}</dd>
+        <dt>Resume</dt>
+        <dd>{{ review.summary|default('Aucun resume')|nl2br }}</dd>
         <dt>Points forts</dt>
-        <dd>{{ review.strengths|default('Non renseignés')|nl2br }}</dd>
+        <dd>{{ review.strengths|default('Non renseignes')|nl2br }}</dd>
         <dt>Points faibles</dt>
-        <dd>{{ review.weaknesses|default('Non renseignés')|nl2br }}</dd>
+        <dd>{{ review.weaknesses|default('Non renseignes')|nl2br }}</dd>
         <dt>Note personnelle</dt>
         <dd>{{ review.personalNote|default('Aucune note')|nl2br }}</dd>
         <dt>Etat</dt>
         <dd>
-            {% if review.draft %}<span class="badge badge-muted">Brouillon</span>{% else %}<span class="badge">Fiche active</span>{% endif %}
-            {% if review.autoCreated %}<span class="badge badge-muted">Créée automatiquement</span>{% endif %}
+            <span class="badge {{ review.status.value == 'draft' ? 'badge-muted' : '' }}">{{ review.status.label() }}</span>
+            {% if review.autoCreated %}<span class="badge badge-muted">Creee automatiquement</span>{% endif %}
         </dd>
-        <dt>Créée le</dt>
+        <dt>Prochaine action</dt>
+        <dd>{{ review.nextAction ? review.nextAction.label() : 'Non definie' }}</dd>
+        <dt>Date de decision</dt>
+        <dd>{{ review.decisionAt ? review.decisionAt|date('d/m/Y H:i') : 'Non renseignee' }}</dd>
+        <dt>Comparaison Entry</dt>
+        <dd>
+            <span class="score">Interet {{ review.entry.interestLevel }}/5</span>
+            {% if review.entry.decision %}<span class="badge badge-decision-{{ review.entry.decision.value }}">{{ review.entry.decision.label() }}</span>{% endif %}
+            {% if review.entry.relevanceScore is not null %}<span class="score">Analyse {{ review.entry.relevanceScore }}/100</span>{% endif %}
+            <span class="badge">{{ review.entry.finalMediaType.label() }}</span>
+        </dd>
+        <dt>Tags detectes</dt>
+        <dd>
+            {% if review.entry.detectedTags is empty %}
+                <span class="muted">Aucun tag detecte</span>
+            {% else %}
+                {% for tag in review.entry.detectedTags|slice(0, 12) %}
+                    <span class="badge badge-muted">{{ tag }}</span>
+                {% endfor %}
+            {% endif %}
+        </dd>
+        <dt>Creee le</dt>
         <dd>{{ review.createdAt|date('d/m/Y H:i') }}</dd>
-        <dt>Mise à jour le</dt>
+        <dt>Mise a jour le</dt>
         <dd>{{ review.updatedAt|date('d/m/Y H:i') }}</dd>
     </dl>
 

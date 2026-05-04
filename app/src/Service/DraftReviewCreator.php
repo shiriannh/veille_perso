@@ -4,6 +4,8 @@ namespace App\Service;
 
 use App\Entity\Entry;
 use App\Entity\Review;
+use App\Enum\ReviewNextAction;
+use App\Enum\ReviewStatus;
 use App\Enum\ReviewVerdict;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -24,6 +26,8 @@ class DraftReviewCreator
             ->setEntry($entry)
             ->setVerdict(ReviewVerdict::Curious)
             ->setScore($entry->getRelevanceScore())
+            ->setStatus(ReviewStatus::Draft)
+            ->setNextAction(ReviewNextAction::Monitor)
             ->setIsDraft(true)
             ->setIsAutoCreated(true)
             ->setSummary($this->buildSummary($entry))
