@@ -206,7 +206,7 @@
             </thead>
             <tbody>
                 {% for entry in entries %}
-                    <tr>
+                    <tr class="entry-main-row">
                         <td class="entry-title-cell" data-label="Titre">
                             <a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a>
                             {% if filters.view == 'compact' and entry.rawContent %}
@@ -246,87 +246,97 @@
                             {% endif %}
                         </td>
                         <td class="entry-details-cell" data-label="Details">
-                            <details class="entry-row-details">
-                                <summary>Voir</summary>
-                                <div class="entry-row-details-content">
-                                    <dl class="entry-detail-grid">
-                                        <div>
-                                            <dt>Media detecte</dt>
-                                            <dd>
-                                                {% if entry.detectedMediaType %}
-                                                    <span class="badge {{ entry.detectedMediaType.value == 'other' ? 'badge-muted' : '' }}">{{ entry.detectedMediaType.label() }}</span>
-                                                {% else %}
-                                                    <span class="badge badge-muted">Non detecte</span>
-                                                {% endif %}
-                                            </dd>
-                                        </div>
-                                        <div>
-                                            <dt>Statut</dt>
-                                            <dd><span class="badge">{{ entry.status.label() }}</span></dd>
-                                        </div>
-                                        <div>
-                                            <dt>Putaclic</dt>
-                                            <dd>
-                                                {% if entry.clickbaitLevel %}
-                                                    <span class="badge badge-clickbait-{{ entry.clickbaitLevel.value }}">{{ entry.clickbaitLevel.label() }}</span>
-                                                    <small>{{ entry.clickbaitScore ?? 0 }}/100</small>
-                                                {% else %}
-                                                    <span class="badge badge-muted">-</span>
-                                                {% endif %}
-                                            </dd>
-                                        </div>
-                                        <div>
-                                            <dt>Langue</dt>
-                                            <dd>{{ entry.analysisLanguage|default('-')|upper }}</dd>
-                                        </div>
-                                        <div class="entry-detail-wide">
-                                            <dt>Tags detectes</dt>
-                                            <dd>
-                                                {% if entry.detectedTags is empty %}
-                                                    <span class="badge badge-muted">Aucun</span>
-                                                {% else %}
-                                                    {% for tag in entry.detectedTags|slice(0, 10) %}
-                                                        <span class="badge badge-muted">{{ tag }}</span>
-                                                    {% endfor %}
-                                                {% endif %}
-                                            </dd>
-                                        </div>
-                                        {% if entry.rawPayload.categories is defined and entry.rawPayload.categories is not empty %}
-                                            <div class="entry-detail-wide">
-                                                <dt>Categories RSS</dt>
-                                                <dd>{{ entry.rawPayload.categories|slice(0, 8)|join(', ') }}</dd>
-                                            </div>
-                                        {% endif %}
-                                        <div class="entry-detail-wide">
-                                            <dt>Extrait</dt>
-                                            <dd>
-                                                {% if entry.rawContent %}
-                                                    {{ entry.rawContent|striptags|slice(0, 240) }}{{ entry.rawContent|length > 240 ? '...' : '' }}
-                                                {% else %}
-                                                    <span class="badge badge-muted">Aucun extrait</span>
-                                                {% endif %}
-                                            </dd>
-                                        </div>
-                                    </dl>
-                                    <div class="entry-row-actions">
-                                        {% if entry.review %}
-                                            <a class="button button-secondary" href="{{ path('app_review_edit', {id: entry.review.id}) }}">Fiche</a>
-                                        {% else %}
-                                            <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Creer fiche</a>
-                                        {% endif %}
-                                        <a class="button button-secondary" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
-                                        <form method="post" action="{{ path('app_entry_mark_relevant', app.request.query.all|merge({id: entry.id})) }}" class="inline-form">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('mark_entry_relevant_' ~ entry.id) }}">
-                                            <button class="button button-secondary">Pertinent</button>
-                                        </form>
-                                        <form method="post" action="{{ path('app_entry_mark_ignored', app.request.query.all|merge({id: entry.id})) }}" class="inline-form" onsubmit="return confirm('Marquer cette entree comme ignoree ?');">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('mark_entry_ignored_' ~ entry.id) }}">
-                                            <button class="button button-danger">Ignorer</button>
-                                        </form>
-                                        {{ include('entry/_delete_form.html.twig') }}
+                            <button
+                                class="entry-expand-toggle"
+                                type="button"
+                                aria-expanded="false"
+                                aria-controls="entry-details-{{ entry.id }}"
+                                data-entry-toggle="entry-details-{{ entry.id }}"
+                            >
+                                Voir +
+                            </button>
+                        </td>
+                    </tr>
+                    <tr id="entry-details-{{ entry.id }}" class="entry-subrow" hidden>
+                        <td colspan="7">
+                            <div class="entry-row-details-content">
+                                <dl class="entry-detail-grid">
+                                    <div>
+                                        <dt>Media detecte</dt>
+                                        <dd>
+                                            {% if entry.detectedMediaType %}
+                                                <span class="badge {{ entry.detectedMediaType.value == 'other' ? 'badge-muted' : '' }}">{{ entry.detectedMediaType.label() }}</span>
+                                            {% else %}
+                                                <span class="badge badge-muted">Non detecte</span>
+                                            {% endif %}
+                                        </dd>
                                     </div>
+                                    <div>
+                                        <dt>Statut</dt>
+                                        <dd><span class="badge">{{ entry.status.label() }}</span></dd>
+                                    </div>
+                                    <div>
+                                        <dt>Putaclic</dt>
+                                        <dd>
+                                            {% if entry.clickbaitLevel %}
+                                                <span class="badge badge-clickbait-{{ entry.clickbaitLevel.value }}">{{ entry.clickbaitLevel.label() }}</span>
+                                                <small>{{ entry.clickbaitScore ?? 0 }}/100</small>
+                                            {% else %}
+                                                <span class="badge badge-muted">-</span>
+                                            {% endif %}
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt>Langue</dt>
+                                        <dd>{{ entry.analysisLanguage|default('-')|upper }}</dd>
+                                    </div>
+                                    <div class="entry-detail-wide">
+                                        <dt>Tags detectes</dt>
+                                        <dd>
+                                            {% if entry.detectedTags is empty %}
+                                                <span class="badge badge-muted">Aucun</span>
+                                            {% else %}
+                                                {% for tag in entry.detectedTags|slice(0, 10) %}
+                                                    <span class="badge badge-muted">{{ tag }}</span>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </dd>
+                                    </div>
+                                    {% if entry.rawPayload.categories is defined and entry.rawPayload.categories is not empty %}
+                                        <div class="entry-detail-wide">
+                                            <dt>Categories RSS</dt>
+                                            <dd>{{ entry.rawPayload.categories|slice(0, 8)|join(', ') }}</dd>
+                                        </div>
+                                    {% endif %}
+                                    <div class="entry-detail-wide">
+                                        <dt>Extrait</dt>
+                                        <dd>
+                                            {% if entry.rawContent %}
+                                                {{ entry.rawContent|striptags|slice(0, 240) }}{{ entry.rawContent|length > 240 ? '...' : '' }}
+                                            {% else %}
+                                                <span class="badge badge-muted">Aucun extrait</span>
+                                            {% endif %}
+                                        </dd>
+                                    </div>
+                                </dl>
+                                <div class="entry-row-actions">
+                                    {% if entry.review %}
+                                        <a class="button button-secondary" href="{{ path('app_review_edit', {id: entry.review.id}) }}">Fiche</a>
+                                    {% else %}
+                                        <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Creer fiche</a>
+                                    {% endif %}
+                                    <a class="button button-secondary" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
+                                    <form method="post" action="{{ path('app_entry_mark_relevant', app.request.query.all|merge({id: entry.id})) }}" class="inline-form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('mark_entry_relevant_' ~ entry.id) }}">
+                                        <button class="button button-secondary">Pertinent</button>
+                                    </form>
+                                    <form method="post" action="{{ path('app_entry_mark_ignored', app.request.query.all|merge({id: entry.id})) }}" class="inline-form" onsubmit="return confirm('Marquer cette entree comme ignoree ?');">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('mark_entry_ignored_' ~ entry.id) }}">
+                                        <button class="button button-danger">Ignorer</button>
+                                    </form>
+                                    {{ include('entry/_delete_form.html.twig') }}
                                 </div>
-                            </details>
+                            </div>
                         </td>
                     </tr>
                 {% endfor %}
@@ -335,4 +345,20 @@
 
         {{ include('partials/_pager.html.twig', {pagination: pagination, route: 'app_entry_index', label: 'Pagination des entrees'}) }}
     {% endif %}
+    <script>
+        document.querySelectorAll('[data-entry-toggle]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const row = document.getElementById(button.dataset.entryToggle);
+
+                if (!row) {
+                    return;
+                }
+
+                const isOpening = row.hidden;
+                row.hidden = !isOpening;
+                button.setAttribute('aria-expanded', String(isOpening));
+                button.textContent = isOpening ? 'Masquer -' : 'Voir +';
+            });
+        });
+    </script>
 {% endblock %}
