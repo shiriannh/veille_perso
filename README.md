@@ -611,22 +611,35 @@ Actions disponibles :
 
 La liste des entrées accepte des filtres transmis en query string :
 
-- recherche texte sur le titre ;
+- recherche texte sur le titre, le contenu brut, les URL, la source, les tags personnels, les tags detectes et les categories RSS ;
 - source ;
 - type de média ;
 - statut ;
 - niveau d’intérêt ;
 - présence ou absence de fiche ;
-- tri par date de publication ou date d’import.
+- presence ou absence dans une synthese ;
+- categorie RSS brute ;
+- tri par date de publication, date d’import, score de pertinence, score putaclic, `interestLevel` ou date d'analyse.
 
 La V1.6 ajoute une pagination sobre avec choix 5 / 10 / 25 / tout sur les listes longues : entrees, sources, imports, fiches, tags Admin et syntheses.
 
 Actions rapides Entry :
 
 - raccourcis de vue `A verifier`, `Medias other` et `Putaclic suspect` ;
+- raccourcis de vue thematiques : Livres SFF, Jeux video, BD, Manga, Comics, JDR et Figurines ;
+- mode compact de la liste Entry pour parcourir rapidement les gros volumes ;
 - reanalyse du filtre courant ;
 - recalcul des tags detectes du filtre courant ;
 - marquage manuel `Pertinent` ou `Ignore` depuis la liste, avec CSRF et retour sur les filtres actifs.
+
+La liste Entry affiche aussi un extrait RSS tronque proprement et un indicateur de source :
+
+- `source neuve` si moins de trois Entry analysees existent ;
+- `source fiable` quand l'historique contient surtout des contenus pertinents ;
+- `source mixte` quand les decisions sont contrastees ;
+- `source bruyante` quand les decisions `ignored` / `clickbait` dominent.
+
+Le tableau de bord ajoute des raccourcis directs vers les Entry avec fiche, sans fiche, jamais synthetisees et le mode compact.
 
 La liste Source propose les filtres `Sources RSS actives uniquement` et `Dernier import en erreur`. Elle affiche aussi le dernier ImportRun connu avec statut et compteurs, ainsi que le nombre d'entrees par source.
 

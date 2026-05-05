@@ -103,6 +103,8 @@ class EntryRepository extends ServiceEntityRepository
      *     clickbaitLevel?: ?ClickbaitLevel,
      *     keyword?: ?string,
      *     detectedTag?: ?string,
+     *     rssCategory?: ?string,
+     *     synthesisState?: ?string,
      *     analysisLanguage?: ?string,
      *     sort?: ?string
      * } $filters
@@ -116,12 +118,6 @@ class EntryRepository extends ServiceEntityRepository
             ->addSelect('source')
             ->leftJoin('entry.review', 'review')
             ->addSelect('review');
-
-        if (($filters['q'] ?? null) !== null && trim((string) $filters['q']) !== '') {
-            $queryBuilder
-                ->andWhere('LOWER(entry.title) LIKE :query')
-                ->setParameter('query', '%'.mb_strtolower(trim((string) $filters['q'])).'%');
-        }
 
         if (($filters['source'] ?? null) instanceof Source) {
             $queryBuilder
@@ -173,6 +169,14 @@ class EntryRepository extends ServiceEntityRepository
             $queryBuilder->andWhere('review.id IS NULL');
         }
 
+        if (($filters['synthesisState'] ?? null) === 'with') {
+            $queryBuilder->andWhere('entry.lastSynthesizedAt IS NOT NULL');
+        }
+
+        if (($filters['synthesisState'] ?? null) === 'without') {
+            $queryBuilder->andWhere('entry.lastSynthesizedAt IS NULL');
+        }
+
         if (($filters['decision'] ?? null) instanceof AnalysisDecision) {
             $queryBuilder
                 ->andWhere('entry.decision = :decision')
@@ -202,10 +206,28 @@ class EntryRepository extends ServiceEntityRepository
             'published_desc' => $queryBuilder->orderBy('entry.publishedAt', 'DESC')->addOrderBy('entry.createdAt', 'DESC'),
             'imported_asc' => $queryBuilder->orderBy('entry.importedAt', 'ASC')->addOrderBy('entry.createdAt', 'DESC'),
             'imported_desc' => $queryBuilder->orderBy('entry.importedAt', 'DESC')->addOrderBy('entry.createdAt', 'DESC'),
+            'relevance_desc' => $queryBuilder->orderBy('entry.relevanceScore', 'DESC')->addOrderBy('entry.importedAt', 'DESC'),
+            'relevance_asc' => $queryBuilder->orderBy('entry.relevanceScore', 'ASC')->addOrderBy('entry.importedAt', 'DESC'),
+            'clickbait_desc' => $queryBuilder->orderBy('entry.clickbaitScore', 'DESC')->addOrderBy('entry.importedAt', 'DESC'),
+            'clickbait_asc' => $queryBuilder->orderBy('entry.clickbaitScore', 'ASC')->addOrderBy('entry.importedAt', 'DESC'),
+            'interest_desc' => $queryBuilder->orderBy('entry.interestLevel', 'DESC')->addOrderBy('entry.importedAt', 'DESC'),
+            'interest_asc' => $queryBuilder->orderBy('entry.interestLevel', 'ASC')->addOrderBy('entry.importedAt', 'DESC'),
+            'analyzed_desc' => $queryBuilder->orderBy('entry.analyzedAt', 'DESC')->addOrderBy('entry.importedAt', 'DESC'),
+            'analyzed_asc' => $queryBuilder->orderBy('entry.analyzedAt', 'ASC')->addOrderBy('entry.importedAt', 'DESC'),
             default => $queryBuilder->orderBy('entry.createdAt', 'DESC'),
         };
 
         $entries = $queryBuilder->getQuery()->getResult();
+
+        if (($filters['q'] ?? null) !== null && trim((string) $filters['q']) !== '') {
+            $query = mb_strtolower(trim((string) $filters['q']));
+            $entries = array_values(array_filter($entries, fn (Entry $entry): bool => $this->matchesTextSearch($entry, $query)));
+        }
+
+        if (($filters['rssCategory'] ?? null) !== null && trim((string) $filters['rssCategory']) !== '') {
+            $category = mb_strtolower(trim((string) $filters['rssCategory']));
+            $entries = array_values(array_filter($entries, fn (Entry $entry): bool => $this->matchesRssCategory($entry, $category)));
+        }
 
         if (($filters['detectedTag'] ?? null) !== null && trim((string) $filters['detectedTag']) !== '') {
             $tag = mb_strtolower(trim((string) $filters['detectedTag']));
@@ -222,6 +244,46 @@ class EntryRepository extends ServiceEntityRepository
         }
 
         return $entries;
+    }
+
+    private function matchesTextSearch(Entry $entry, string $query): bool
+    {
+        $haystack = mb_strtolower(implode(' ', array_filter([
+            $entry->getTitle(),
+            $entry->getRawContent(),
+            $entry->getOriginalUrl(),
+            $entry->getCanonicalUrl(),
+            $entry->getSource()->getName(),
+            implode(' ', $entry->getPersonalTags()),
+            implode(' ', $entry->getDetectedTags()),
+            implode(' ', $this->rssCategories($entry)),
+        ])));
+
+        return str_contains($haystack, $query);
+    }
+
+    private function matchesRssCategory(Entry $entry, string $category): bool
+    {
+        foreach ($this->rssCategories($entry) as $rssCategory) {
+            if (str_contains(mb_strtolower($rssCategory), $category)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function rssCategories(Entry $entry): array
+    {
+        $rawPayload = $entry->getRawPayload();
+        if (!is_array($rawPayload) || !isset($rawPayload['categories']) || !is_array($rawPayload['categories'])) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('strval', $rawPayload['categories'])));
     }
 
     /**

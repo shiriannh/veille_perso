@@ -161,20 +161,25 @@ Etat :
 - les contenus commerciaux sont exclus des recommandations si l'option est cochee, a partir de signaux simples documentes ;
 - relation `SynthesisReport` -> `Review` ajoutee pour tracer les fiches enrichies liees aux Entry synthetisees.
 
-## Priorite 9 - Recherche et consultation
+## Priorite 9 - Finalisee
 
-- Ajouter une recherche texte sur titre, contenu brut, tags personnels, tags detectes, tags de reference et source.
-- Ajouter un tri par score de pertinence.
-- Ajouter un tri par score clickbait.
-- Ajouter un tri par `interest_level`.
-- Ajouter un tri par date d'analyse.
-- Ajouter un filtre par categorie RSS brute.
-- Ajouter un filtre "a ete synthetise / jamais synthetise".
-- Ajouter un filtre "a une Review / sans Review" sur le dashboard.
-- Ajouter des raccourcis de filtres predefinis : "Livres SFF", "Jeux video", "BD", "Manga", "Comics", "JDR", "Figurines".
-- Ajouter un mode compact de la liste Entry.
-- Ajouter un affichage plus riche des extraits RSS, tronque proprement.
-- Ajouter un indicateur "source fiable / source bruyante" calcule depuis l'historique des decisions.
+Recherche et consultation renforcees.
+
+Etat :
+
+- recherche texte etendue au titre, contenu brut, URL, source, tags personnels, tags detectes et categories RSS ;
+- tri par score de pertinence ajoute ;
+- tri par score clickbait ajoute ;
+- tri par `interest_level` ajoute ;
+- tri par date d'analyse ajoute ;
+- filtre par categorie RSS brute ajoute ;
+- filtre "deja synthetisee / jamais synthetisee" ajoute ;
+- raccourcis dashboard "avec fiche", "sans fiche", "a synthetiser" et "mode compact" ajoutes ;
+- raccourcis de filtres predefinis ajoutes : "Livres SFF", "Jeux video", "BD", "Manga", "Comics", "JDR", "Figurines" ;
+- mode compact de la liste Entry ajoute ;
+- affichage plus riche des extraits RSS, tronque proprement ;
+- categories RSS visibles dans la liste Entry quand elles existent ;
+- indicateur "source neuve / fiable / mixte / bruyante" calcule depuis l'historique des decisions et affiche sur la liste Entry.
 
 ## Priorite 10 - Donnees, maintenance et robustesse
 

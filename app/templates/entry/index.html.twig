@@ -1,25 +1,32 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Entrées - Veille perso{% endblock %}
+{% block title %}Entrees - Veille perso{% endblock %}
 
 {% block body %}
     <section class="page-heading">
         <div>
-            <h1>Entrées</h1>
-            <p>Contenus bruts repérés avant synthèse personnelle.</p>
+            <h1>Entrees</h1>
+            <p>Contenus bruts reperes avant synthese personnelle.</p>
         </div>
         <div class="actions">
             <a class="button button-secondary" href="{{ path('app_entry_index', {decision: 'maybe_relevant', sort: 'imported_desc'}) }}">A verifier</a>
             <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'other'}) }}">Medias other</a>
             <a class="button button-secondary" href="{{ path('app_entry_index', {clickbaitLevel: 'suspicious', sort: 'imported_desc'}) }}">Putaclic suspect</a>
-            <a class="button" href="{{ path('app_entry_new') }}">Nouvelle entrée</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'book', detectedTag: 'sf', sort: 'relevance_desc'}) }}">Livres SFF</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'video_game', sort: 'interest_desc'}) }}">Jeux video</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'bd', sort: 'interest_desc'}) }}">BD</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'manga', sort: 'interest_desc'}) }}">Manga</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'comics', sort: 'interest_desc'}) }}">Comics</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'ttrpg', sort: 'interest_desc'}) }}">JDR</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {mediaType: 'figurines', sort: 'interest_desc'}) }}">Figurines</a>
+            <a class="button" href="{{ path('app_entry_new') }}">Nouvelle entree</a>
         </div>
     </section>
 
     <form method="get" class="filter-form">
         <div>
             <label for="q">Recherche</label>
-            <input id="q" type="search" name="q" value="{{ filters.q }}" placeholder="Titre">
+            <input id="q" type="search" name="q" value="{{ filters.q }}" placeholder="Titre, contenu, tags, source...">
         </div>
         <div>
             <label for="source">Source</label>
@@ -31,7 +38,7 @@
             </select>
         </div>
         <div>
-            <label for="mediaType">Média</label>
+            <label for="mediaType">Media</label>
             <select id="mediaType" name="mediaType">
                 <option value="">Tous</option>
                 {% for media_type in media_types %}
@@ -40,7 +47,7 @@
             </select>
         </div>
         <div>
-            <label for="detectedMediaType">Média détecté</label>
+            <label for="detectedMediaType">Media detecte</label>
             <select id="detectedMediaType" name="detectedMediaType">
                 <option value="">Tous</option>
                 {% for media_type in media_types %}
@@ -49,7 +56,7 @@
             </select>
         </div>
         <div>
-            <label for="mediaTypeOrigin">Origine média</label>
+            <label for="mediaTypeOrigin">Origine media</label>
             <select id="mediaTypeOrigin" name="mediaTypeOrigin">
                 <option value="">Toutes</option>
                 {% for origin in media_type_origins %}
@@ -67,7 +74,7 @@
             </select>
         </div>
         <div>
-            <label for="interestLevel">Intérêt</label>
+            <label for="interestLevel">Interet</label>
             <select id="interestLevel" name="interestLevel">
                 <option value="">Tous</option>
                 {% for level in 0..5 %}
@@ -84,7 +91,15 @@
             </select>
         </div>
         <div>
-            <label for="decision">Décision</label>
+            <label for="synthesisState">Synthese</label>
+            <select id="synthesisState" name="synthesisState">
+                <option value="">Toutes</option>
+                <option value="with" {{ filters.synthesisState == 'with' ? 'selected' : '' }}>Deja synthetisee</option>
+                <option value="without" {{ filters.synthesisState == 'without' ? 'selected' : '' }}>Jamais synthetisee</option>
+            </select>
+        </div>
+        <div>
+            <label for="decision">Decision</label>
             <select id="decision" name="decision">
                 <option value="">Toutes</option>
                 {% for decision in decisions %}
@@ -102,12 +117,16 @@
             </select>
         </div>
         <div>
-            <label for="keyword">Mot-clé détecté</label>
+            <label for="keyword">Mot-cle analyse</label>
             <input id="keyword" type="search" name="keyword" value="{{ filters.keyword }}" placeholder="sf, fantasy, rumeur...">
         </div>
         <div>
-            <label for="detectedTag">Tag détecté</label>
+            <label for="detectedTag">Tag detecte</label>
             <input id="detectedTag" type="search" name="detectedTag" value="{{ filters.detectedTag }}" placeholder="battlefield, fps, sf...">
+        </div>
+        <div>
+            <label for="rssCategory">Categorie RSS</label>
+            <input id="rssCategory" type="search" name="rssCategory" value="{{ filters.rssCategory }}" placeholder="Romans VF, Space Opera...">
         </div>
         <div>
             <label for="analysisLanguage">Langue</label>
@@ -122,46 +141,62 @@
         <div>
             <label for="sort">Tri</label>
             <select id="sort" name="sort">
-                <option value="">Création récente</option>
-                <option value="published_desc" {{ filters.sort == 'published_desc' ? 'selected' : '' }}>Publication récente</option>
+                <option value="">Creation recente</option>
+                <option value="published_desc" {{ filters.sort == 'published_desc' ? 'selected' : '' }}>Publication recente</option>
                 <option value="published_asc" {{ filters.sort == 'published_asc' ? 'selected' : '' }}>Publication ancienne</option>
-                <option value="imported_desc" {{ filters.sort == 'imported_desc' ? 'selected' : '' }}>Import récent</option>
+                <option value="imported_desc" {{ filters.sort == 'imported_desc' ? 'selected' : '' }}>Import recent</option>
                 <option value="imported_asc" {{ filters.sort == 'imported_asc' ? 'selected' : '' }}>Import ancien</option>
+                <option value="relevance_desc" {{ filters.sort == 'relevance_desc' ? 'selected' : '' }}>Pertinence forte</option>
+                <option value="relevance_asc" {{ filters.sort == 'relevance_asc' ? 'selected' : '' }}>Pertinence faible</option>
+                <option value="clickbait_desc" {{ filters.sort == 'clickbait_desc' ? 'selected' : '' }}>Putaclic fort</option>
+                <option value="clickbait_asc" {{ filters.sort == 'clickbait_asc' ? 'selected' : '' }}>Putaclic faible</option>
+                <option value="interest_desc" {{ filters.sort == 'interest_desc' ? 'selected' : '' }}>Interet fort</option>
+                <option value="interest_asc" {{ filters.sort == 'interest_asc' ? 'selected' : '' }}>Interet faible</option>
+                <option value="analyzed_desc" {{ filters.sort == 'analyzed_desc' ? 'selected' : '' }}>Analyse recente</option>
+                <option value="analyzed_asc" {{ filters.sort == 'analyzed_asc' ? 'selected' : '' }}>Analyse ancienne</option>
+            </select>
+        </div>
+        <div>
+            <label for="view">Affichage</label>
+            <select id="view" name="view">
+                <option value="default" {{ filters.view == 'default' ? 'selected' : '' }}>Detaille</option>
+                <option value="compact" {{ filters.view == 'compact' ? 'selected' : '' }}>Compact</option>
             </select>
         </div>
         <div class="filter-actions">
             <button class="button">Filtrer</button>
-            <a class="button button-secondary" href="{{ path('app_entry_index') }}">Réinitialiser</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index') }}">Reinitialiser</a>
         </div>
     </form>
 
     <div class="actions action-strip">
-        <form method="post" action="{{ path('app_entry_reanalyze_filtered', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Ré-analyser toutes les entrées du filtre courant ?');">
+        <form method="post" action="{{ path('app_entry_reanalyze_filtered', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Re-analyser toutes les entrees du filtre courant ?');">
             <input type="hidden" name="_token" value="{{ csrf_token('reanalyze_filtered_entries') }}">
-            <button class="button button-secondary">Ré-analyser le filtre courant</button>
+            <button class="button button-secondary">Re-analyser le filtre courant</button>
         </form>
-        <form method="post" action="{{ path('app_entry_detect_tags_filtered', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Recalculer les tags des entrées du filtre courant ?');">
+        <form method="post" action="{{ path('app_entry_detect_tags_filtered', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Recalculer les tags des entrees du filtre courant ?');">
             <input type="hidden" name="_token" value="{{ csrf_token('detect_tags_filtered_entries') }}">
-            <button class="button button-secondary">Détecter les tags du filtre</button>
+            <button class="button button-secondary">Detecter les tags du filtre</button>
         </form>
     </div>
 
     {% if entries is empty %}
-        <p class="empty">Aucune entrée enregistrée.</p>
+        <p class="empty">Aucune entree enregistree.</p>
     {% else %}
-        <table class="entry-table">
+        <table class="entry-table {{ filters.view == 'compact' ? 'entry-table-compact' : '' }}">
             <thead>
                 <tr>
                     <th>Titre</th>
                     <th>Type</th>
-                    <th>Détecté</th>
+                    <th>Detecte</th>
                     <th>Source</th>
                     <th>Statut</th>
-                    <th>Intérêt</th>
+                    <th>Interet</th>
                     <th>Analyse</th>
                     <th>Putaclic</th>
                     <th>Langue</th>
-                    <th>Tags détectés</th>
+                    <th>Tags detectes</th>
+                    <th class="optional-column">Extrait</th>
                     <th>Fiche</th>
                     <th></th>
                 </tr>
@@ -169,7 +204,12 @@
             <tbody>
                 {% for entry in entries %}
                     <tr>
-                        <td><a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a></td>
+                        <td>
+                            <a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a>
+                            {% if filters.view == 'compact' and entry.rawContent %}
+                                <small>{{ entry.rawContent|striptags|slice(0, 140) }}{{ entry.rawContent|length > 140 ? '...' : '' }}</small>
+                            {% endif %}
+                        </td>
                         <td>
                             {{ entry.finalMediaType.label() }}
                             {% if entry.mediaTypeOrigin %}<small>{{ entry.mediaTypeOrigin }}</small>{% endif %}
@@ -178,10 +218,16 @@
                             {% if entry.detectedMediaType %}
                                 <span class="badge {{ entry.detectedMediaType.value == 'other' ? 'badge-muted' : '' }}">{{ entry.detectedMediaType.label() }}</span>
                             {% else %}
-                                <span class="badge badge-muted">Non détecté</span>
+                                <span class="badge badge-muted">Non detecte</span>
                             {% endif %}
                         </td>
-                        <td>{{ entry.source.name }}</td>
+                        <td>
+                            {{ entry.source.name }}
+                            {% set quality = source_quality[entry.source.id] ?? null %}
+                            {% if quality %}
+                                <span class="badge {{ quality.class }}" title="Score source {{ quality.score }} sur {{ quality.total }} entree(s) analysees">{{ quality.label }}</span>
+                            {% endif %}
+                        </td>
                         <td><span class="badge">{{ entry.status.label() }}</span></td>
                         <td>{{ entry.interestLevel }}/5</td>
                         <td>
@@ -189,7 +235,7 @@
                                 <span class="badge badge-decision-{{ entry.decision.value }}">{{ entry.decision.label() }}</span>
                                 <small>{{ entry.relevanceScore ?? 0 }}/100</small>
                             {% else %}
-                                <span class="badge badge-muted">À analyser</span>
+                                <span class="badge badge-muted">A analyser</span>
                             {% endif %}
                         </td>
                         <td>
@@ -209,21 +255,34 @@
                                     <span class="badge badge-muted">{{ tag }}</span>
                                 {% endfor %}
                             {% endif %}
+                            {% if entry.rawPayload.categories is defined and entry.rawPayload.categories is not empty %}
+                                <small>RSS : {{ entry.rawPayload.categories|slice(0, 3)|join(', ') }}</small>
+                            {% endif %}
+                        </td>
+                        <td class="optional-column">
+                            {% if entry.rawContent %}
+                                <small>{{ entry.rawContent|striptags|slice(0, 180) }}{{ entry.rawContent|length > 180 ? '...' : '' }}</small>
+                            {% else %}
+                                <span class="badge badge-muted">Aucun extrait</span>
+                            {% endif %}
                         </td>
                         <td>
                             {% if entry.review %}
-                                <span class="badge">Fichée</span>
+                                <span class="badge">Fichee</span>
                                 {% if entry.review.draft %}<span class="badge badge-muted">Brouillon</span>{% endif %}
                                 {% if entry.review.autoCreated %}<span class="badge badge-muted">Auto</span>{% endif %}
                             {% else %}
-                                <span class="badge badge-muted">À ficher</span>
+                                <span class="badge badge-muted">A ficher</span>
+                            {% endif %}
+                            {% if entry.lastSynthesizedAt %}
+                                <span class="badge badge-muted">Synthetisee</span>
                             {% endif %}
                         </td>
                         <td class="table-actions">
                             {% if entry.review %}
                                 <a class="button button-secondary" href="{{ path('app_review_edit', {id: entry.review.id}) }}">Fiche</a>
                             {% else %}
-                                <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Créer fiche</a>
+                                <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Creer fiche</a>
                             {% endif %}
                             <a class="button button-secondary" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
                             <form method="post" action="{{ path('app_entry_mark_relevant', app.request.query.all|merge({id: entry.id})) }}" class="inline-form">

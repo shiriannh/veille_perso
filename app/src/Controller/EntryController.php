@@ -15,6 +15,7 @@ use App\Service\EntryAnalyzer;
 use App\Service\EntryTagDetector;
 use App\Service\MediaTypeResolver;
 use App\Service\ReferenceFieldSynchronizer;
+use App\Service\SourceQualityReporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,7 +26,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class EntryController extends AbstractController
 {
     #[Route('', name: 'app_entry_index', methods: ['GET'])]
-    public function index(Request $request, EntryRepository $entryRepository, SourceRepository $sourceRepository): Response
+    public function index(Request $request, EntryRepository $entryRepository, SourceRepository $sourceRepository, SourceQualityReporter $sourceQualityReporter): Response
     {
         [$filters, $viewFilters] = $this->filtersFromRequest($request, $sourceRepository);
 
@@ -43,6 +44,7 @@ class EntryController extends AbstractController
             'decisions' => AnalysisDecision::cases(),
             'clickbait_levels' => ClickbaitLevel::cases(),
             'media_type_origins' => MediaTypeResolver::origins(),
+            'source_quality' => $sourceQualityReporter->summarizeAll(),
             'filters' => $viewFilters,
         ]);
     }
@@ -375,9 +377,15 @@ class EntryController extends AbstractController
         $analysisLanguage = in_array($request->query->get('analysisLanguage'), ['fr', 'en', 'mixed', 'unknown'], true)
             ? (string) $request->query->get('analysisLanguage')
             : null;
-        $sort = in_array($request->query->get('sort'), ['published_desc', 'published_asc', 'imported_desc', 'imported_asc'], true)
+        $sort = in_array($request->query->get('sort'), ['published_desc', 'published_asc', 'imported_desc', 'imported_asc', 'relevance_desc', 'relevance_asc', 'clickbait_desc', 'clickbait_asc', 'interest_desc', 'interest_asc', 'analyzed_desc', 'analyzed_asc'], true)
             ? (string) $request->query->get('sort')
             : null;
+        $synthesisState = in_array($request->query->get('synthesisState'), ['with', 'without'], true)
+            ? (string) $request->query->get('synthesisState')
+            : null;
+        $viewMode = in_array($request->query->get('view'), ['default', 'compact'], true)
+            ? (string) $request->query->get('view')
+            : 'default';
 
         return [
             [
@@ -393,6 +401,8 @@ class EntryController extends AbstractController
                 'clickbaitLevel' => $clickbaitLevel,
                 'keyword' => $request->query->get('keyword'),
                 'detectedTag' => $request->query->get('detectedTag'),
+                'rssCategory' => $request->query->get('rssCategory'),
+                'synthesisState' => $synthesisState,
                 'analysisLanguage' => $analysisLanguage,
                 'sort' => $sort,
             ],
@@ -409,8 +419,11 @@ class EntryController extends AbstractController
                 'clickbaitLevel' => $clickbaitLevel?->value,
                 'keyword' => (string) $request->query->get('keyword', ''),
                 'detectedTag' => (string) $request->query->get('detectedTag', ''),
+                'rssCategory' => (string) $request->query->get('rssCategory', ''),
+                'synthesisState' => $synthesisState,
                 'analysisLanguage' => $analysisLanguage ?? '',
                 'sort' => $sort ?? '',
+                'view' => $viewMode,
             ],
         ];
     }

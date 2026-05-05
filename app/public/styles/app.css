@@ -309,6 +309,29 @@ tr:last-child td {
     min-width: 78px;
 }
 
+.entry-table td small,
+.entry-table th small {
+    display: block;
+    margin-top: 4px;
+}
+
+.entry-table-compact th:nth-child(3),
+.entry-table-compact td:nth-child(3),
+.entry-table-compact th:nth-child(5),
+.entry-table-compact td:nth-child(5),
+.entry-table-compact th:nth-child(8),
+.entry-table-compact td:nth-child(8),
+.entry-table-compact th:nth-child(9),
+.entry-table-compact td:nth-child(9),
+.entry-table-compact .optional-column {
+    display: none;
+}
+
+.entry-table-compact th,
+.entry-table-compact td {
+    padding: 9px 10px;
+}
+
 .details {
     display: grid;
     grid-template-columns: 180px 1fr;

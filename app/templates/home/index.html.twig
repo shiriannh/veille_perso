@@ -43,10 +43,27 @@
             <span>Pertinentes sans fiche</span>
             <strong>{{ relevant_without_review_count }}</strong>
         </a>
+        <a class="metric" href="{{ path('app_entry_index', {reviewState: 'with', sort: 'interest_desc'}) }}">
+            <span>Avec fiche</span>
+            <strong>Voir</strong>
+        </a>
         <a class="metric" href="{{ path('app_synthesis_report_index') }}">
             <span>Jamais synthetisees</span>
             <strong>{{ unsynthesized_entry_count }}</strong>
         </a>
+    </section>
+
+    <section class="content-block">
+        <div class="section-title">
+            <h2>Vues rapides</h2>
+            <a href="{{ path('app_entry_index') }}">Toutes les entrees</a>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_entry_index', {reviewState: 'without', sort: 'interest_desc'}) }}">Sans fiche</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {reviewState: 'with', sort: 'interest_desc'}) }}">Avec fiche</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {synthesisState: 'without', decision: 'relevant', sort: 'interest_desc'}) }}">A synthetiser</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index', {view: 'compact', sort: 'relevance_desc'}) }}">Mode compact</a>
+        </div>
     </section>
 
     <section class="two-columns">
