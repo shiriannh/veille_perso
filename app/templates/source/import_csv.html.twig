@@ -8,7 +8,10 @@
             <h1>Importer des sources</h1>
             <p>Import transactionnel : si une ligne est invalide, aucune source n'est creee.</p>
         </div>
-        <a class="button button-secondary" href="{{ path('app_source_index') }}">Retour</a>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_source_import_csv_template') }}">Telecharger le modele CSV</a>
+            <a class="button button-secondary" href="{{ path('app_source_index') }}">Retour</a>
+        </div>
     </section>
 
     <section class="section-block">
@@ -24,6 +27,10 @@
             <dd><code>type</code> : website, rss, newsletter, youtube, podcast, social, other. <code>fetchMode</code> : manual, rss.</dd>
             <dt>Booleen</dt>
             <dd><code>isActive</code> : true, false, 1, 0, oui, non, yes, no.</dd>
+            <dt>Simulation</dt>
+            <dd>La case de simulation lance toutes les validations sans creer de Source.</dd>
+            <dt>Doublons</dt>
+            <dd>Le controle peut porter sur le nom, le flux RSS, ou le couple nom + flux RSS.</dd>
         </div>
     </section>
 
@@ -44,6 +51,7 @@ Site manuel;website;https://example.net;true;manual;;A consulter ponctuellement<
                         <li>{{ error }}</li>
                     {% endfor %}
                 </ul>
+                <a class="button button-secondary" href="{{ path('app_source_import_csv_error_report') }}">Telecharger le rapport</a>
             </div>
         </section>
     {% endif %}

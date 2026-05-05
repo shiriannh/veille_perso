@@ -6,14 +6,28 @@
     <section class="page-heading">
         <div>
             <h1>{{ source.name }}</h1>
-            <p>{{ source.type.label() }} · {{ source.fetchMode.label() }} · {{ source.active ? 'active' : 'inactive' }}</p>
+            <p>{{ source.type.label() }} - {{ source.fetchMode.label() }} - {{ source.active ? 'active' : 'inactive' }}</p>
         </div>
         <div class="actions">
             <a class="button" href="{{ path('app_source_edit', {id: source.id}) }}">Modifier</a>
             {% if source.fetchMode.value == 'rss' %}
                 <form method="post" action="{{ path('app_source_import', {id: source.id}) }}" class="inline-form">
                     <input type="hidden" name="_token" value="{{ csrf_token('import_source_' ~ source.id) }}">
-                    <button class="button button-secondary">Importer</button>
+                    <input type="hidden" name="analyze" value="1">
+                    <button class="button button-secondary">Importer puis analyser</button>
+                </form>
+                <form method="post" action="{{ path('app_source_import', {id: source.id}) }}" class="inline-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('import_source_' ~ source.id) }}">
+                    <input type="hidden" name="analyze" value="0">
+                    <button class="button button-secondary">Importer sans analyser</button>
+                </form>
+                <form method="post" action="{{ path('app_source_test_rss', {id: source.id}) }}" class="inline-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('test_source_rss_' ~ source.id) }}">
+                    <button class="button button-secondary">Tester le flux RSS</button>
+                </form>
+                <form method="post" action="{{ path('app_source_preview_rss', {id: source.id}) }}" class="inline-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('preview_source_rss_' ~ source.id) }}">
+                    <button class="button button-secondary">Previsualiser</button>
                 </form>
             {% endif %}
             <a class="button button-secondary" href="{{ path('app_source_index') }}">Retour</a>
@@ -26,7 +40,7 @@
             {% if source.url %}
                 <a href="{{ source.url }}" rel="noreferrer">{{ source.url }}</a>
             {% else %}
-                <span class="muted">Non renseignée</span>
+                <span class="muted">Non renseignee</span>
             {% endif %}
         </dd>
         <dt>Flux RSS</dt>
@@ -34,14 +48,14 @@
             {% if source.feedUrl %}
                 <a href="{{ source.feedUrl }}" rel="noreferrer">{{ source.feedUrl }}</a>
             {% else %}
-                <span class="muted">Non renseigné</span>
+                <span class="muted">Non renseigne</span>
             {% endif %}
         </dd>
         <dt>Dernier import</dt>
         <dd>{{ source.lastFetchedAt ? source.lastFetchedAt|date('d/m/Y H:i') : 'Jamais' }}</dd>
-        <dt>Dernier succès</dt>
+        <dt>Dernier succes</dt>
         <dd>{{ source.lastSuccessAt ? source.lastSuccessAt|date('d/m/Y H:i') : 'Jamais' }}</dd>
-        <dt>Dernière erreur</dt>
+        <dt>Derniere erreur</dt>
         <dd>
             {% if source.lastErrorAt %}
                 {{ source.lastErrorAt|date('d/m/Y H:i') }}
@@ -55,12 +69,79 @@
         <dt>Notes</dt>
         <dd>{{ source.notes|default('Aucune note')|nl2br }}</dd>
         <dt>Profil de source</dt>
-        <dd>{{ source.sourceProfileLabel() }} · poids {{ source.sourceWeightLabel() }}</dd>
-        <dt>Créée le</dt>
+        <dd>{{ source.sourceProfileLabel() }} - poids {{ source.sourceWeightLabel() }}</dd>
+        <dt>Priorite d import</dt>
+        <dd>{{ source.importPriority }}/100</dd>
+        <dt>Creee le</dt>
         <dd>{{ source.createdAt|date('d/m/Y H:i') }}</dd>
-        <dt>Mise à jour le</dt>
+        <dt>Mise a jour le</dt>
         <dd>{{ source.updatedAt|date('d/m/Y H:i') }}</dd>
     </dl>
+
+    {% if rss_test %}
+        <section class="section-block">
+            <div class="section-title">
+                <h2>Test du flux RSS</h2>
+            </div>
+            {% if rss_test.ok %}
+                <dl class="details">
+                    <dt>Titre du flux</dt>
+                    <dd>{{ rss_test.title|default('Non renseigne') }}</dd>
+                    <dt>Dernier item</dt>
+                    <dd>{{ rss_test.lastItemAt ? rss_test.lastItemAt|date('d/m/Y H:i') : 'Date absente' }}</dd>
+                    <dt>Items lus</dt>
+                    <dd>{{ rss_test.itemCount }}</dd>
+                </dl>
+            {% else %}
+                <div class="empty">
+                    <ul>
+                        {% for error in rss_test.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {% if rss_preview %}
+        <section class="section-block">
+            <div class="section-title">
+                <h2>Previsualisation RSS</h2>
+                <span class="muted">{{ rss_preview.itemCount }} item(s) detecte(s)</span>
+            </div>
+            {% if rss_preview.ok %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Date</th>
+                            <th>Categories</th>
+                            <th>URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in rss_preview.items %}
+                            <tr>
+                                <td>{{ item.title }}</td>
+                                <td>{{ item.publishedAt ? item.publishedAt|date('d/m/Y H:i') : '-' }}</td>
+                                <td>{{ item.categories is empty ? '-' : item.categories|join(', ') }}</td>
+                                <td>{% if item.url %}<a href="{{ item.url }}" rel="noreferrer">{{ item.url }}</a>{% else %}-{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty">
+                    <ul>
+                        {% for error in rss_preview.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </section>
+    {% endif %}
 
     <div class="actions">
         {{ include('source/_delete_form.html.twig') }}
@@ -68,20 +149,20 @@
 
     <section class="section-block">
         <div class="section-title">
-            <h2>Historique d’import</h2>
+            <h2>Historique d'import</h2>
             <a href="{{ path('app_import_run_index', {source: source.id}) }}">Tout voir</a>
         </div>
         {% if import_runs is empty %}
-            <p class="empty">Aucun import lancé pour cette source.</p>
+            <p class="empty">Aucun import lance pour cette source.</p>
         {% else %}
             <table>
                 <thead>
                     <tr>
-                        <th>Démarré</th>
+                        <th>Demarre</th>
                         <th>Statut</th>
-                        <th>Récupérés</th>
-                        <th>Créés</th>
-                        <th>Ignorés</th>
+                        <th>Recuperes</th>
+                        <th>Crees</th>
+                        <th>Ignores</th>
                         <th>Erreur</th>
                     </tr>
                 </thead>

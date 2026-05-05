@@ -10,6 +10,7 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\UrlType;
@@ -66,6 +67,11 @@ class SourceType extends AbstractType
             ->add('sourceWeight', ChoiceType::class, [
                 'label' => 'Poids de source',
                 'choices' => array_flip(Source::SOURCE_WEIGHTS),
+            ])
+            ->add('importPriority', IntegerType::class, [
+                'label' => 'Priorite d import',
+                'help' => '0 par defaut. Les valeurs hautes sont importees en premier.',
+                'attr' => ['min' => 0, 'max' => 100],
             ]);
     }
 

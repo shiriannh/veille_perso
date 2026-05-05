@@ -22,8 +22,12 @@ class SourceCsvImporter
     ) {
     }
 
-    public function import(UploadedFile $file): SourceCsvImportResult
+    public function import(UploadedFile $file, bool $persist = true, string $duplicateRule = 'name'): SourceCsvImportResult
     {
+        if (!in_array($duplicateRule, ['name', 'feed_url', 'name_feed_url'], true)) {
+            $duplicateRule = 'name';
+        }
+
         $fileErrors = $this->validateFile($file);
         if ($fileErrors !== []) {
             return new SourceCsvImportResult(0, $fileErrors);
@@ -35,10 +39,14 @@ class SourceCsvImporter
             return new SourceCsvImportResult(0, $errors);
         }
 
-        [$sources, $validationErrors] = $this->validateRows($rows);
+        [$sources, $validationErrors] = $this->validateRows($rows, $duplicateRule);
 
         if ($validationErrors !== []) {
             return new SourceCsvImportResult(0, $validationErrors);
+        }
+
+        if (!$persist) {
+            return new SourceCsvImportResult(count($sources));
         }
 
         try {
@@ -139,12 +147,16 @@ class SourceCsvImporter
      *
      * @return array{0: array<int, Source>, 1: array<int, string>}
      */
-    private function validateRows(array $rows): array
+    private function validateRows(array $rows, string $duplicateRule): array
     {
         $errors = [];
         $sources = [];
         $seenNames = [];
+        $seenFeedUrls = [];
+        $seenNameFeedUrls = [];
         $existingNames = $this->existingNames();
+        $existingFeedUrls = $this->existingFeedUrls();
+        $existingNameFeedUrls = $this->existingNameFeedUrls();
 
         foreach ($rows as $row) {
             $line = $row['line'];
@@ -156,15 +168,46 @@ class SourceCsvImporter
             }
 
             $normalizedName = $this->normalizeKey($values['name']);
+            $normalizedFeedUrl = $this->normalizeKey($values['feedUrl']);
+            $normalizedNameFeedUrl = $normalizedName.'|'.$normalizedFeedUrl;
+
             if ($normalizedName !== '') {
-                if (isset($seenNames[$normalizedName])) {
-                    $lineErrors[] = sprintf('doublon dans le CSV avec la ligne %d pour le nom "%s"', $seenNames[$normalizedName], $values['name']);
+                if ($duplicateRule === 'name') {
+                    if (isset($seenNames[$normalizedName])) {
+                        $lineErrors[] = sprintf('doublon dans le CSV avec la ligne %d pour le nom "%s"', $seenNames[$normalizedName], $values['name']);
+                    } else {
+                        $seenNames[$normalizedName] = $line;
+                    }
+
+                    if (isset($existingNames[$normalizedName])) {
+                        $lineErrors[] = sprintf('une source nommee "%s" existe deja', $values['name']);
+                    }
+                }
+            }
+
+            if ($normalizedFeedUrl !== '') {
+                if ($duplicateRule === 'feed_url') {
+                    if (isset($seenFeedUrls[$normalizedFeedUrl])) {
+                        $lineErrors[] = sprintf('doublon dans le CSV avec la ligne %d pour le flux "%s"', $seenFeedUrls[$normalizedFeedUrl], $values['feedUrl']);
+                    } else {
+                        $seenFeedUrls[$normalizedFeedUrl] = $line;
+                    }
+
+                    if (isset($existingFeedUrls[$normalizedFeedUrl])) {
+                        $lineErrors[] = sprintf('une source avec le flux "%s" existe deja', $values['feedUrl']);
+                    }
+                }
+            }
+
+            if ($duplicateRule === 'name_feed_url' && $normalizedName !== '' && $normalizedFeedUrl !== '') {
+                if (isset($seenNameFeedUrls[$normalizedNameFeedUrl])) {
+                    $lineErrors[] = sprintf('doublon dans le CSV avec la ligne %d pour le couple nom + flux', $seenNameFeedUrls[$normalizedNameFeedUrl]);
                 } else {
-                    $seenNames[$normalizedName] = $line;
+                    $seenNameFeedUrls[$normalizedNameFeedUrl] = $line;
                 }
 
-                if (isset($existingNames[$normalizedName])) {
-                    $lineErrors[] = sprintf('une source nommee "%s" existe deja', $values['name']);
+                if (isset($existingNameFeedUrls[$normalizedNameFeedUrl])) {
+                    $lineErrors[] = sprintf('une source avec ce couple nom + flux existe deja');
                 }
             }
 
@@ -236,6 +279,38 @@ class SourceCsvImporter
         }
 
         return $names;
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    private function existingFeedUrls(): array
+    {
+        $feedUrls = [];
+
+        foreach ($this->sourceRepository->findAll() as $source) {
+            if ($source->getFeedUrl() !== null && trim($source->getFeedUrl()) !== '') {
+                $feedUrls[$this->normalizeKey($source->getFeedUrl())] = true;
+            }
+        }
+
+        return $feedUrls;
+    }
+
+    /**
+     * @return array<string, true>
+     */
+    private function existingNameFeedUrls(): array
+    {
+        $pairs = [];
+
+        foreach ($this->sourceRepository->findAll() as $source) {
+            if ($source->getFeedUrl() !== null && trim($source->getFeedUrl()) !== '') {
+                $pairs[$this->normalizeKey($source->getName()).'|'.$this->normalizeKey($source->getFeedUrl())] = true;
+            }
+        }
+
+        return $pairs;
     }
 
     private function cleanCell(string $value): string

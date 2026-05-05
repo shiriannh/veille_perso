@@ -90,6 +90,10 @@ class Source
     private string $sourceWeight = 'normal';
 
     #[ORM\Column]
+    #[Assert\Range(min: 0, max: 100)]
+    private int $importPriority = 0;
+
+    #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
     #[ORM\Column]
@@ -311,6 +315,18 @@ class Source
     public function sourceWeightLabel(): string
     {
         return self::SOURCE_WEIGHTS[$this->sourceWeight] ?? $this->sourceWeight;
+    }
+
+    public function getImportPriority(): int
+    {
+        return $this->importPriority;
+    }
+
+    public function setImportPriority(int $importPriority): self
+    {
+        $this->importPriority = max(0, min(100, $importPriority));
+
+        return $this;
     }
 
     public function getCreatedAt(): \DateTimeImmutable

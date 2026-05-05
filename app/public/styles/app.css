@@ -273,12 +273,21 @@ tr:last-child td {
 }
 
 .table-actions {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 10px;
     text-align: right;
+    vertical-align: middle;
     white-space: nowrap;
+}
+
+.table-actions > * {
+    margin-left: 10px;
+}
+
+.table-actions > *:first-child {
+    margin-left: 0;
+}
+
+.table-actions .inline-form {
+    vertical-align: middle;
 }
 
 .entry-table th,
@@ -292,8 +301,7 @@ tr:last-child td {
 
 .entry-table .table-actions {
     min-width: 245px;
-    justify-content: flex-end;
-    flex-wrap: nowrap;
+    vertical-align: middle;
 }
 
 .entry-table .table-actions .button,
@@ -591,7 +599,7 @@ input[type="checkbox"] {
 
     .entry-table .table-actions {
         min-width: 0;
-        justify-content: flex-start;
+        text-align: left;
     }
 
     table {

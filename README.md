@@ -57,7 +57,10 @@ docker compose exec app php bin/console cache:clear
 docker compose exec app php bin/console doctrine:migrations:status
 docker compose exec app php bin/console doctrine:schema:validate
 docker compose exec app php bin/console app:import-source 1
+docker compose exec app php bin/console app:import-source 1 --dry-run
+docker compose exec app php bin/console app:import-source 1 --limit=10
 docker compose exec app php bin/console app:import-sources
+docker compose exec app php bin/console app:import-sources --limit=5
 docker compose exec app php bin/console app:analyze-new-entries
 docker compose exec app php bin/console app:reanalyze-entries --all
 docker compose exec app php bin/console app:detect-entry-tags
@@ -252,6 +255,17 @@ docker compose exec app php bin/console app:import-sources
 L’interface HTML propose aussi un bouton “Importer” sur la page d’une source RSS.
 La page “Imports” propose un bouton global équivalent à `app:import-sources`.
 
+La fiche Source propose aussi :
+
+- `Tester le flux RSS` : verifie DNS, HTTP, validite XML et flux vide, puis affiche le titre du flux, le dernier item et le nombre d'items lus ;
+- `Previsualiser` : affiche les premiers items, leurs dates, categories et liens sans creer d'Entry ;
+- `Importer puis analyser` : cree les nouvelles Entry et lance l'analyse post-RSS ;
+- `Importer sans analyser` : cree les nouvelles Entry, detecte les tags de base et laisse l'analyse pour une commande ulterieure.
+
+La commande `app:import-source <sourceId> --dry-run` lit le flux sans persistence. L'option `--limit=<n>` limite le nombre d'items importes ou previsualises pour cette source. La commande globale `app:import-sources --limit=<n>` limite l'import aux `n` premieres sources actives, ordonnees par priorite d'import puis par nom.
+
+Protection volume : l'inspection RSS coupe l'apercu a 20 items et refuse les documents superieurs a 2,5 Mo. L'import effectif refuse un flux qui expose plus de 500 items afin d'eviter un import massif accidentel en usage local.
+
 Déduplication, par priorité :
 
 1. `externalId` : `guid` RSS ou `id` Atom.
@@ -260,9 +274,11 @@ Déduplication, par priorité :
 
 Si une entrée existante correspond à l’un de ces critères pour la même source, l’item est ignoré et compté dans `skippedCount`.
 
+Si un flux garde le meme `guid` mais change d'URL canonique, l'Entry existante est conservee, son URL canonique est rafraichie et un signal d'analyse `rss guid identique avec url canonique modifiee` est ajoute.
+
 ## Import CSV des sources
 
-La page Sources propose un bouton `Importer un CSV`. L'import est strictement transactionnel : toutes les lignes sont validees avant insertion. Si une erreur est detectee, aucune source n'est creee.
+La page Sources propose un bouton `Importer un CSV`. L'import est strictement transactionnel : toutes les lignes sont validees avant insertion. Si une erreur est detectee, aucune source n'est creee. La page d'import propose aussi une simulation sans persistence, un modele CSV telechargeable et un rapport d'erreurs telechargeable quand des lignes sont invalides.
 
 Format retenu :
 
@@ -298,7 +314,13 @@ Regles de validation :
 - les valeurs texte sont nettoyees avec `trim` ;
 - les erreurs sont remontees avec numero de ligne.
 
-Regle de doublon : le nom de Source doit etre unique, sans tenir compte de la casse, a la fois dans le CSV et par rapport aux sources deja presentes en base.
+Regle de doublon configurable au moment de l'import :
+
+- `Nom seul` : le nom de Source doit etre unique, sans tenir compte de la casse ;
+- `Flux RSS seul` : l'URL de flux doit etre unique lorsqu'elle est renseignee ;
+- `Nom + flux RSS` : le couple nom normalise + URL de flux normalisee doit etre unique.
+
+Les doublons sont controles dans le CSV lui-meme et par rapport aux sources deja presentes en base. En mode simulation, les memes controles sont effectues mais aucune Source n'est persistee.
 
 ## Analyse post-RSS
 

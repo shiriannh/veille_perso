@@ -11,12 +11,14 @@ use App\Repository\SourceRepository;
 use App\Service\DatabaseResetter;
 use App\Service\ArrayPaginator;
 use App\Service\ReferenceFieldSynchronizer;
+use App\Service\RssFeedInspector;
 use App\Service\RssImporter;
 use App\Service\SourceCsvImporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/sources')]
@@ -84,15 +86,20 @@ class SourceController extends AbstractController
         $errors = [];
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $result = $sourceCsvImporter->import($form->get('file')->getData());
+            $simulate = (bool) $form->get('simulate')->getData();
+            $duplicateRule = (string) $form->get('duplicateRule')->getData();
+            $result = $sourceCsvImporter->import($form->get('file')->getData(), !$simulate, $duplicateRule);
 
             if (!$result->hasErrors()) {
-                $this->addFlash('success', sprintf('%d sources importees avec succes.', $result->importedCount()));
+                $this->addFlash('success', $simulate
+                    ? sprintf('Simulation valide : %d source(s) pourraient etre importees.', $result->importedCount())
+                    : sprintf('%d sources importees avec succes.', $result->importedCount()));
 
                 return $this->redirectToRoute('app_source_index');
             }
 
             $errors = $result->errors();
+            $request->getSession()->set('source_csv_errors', $errors);
             $this->addFlash('error', 'Import annule : le CSV contient des erreurs.');
         }
 
@@ -100,6 +107,42 @@ class SourceController extends AbstractController
             'form' => $form,
             'errors' => $errors,
         ]);
+    }
+
+    #[Route('/import-csv/template', name: 'app_source_import_csv_template', methods: ['GET'])]
+    public function importCsvTemplate(): Response
+    {
+        $content = "name;type;url;isActive;fetchMode;feedUrl;notes\n"
+            ."Actu SF;website;https://example.org;true;rss;https://example.org/feed.xml;Veille science-fiction\n"
+            ."Site manuel;website;https://example.net;oui;manual;;A consulter ponctuellement\n";
+
+        $response = new Response($content);
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', $response->headers->makeDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            'modele_sources.csv',
+        ));
+
+        return $response;
+    }
+
+    #[Route('/import-csv/error-report', name: 'app_source_import_csv_error_report', methods: ['GET'])]
+    public function importCsvErrorReport(Request $request): Response
+    {
+        $errors = $request->getSession()->get('source_csv_errors', []);
+        $content = "Rapport d'erreurs import CSV\n===========================\n\n";
+        foreach ($errors as $error) {
+            $content .= '- '.$error."\n";
+        }
+
+        $response = new Response($content);
+        $response->headers->set('Content-Type', 'text/plain; charset=UTF-8');
+        $response->headers->set('Content-Disposition', $response->headers->makeDisposition(
+            ResponseHeaderBag::DISPOSITION_ATTACHMENT,
+            'rapport_erreurs_sources.txt',
+        ));
+
+        return $response;
     }
 
     #[Route('/reset-database', name: 'app_source_reset_database', methods: ['POST'])]
@@ -131,6 +174,47 @@ class SourceController extends AbstractController
         return $this->render('source/show.html.twig', [
             'source' => $source,
             'import_runs' => $importRunRepository->findLatestForSource($source),
+            'rss_test' => null,
+            'rss_preview' => null,
+        ]);
+    }
+
+    #[Route('/{id}/test-rss', name: 'app_source_test_rss', methods: ['POST'])]
+    public function testRss(Request $request, Source $source, ImportRunRepository $importRunRepository, RssFeedInspector $rssFeedInspector): Response
+    {
+        if (!$this->isCsrfTokenValid('test_source_rss_'.$source->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, test RSS annule.');
+
+            return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
+        }
+
+        $result = $rssFeedInspector->inspect($source, 5);
+        $this->addFlash($result['ok'] ? 'success' : 'error', $result['ok'] ? 'Flux RSS valide.' : 'Flux RSS invalide.');
+
+        return $this->render('source/show.html.twig', [
+            'source' => $source,
+            'import_runs' => $importRunRepository->findLatestForSource($source),
+            'rss_test' => $result,
+            'rss_preview' => null,
+        ]);
+    }
+
+    #[Route('/{id}/preview-rss', name: 'app_source_preview_rss', methods: ['POST'])]
+    public function previewRss(Request $request, Source $source, ImportRunRepository $importRunRepository, RssFeedInspector $rssFeedInspector): Response
+    {
+        if (!$this->isCsrfTokenValid('preview_source_rss_'.$source->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, previsualisation annulee.');
+
+            return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
+        }
+
+        $result = $rssFeedInspector->inspect($source, 10);
+
+        return $this->render('source/show.html.twig', [
+            'source' => $source,
+            'import_runs' => $importRunRepository->findLatestForSource($source),
+            'rss_test' => null,
+            'rss_preview' => $result,
         ]);
     }
 
@@ -147,7 +231,7 @@ class SourceController extends AbstractController
             return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
         }
 
-        $run = $rssImporter->import($source);
+        $run = $rssImporter->import($source, $request->request->getBoolean('analyze', true));
 
         if ($run->getErrorMessage() !== null) {
             $this->addFlash('error', 'Import échoué : '.$run->getErrorMessage());

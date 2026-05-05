@@ -15,6 +15,8 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class RssImporter
 {
+    private const MAX_ITEMS_PER_IMPORT = 500;
+
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly EntityManagerInterface $entityManager,
@@ -25,7 +27,7 @@ class RssImporter
     ) {
     }
 
-    public function import(Source $source): ImportRun
+    public function import(Source $source, bool $analyze = true, ?int $limit = null): ImportRun
     {
         $run = (new ImportRun())->setSource($source);
         $this->entityManager->persist($run);
@@ -42,6 +44,13 @@ class RssImporter
             ]);
             $content = $response->getContent();
             $items = $this->parseFeed($content);
+            if (count($items) > self::MAX_ITEMS_PER_IMPORT) {
+                throw new \RuntimeException(sprintf('Flux trop volumineux : %d items lus, limite %d.', count($items), self::MAX_ITEMS_PER_IMPORT));
+            }
+
+            if ($limit !== null) {
+                $items = array_slice($items, 0, max(1, $limit));
+            }
 
             $createdCount = 0;
             $skippedCount = 0;
@@ -61,6 +70,7 @@ class RssImporter
                 );
 
                 if ($duplicate !== null) {
+                    $this->refreshCanonicalUrlWhenGuidMatches($duplicate, $item['canonicalUrl']);
                     ++$skippedCount;
                     continue;
                 }
@@ -85,7 +95,9 @@ class RssImporter
 
                 $this->entryTagDetector->detect($entry);
                 $this->rssCategoryMapper->enrich($entry, $item['categories']);
-                $this->entryAnalyzer->analyze($entry);
+                if ($analyze) {
+                    $this->entryAnalyzer->analyze($entry);
+                }
                 $this->entityManager->persist($entry);
                 ++$createdCount;
             }
@@ -129,6 +141,21 @@ class RssImporter
 
         if ($source->getFeedUrl() === null || trim($source->getFeedUrl()) === '') {
             throw new \RuntimeException('La source n’a pas d’URL de flux RSS.');
+        }
+    }
+
+    private function refreshCanonicalUrlWhenGuidMatches(Entry $entry, ?string $canonicalUrl): void
+    {
+        if ($canonicalUrl === null || $canonicalUrl === '' || $entry->getExternalId() === null) {
+            return;
+        }
+
+        if ($entry->getCanonicalUrl() !== null && $entry->getCanonicalUrl() !== $canonicalUrl) {
+            $signals = $entry->getAnalysisSignals();
+            $signals[] = 'rss guid identique avec url canonique modifiee';
+            $entry->setAnalysisSignals($signals);
+            $entry->setCanonicalUrl($canonicalUrl);
+            $entry->setOriginalUrl($canonicalUrl);
         }
     }
 

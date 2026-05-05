@@ -117,22 +117,27 @@ Etat :
 - bouton "Transformer le brouillon en fiche active" ajoute ;
 - bouton "Refuser le brouillon" ajoute, sans suppression de l'Entry associee.
 
-## Priorite 7 - Imports et sources
+## Priorite 7 - Finalisee
 
-- Ajouter un bouton "Tester le flux RSS" sur la fiche Source.
-- Afficher le titre du flux, la date du dernier item et le nombre d'items lus lors du test RSS.
-- Ajouter une validation plus explicite de l'URL RSS : DNS, HTTP, XML invalide, flux vide.
-- Ajouter une previsualisation d'import RSS avant creation effective des Entry.
-- Ajouter une option "Importer sans analyser" et une option "Importer puis analyser".
-- Ajouter une option d'import Source CSV en mode simulation, sans persistence.
-- Ajouter un modele CSV telechargeable depuis la page d'import Source.
-- Ajouter un rapport d'import CSV exportable en texte ou CSV lorsque des lignes sont invalides.
-- Ajouter un controle de doublon Source configurable : nom seul, flux RSS seul, ou couple nom + flux.
-- Ajouter un champ "priorite de source" pour ordonner les imports globaux.
-- Ajouter une commande `app:import-source --dry-run <sourceId>`.
-- Ajouter une commande `app:import-sources --limit=<n>` pour tester les premieres sources actives.
-- Ajouter une protection contre les flux RSS trop volumineux avec limite documentee.
-- Ajouter une detection des flux RSS qui changent d'URL canonique mais gardent le meme GUID.
+Imports et sources fiabilises.
+
+Etat :
+
+- bouton "Tester le flux RSS" ajoute sur la fiche Source ;
+- test RSS avec controle DNS, HTTP, XML invalide et flux vide ;
+- resultat du test RSS affiche : titre du flux, date du dernier item et nombre d'items lus ;
+- previsualisation RSS ajoutee avant creation effective des Entry ;
+- actions separees "Importer puis analyser" et "Importer sans analyser" ;
+- import Source CSV en mode simulation, sans persistence ;
+- modele CSV telechargeable depuis la page d'import Source ;
+- rapport d'erreurs CSV telechargeable quand des lignes sont invalides ;
+- controle de doublon Source configurable : nom seul, flux RSS seul, ou couple nom + flux ;
+- champ "priorite de source" ajoute pour ordonner les imports globaux ;
+- commande `app:import-source --dry-run <sourceId>` ajoutee ;
+- option `--limit=<n>` ajoutee sur `app:import-source` pour limiter les items et sur `app:import-sources` pour limiter les premieres sources actives ;
+- protection contre les flux RSS trop volumineux documentee : inspection limitee a 2,5 Mo, import refuse au-dessus de 500 items ;
+- detection des flux RSS qui changent d'URL canonique avec le meme GUID, avec rafraichissement de l'URL et signal d'analyse ;
+- correction CSS de la cellule `table-actions` de la liste Entry pour conserver l'alignement vertical des boutons et des bordures de ligne.
 
 ## Priorite 8 - Syntheses
 

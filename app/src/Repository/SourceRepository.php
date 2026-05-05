@@ -56,7 +56,8 @@ class SourceRepository extends ServiceEntityRepository
             ->andWhere('source.isActive = true')
             ->andWhere('source.fetchMode = :fetchMode')
             ->setParameter('fetchMode', FetchMode::Rss)
-            ->orderBy('source.name', 'ASC')
+            ->orderBy('source.importPriority', 'DESC')
+            ->addOrderBy('source.name', 'ASC')
             ->getQuery()
             ->getResult();
     }
