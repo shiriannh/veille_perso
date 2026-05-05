@@ -318,10 +318,40 @@ tr:last-child td {
 .entry-table th,
 .entry-table td {
     padding: 11px 12px;
+    overflow-wrap: anywhere;
 }
 
 .entry-table td:first-child {
-    min-width: 260px;
+    min-width: 0;
+}
+
+.entry-table {
+    max-width: 1480px;
+    margin-left: auto;
+    margin-right: auto;
+    table-layout: fixed;
+}
+
+.entry-table th:nth-child(1) {
+    width: 32%;
+}
+
+.entry-table th:nth-child(2),
+.entry-table th:nth-child(3) {
+    width: 13%;
+}
+
+.entry-table th:nth-child(4) {
+    width: 7%;
+}
+
+.entry-table th:nth-child(5),
+.entry-table th:nth-child(6) {
+    width: 12%;
+}
+
+.entry-table th:nth-child(7) {
+    width: 11%;
 }
 
 .entry-table .table-actions {
@@ -340,21 +370,99 @@ tr:last-child td {
     margin-top: 4px;
 }
 
-.entry-table-compact th:nth-child(3),
-.entry-table-compact td:nth-child(3),
-.entry-table-compact th:nth-child(5),
-.entry-table-compact td:nth-child(5),
-.entry-table-compact th:nth-child(8),
-.entry-table-compact td:nth-child(8),
-.entry-table-compact th:nth-child(9),
-.entry-table-compact td:nth-child(9),
-.entry-table-compact .optional-column {
-    display: none;
-}
-
 .entry-table-compact th,
 .entry-table-compact td {
     padding: 9px 10px;
+}
+
+.entry-title-cell a {
+    font-weight: 750;
+}
+
+.entry-details-cell {
+    vertical-align: top;
+}
+
+.entry-row-details summary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: var(--surface);
+    color: var(--primary);
+    font-weight: 750;
+    cursor: pointer;
+    list-style: none;
+}
+
+.entry-row-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.entry-row-details summary::after {
+    content: "+";
+    margin-left: 8px;
+    color: var(--muted);
+}
+
+.entry-row-details[open] summary::after {
+    content: "-";
+}
+
+.entry-row-details-content {
+    margin-top: 10px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fbfcfb;
+}
+
+.entry-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 14px;
+    margin: 0;
+}
+
+.entry-detail-grid div {
+    min-width: 0;
+}
+
+.entry-detail-grid dt {
+    margin-bottom: 3px;
+    color: var(--muted);
+    font-size: .78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.entry-detail-grid dd {
+    margin: 0;
+}
+
+.entry-detail-wide {
+    grid-column: 1 / -1;
+}
+
+.entry-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.entry-row-actions > * {
+    margin: 0;
+}
+
+.entry-row-actions .button,
+.entry-row-actions button {
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: .9rem;
 }
 
 .details {
@@ -669,6 +777,11 @@ input[type="checkbox"] {
         overflow-x: auto;
     }
 
+    .entry-table {
+        display: table;
+        overflow-x: visible;
+    }
+
     .details {
         grid-template-columns: 1fr;
     }
@@ -776,5 +889,68 @@ input[type="checkbox"] {
 
     table {
         border-radius: 6px;
+    }
+
+    .entry-table,
+    .entry-table thead,
+    .entry-table tbody,
+    .entry-table tr,
+    .entry-table th,
+    .entry-table td {
+        display: block;
+        width: 100%;
+    }
+
+    .entry-table {
+        border: 0;
+        background: transparent;
+    }
+
+    .entry-table thead {
+        display: none;
+    }
+
+    .entry-table tr {
+        margin-bottom: 12px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        background: var(--surface);
+        overflow: hidden;
+    }
+
+    .entry-table td {
+        display: grid;
+        grid-template-columns: 110px minmax(0, 1fr);
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .entry-table td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: .78rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .entry-table td.entry-title-cell,
+    .entry-table td.entry-details-cell {
+        display: block;
+    }
+
+    .entry-table td.entry-title-cell::before,
+    .entry-table td.entry-details-cell::before {
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .entry-detail-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .entry-row-actions .button,
+    .entry-row-actions button,
+    .entry-row-actions .inline-form {
+        width: 100%;
     }
 }
