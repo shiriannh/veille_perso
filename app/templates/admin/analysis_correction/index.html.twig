@@ -20,7 +20,7 @@
             <thead>
                 <tr>
                     <th>Date</th>
-                    <th>Entry</th>
+                    <th>Entree</th>
                     <th>Champ</th>
                     <th>Ancienne valeur</th>
                     <th>Nouvelle valeur</th>
@@ -36,7 +36,7 @@
                                 <a href="{{ path('app_entry_show', {id: correction.entry.id}) }}">{{ correction.entry.title }}</a>
                                 <small>{{ correction.entry.source.name }}</small>
                             {% else %}
-                                <span class="muted">Entry supprimee</span>
+                                <span class="muted">Entree supprimee</span>
                             {% endif %}
                         </td>
                         <td><span class="badge">{{ correction.fieldName }}</span></td>

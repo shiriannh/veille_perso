@@ -78,6 +78,13 @@
         <dd>{{ source.updatedAt|date('d/m/Y H:i') }}</dd>
     </dl>
 
+    {% if source.fetchMode.value == 'rss' %}
+        <section class="content-block">
+            <h2>Aide Source RSS</h2>
+            <p>Teste le flux avant un premier import, puis utilise la previsualisation pour verifier les titres, dates et categories. L'import sans analyse sert aux lots que tu veux analyser plus tard.</p>
+        </section>
+    {% endif %}
+
     {% if rss_test %}
         <section class="section-block">
             <div class="section-title">

@@ -1,0 +1,12 @@
+{% set ignored_filter_keys = ['page', 'perPage'] %}
+{% set active_filter_count = app.request.query.all|filter((value, key) => key not in ignored_filter_keys and value is not empty)|length %}
+
+{% if active_filter_count > 0 %}
+    <div class="filter-status" role="status">
+        <div>
+            <strong>{{ active_filter_count }} filtre(s) actif(s)</strong>
+            <small>Cette vue est partageable via son URL.</small>
+        </div>
+        <button type="button" class="button button-secondary copy-link-button" data-copy-url="{{ app.request.uri }}">Copier le lien filtre</button>
+    </div>
+{% endif %}

@@ -12,22 +12,35 @@
             <nav class="main-nav" aria-label="Navigation principale">
                 <a href="{{ path('app_home') }}">Accueil</a>
                 <a href="{{ path('app_source_index') }}">Sources</a>
-                <a href="{{ path('app_entry_index') }}">Entrées</a>
+                <a href="{{ path('app_entry_index') }}">Entrees</a>
                 <a href="{{ path('app_review_index') }}">Fiches</a>
-                <a href="{{ path('app_synthesis_report_index') }}">Synthèses</a>
+                <a href="{{ path('app_synthesis_report_index') }}">Syntheses</a>
                 <a href="{{ path('app_import_run_index') }}">Imports</a>
                 <a href="{{ path('app_admin_index') }}">Admin</a>
+                <a href="{{ path('app_help') }}">Aide</a>
             </nav>
         </header>
 
         <main class="page">
             {% for label, messages in app.flashes %}
                 {% for message in messages %}
-                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                    <div class="flash flash-{{ label }}" role="status">{{ message }}</div>
                 {% endfor %}
             {% endfor %}
 
             {% block body %}{% endblock %}
         </main>
+        <script>
+            document.querySelectorAll('[data-copy-url]').forEach((button) => {
+                button.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(button.dataset.copyUrl);
+                        button.textContent = 'Lien copie';
+                    } catch (error) {
+                        window.prompt('Copier le lien', button.dataset.copyUrl);
+                    }
+                });
+            });
+        </script>
     </body>
 </html>

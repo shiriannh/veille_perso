@@ -1,4 +1,4 @@
-<form class="inline-form" method="post" action="{{ path('app_entry_delete', app.request.query.all|merge({id: entry.id})) }}" onsubmit="return confirm('Supprimer cette entree ? Une entree liee a une fiche ne sera pas supprimee.');">
+<form class="inline-form" method="post" action="{{ path('app_entry_delete', app.request.query.all|merge({id: entry.id})) }}" onsubmit="return confirm('Supprimer l entree {{ entry.title|e('js') }} ? Cette action est refusee si une fiche existe deja.');">
     <input type="hidden" name="_token" value="{{ csrf_token('delete_entry_' ~ entry.id) }}">
     <button class="button button-danger">Supprimer</button>
 </form>

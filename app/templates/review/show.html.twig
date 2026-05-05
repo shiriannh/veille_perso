@@ -42,7 +42,7 @@
         <dd>{{ review.nextAction ? review.nextAction.label() : 'Non definie' }}</dd>
         <dt>Date de decision</dt>
         <dd>{{ review.decisionAt ? review.decisionAt|date('d/m/Y H:i') : 'Non renseignee' }}</dd>
-        <dt>Comparaison Entry</dt>
+        <dt>Comparaison entree</dt>
         <dd>
             <span class="score">Interet {{ review.entry.interestLevel }}/5</span>
             {% if review.entry.decision %}<span class="badge badge-decision-{{ review.entry.decision.value }}">{{ review.entry.decision.label() }}</span>{% endif %}

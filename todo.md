@@ -199,17 +199,23 @@ Etat :
 - Ajouter une politique de retention configurable pour les ImportRun anciens.
 - Ajouter une politique de retention configurable pour les Entry ignorees, sans suppression automatique par defaut.
 
-## Priorite 11 - Qualite UX
+## Priorite 11 - Finalisee
 
-- Uniformiser les libelles entre "Entry", "Entree", "Fiche" et "Review" dans l'interface.
-- Uniformiser les boutons principaux, secondaires et dangereux.
-- Ajouter des messages flash plus precis avec nom de l'entite concernee.
-- Ajouter des confirmations explicites pour les actions destructives ou massives.
-- Ajouter une aide contextuelle courte sur les pages Import CSV, Source RSS, Analyse, Admin et Synthese.
-- Ajouter une page "Aide rapide" expliquant le workflow Source -> Import -> Entry -> Analyse -> Review -> Synthese.
-- Ajouter un etat vide utile sur chaque liste, avec le bouton d'action le plus probable.
-- Ajouter une indication visuelle quand une page affiche des filtres actifs.
-- Ajouter un bouton "Copier le lien filtre" pour partager ou reutiliser une vue.
+Qualite UX et responsive.
+
+Etat :
+
+- libelles principaux harmonises autour de "Entree", "Fiche" et "Synthese" ;
+- boutons principaux, secondaires et dangereux conserves et mieux adaptes au responsive ;
+- messages flash affiches avec role `status` et libelles d'actions plus explicites sur les parcours touches ;
+- confirmations explicites ajoutees ou renforcees sur suppressions et actions massives ;
+- aide contextuelle courte ajoutee sur Import CSV, Source RSS, Analyse et Synthese ;
+- page "Aide rapide" ajoutee pour expliquer le workflow Source -> Import -> Entree -> Analyse -> Fiche -> Synthese ;
+- etats vides utiles ajoutes sur les listes principales avec action probable ;
+- indication visuelle des filtres actifs ajoutee ;
+- bouton "Copier le lien filtre" ajoute pour partager ou reutiliser une vue ;
+- responsive global renforce : navigation mobile scrollable, grilles adaptatives, actions empilables, tables consultables sur petits ecrans ;
+- Tailwind non retenu pour cette passe afin de rester sans pipeline front supplementaire et de ne pas casser la structure Twig existante.
 
 ## Fait recemment
 

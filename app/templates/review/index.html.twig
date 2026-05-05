@@ -65,7 +65,7 @@
             </select>
         </div>
         <div>
-            <label for="entryDecision">Decision Entry</label>
+            <label for="entryDecision">Decision entree</label>
             <select id="entryDecision" name="entryDecision">
                 <option value="">Toutes</option>
                 {% for decision in entry_decisions %}
@@ -97,8 +97,17 @@
         </div>
     </form>
 
+    {{ include('partials/_filter_status.html.twig') }}
+
     {% if reviews is empty %}
-        <p class="empty">Aucune fiche enregistree.</p>
+        <div class="empty">
+            <strong>Aucune fiche trouvee.</strong>
+            <p>Modifie les filtres ou cree une fiche depuis une entree pertinente.</p>
+            <div class="actions">
+                <a class="button button-secondary" href="{{ path('app_review_index') }}">Reinitialiser</a>
+                <a class="button" href="{{ path('app_review_new') }}">Nouvelle fiche</a>
+            </div>
+        </div>
     {% else %}
         <table>
             <thead>
@@ -107,7 +116,7 @@
                     <th>Statut</th>
                     <th>Verdict</th>
                     <th>Score</th>
-                    <th>Entry</th>
+                    <th>Entree</th>
                     <th>Action</th>
                     <th>Mise a jour</th>
                     <th></th>

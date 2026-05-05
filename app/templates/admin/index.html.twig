@@ -6,11 +6,16 @@
     <section class="page-heading">
         <div>
             <h1>Admin</h1>
-            <p>Tables de référence utilisées par l'analyse et les formulaires.</p>
+            <p>Tables de reference utilisees par l'analyse et les formulaires.</p>
         </div>
     </section>
 
-    <div class="metric-grid">
+    <section class="content-block">
+        <h2>Aide Admin</h2>
+        <p>Les referentiels et profils servent a guider l'analyse sans changer le code. Desactive une valeur plutot que la supprimer quand elle peut deja etre liee a des donnees.</p>
+    </section>
+
+    <div class="metric-grid section-block">
         {% for section in sections %}
             <a class="metric" href="{{ path(section.route, section.params) }}">
                 <span>{{ section.class|split('\\\\')|last }}</span>

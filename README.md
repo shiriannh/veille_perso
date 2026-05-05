@@ -647,6 +647,24 @@ La liste des fiches accepte aussi des filtres par verdict, score minimum, type d
 
 Le tableau de bord affiche les compteurs principaux, les dernieres entrees importees, les entrees sans fiche, les dernieres fiches modifiees, les sources dont le dernier import est en erreur, les entrees non analysees, les entrees pertinentes sans fiche et les entrees pertinentes jamais synthetisees.
 
+## Qualite UX
+
+L'interface reste server-rendered avec Twig et CSS local. Tailwind n'est pas ajoute pour l'instant afin de ne pas introduire de pipeline front supplementaire dans ce projet local-first.
+
+La passe UX ajoute :
+
+- navigation et pages responsives mobile / tablette / desktop ;
+- grilles de filtres adaptatives ;
+- boutons et actions empilables sur mobile ;
+- tables consultables sur petits ecrans via defilement horizontal ;
+- libelles principaux harmonises autour de `Entree`, `Fiche`, `Synthese` ;
+- etats vides utiles avec actions probables ;
+- confirmations explicites pour suppressions et actions massives ;
+- indication visuelle des filtres actifs ;
+- bouton de copie du lien filtre ;
+- page `Aide rapide` pour rappeler le workflow Source -> Import -> Entree -> Analyse -> Fiche -> Synthese ;
+- aides contextuelles courtes sur Import CSV, Source RSS, Analyse et Synthese.
+
 ## Suppressions
 
 Les suppressions passent par un formulaire POST avec token CSRF et confirmation navigateur.

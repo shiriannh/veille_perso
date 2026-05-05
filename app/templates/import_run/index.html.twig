@@ -8,7 +8,7 @@
             <h1>Imports</h1>
             <p>Historique des imports RSS lancés manuellement.</p>
         </div>
-        <form method="post" action="{{ path('app_import_run_import_sources', app.request.query.all) }}" class="inline-form">
+        <form method="post" action="{{ path('app_import_run_import_sources', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Importer maintenant toutes les sources RSS actives ? Un historique sera cree pour chaque source traitee.');">
             <input type="hidden" name="_token" value="{{ csrf_token('import_sources') }}">
             <button class="button">Importer les sources RSS</button>
         </form>
@@ -30,8 +30,16 @@
         </div>
     </form>
 
+    {{ include('partials/_filter_status.html.twig') }}
+
     {% if runs is empty %}
-        <p class="empty">Aucun import lancé.</p>
+        <div class="empty">
+            <strong>Aucun import trouve.</strong>
+            <p>Lance un import global ou retire le filtre de source.</p>
+            <div class="actions">
+                <a class="button button-secondary" href="{{ path('app_import_run_index') }}">Reinitialiser</a>
+            </div>
+        </div>
     {% else %}
         <table>
             <thead>

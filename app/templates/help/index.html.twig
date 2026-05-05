@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Aide rapide - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Aide rapide</h1>
+            <p>Le chemin simple pour passer d'un flux RSS a une fiche exploitable.</p>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_source_index') }}">Sources</a>
+            <a class="button button-secondary" href="{{ path('app_entry_index') }}">Entrees</a>
+            <a class="button button-secondary" href="{{ path('app_review_index') }}">Fiches</a>
+        </div>
+    </section>
+
+    <section class="content-block">
+        <h2>Workflow</h2>
+        <div class="workflow-steps">
+            <article>
+                <strong>1. Source</strong>
+                <p>Créer une source, renseigner son flux RSS, tester le flux puis importer.</p>
+            </article>
+            <article>
+                <strong>2. Import</strong>
+                <p>L'import crée des entrées, déduplique et conserve l'historique d'exécution.</p>
+            </article>
+            <article>
+                <strong>3. Entrée</strong>
+                <p>L'entrée est analysée : média, tags, pertinence, bruit éditorial et décision.</p>
+            </article>
+            <article>
+                <strong>4. Fiche</strong>
+                <p>Les entrées intéressantes deviennent des fiches à compléter, lire, tester ou ignorer.</p>
+            </article>
+            <article>
+                <strong>5. Synthèse</strong>
+                <p>Une synthèse regroupe les entrées pertinentes non encore synthétisées.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="two-columns section-block">
+        <div class="content-block">
+            <h2>Filtres</h2>
+            <p>Les filtres sont conservés dans l'URL. Quand une page affiche des filtres actifs, le bloc de résumé permet de copier le lien exact de la vue.</p>
+        </div>
+        <div class="content-block">
+            <h2>Actions sûres</h2>
+            <p>Les suppressions et actions massives demandent confirmation. Les règles métier empêchent les suppressions destructrices silencieuses.</p>
+        </div>
+    </section>
+{% endblock %}

@@ -11,7 +11,7 @@
         <div class="actions">
             <a class="button button-secondary" href="{{ path('app_source_import_csv') }}">Importer un CSV</a>
             <a class="button" href="{{ path('app_source_new') }}">Nouvelle source</a>
-            <form method="post" action="{{ path('app_source_reset_database') }}" class="inline-form" onsubmit="return confirm('Cette action supprime toutes les sources, entrees, fiches, syntheses et historiques d import. Continuer ?');">
+            <form method="post" action="{{ path('app_source_reset_database') }}" class="inline-form" onsubmit="return confirm('RAZ complete : supprimer toutes les sources, entrees, fiches, syntheses et historiques d import ? Cette action vide la base metier locale.');">
                 <input type="hidden" name="_token" value="{{ csrf_token('reset_database') }}">
                 <button class="button button-danger">Raz</button>
             </form>
@@ -35,8 +35,18 @@
         </div>
     </form>
 
+    {{ include('partials/_filter_status.html.twig') }}
+
     {% if sources is empty %}
-        <p class="empty">Aucune source enregistree.</p>
+        <div class="empty">
+            <strong>Aucune source trouvee.</strong>
+            <p>Ajoute une source ou importe un CSV pour commencer la veille.</p>
+            <div class="actions">
+                <a class="button button-secondary" href="{{ path('app_source_index') }}">Reinitialiser</a>
+                <a class="button button-secondary" href="{{ path('app_source_import_csv') }}">Importer un CSV</a>
+                <a class="button" href="{{ path('app_source_new') }}">Nouvelle source</a>
+            </div>
+        </div>
     {% else %}
         <table>
             <thead>

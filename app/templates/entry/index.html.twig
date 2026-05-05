@@ -169,6 +169,8 @@
         </div>
     </form>
 
+    {{ include('partials/_filter_status.html.twig') }}
+
     <div class="actions action-strip">
         <form method="post" action="{{ path('app_entry_reanalyze_filtered', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Re-analyser toutes les entrees du filtre courant ?');">
             <input type="hidden" name="_token" value="{{ csrf_token('reanalyze_filtered_entries') }}">
@@ -181,7 +183,14 @@
     </div>
 
     {% if entries is empty %}
-        <p class="empty">Aucune entree enregistree.</p>
+        <div class="empty">
+            <strong>Aucune entree trouvee.</strong>
+            <p>Ajuste les filtres ou cree une entree manuelle.</p>
+            <div class="actions">
+                <a class="button button-secondary" href="{{ path('app_entry_index') }}">Reinitialiser</a>
+                <a class="button" href="{{ path('app_entry_new') }}">Nouvelle entree</a>
+            </div>
+        </div>
     {% else %}
         <table class="entry-table {{ filters.view == 'compact' ? 'entry-table-compact' : '' }}">
             <thead>
