@@ -1,26 +1,27 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Synthèses - Veille perso{% endblock %}
+{% block title %}Syntheses - Veille perso{% endblock %}
 
 {% block body %}
     <section class="page-heading">
         <div>
-            <h1>Synthèses</h1>
-            <p>Récaps manuels des dernières entrées pertinentes non encore synthétisées.</p>
+            <h1>Syntheses</h1>
+            <p>Recaps manuels des dernieres entrees pertinentes non encore synthetisees.</p>
         </div>
-        <a class="button" href="{{ path('app_synthesis_report_new') }}">Générer une synthèse</a>
+        <a class="button" href="{{ path('app_synthesis_report_new') }}">Generer une synthese</a>
     </section>
 
     {% if reports is empty %}
-        <p class="empty">Aucune synthèse générée.</p>
+        <p class="empty">Aucune synthese generee.</p>
     {% else %}
         <table>
             <thead>
                 <tr>
                     <th>Titre</th>
-                    <th>Générée le</th>
-                    <th>Période</th>
-                    <th>Entrées</th>
+                    <th>Generee le</th>
+                    <th>Periode</th>
+                    <th>Entrees</th>
+                    <th>Criteres</th>
                     <th></th>
                 </tr>
             </thead>
@@ -30,11 +31,21 @@
                         <td><a href="{{ path('app_synthesis_report_show', {id: report.id}) }}">{{ report.title }}</a></td>
                         <td>{{ report.createdAt|date('d/m/Y H:i') }}</td>
                         <td>
-                            {{ report.fromDate ? report.fromDate|date('d/m/Y H:i') : 'Début' }}
-                            →
+                            {{ report.fromDate ? report.fromDate|date('d/m/Y H:i') : 'Debut' }}
+                            ->
                             {{ report.toDate|date('d/m/Y H:i') }}
                         </td>
                         <td>{{ report.entries|length }}</td>
+                        <td>
+                            {% if report.criteria %}
+                                <small>
+                                    {{ report.criteria.mediaTypes is defined and report.criteria.mediaTypes is not empty ? report.criteria.mediaTypes|join(', ') : 'tous medias' }}
+                                    {% if report.criteria.excludeCommercial %}- hors commercial{% endif %}
+                                </small>
+                            {% else %}
+                                <small class="muted">anciens criteres</small>
+                            {% endif %}
+                        </td>
                         <td class="table-actions">
                             <a class="button button-secondary" href="{{ path('app_synthesis_report_show', {id: report.id}) }}">Ouvrir</a>
                         </td>

@@ -1,21 +1,55 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Générer une synthèse - Veille perso{% endblock %}
+{% block title %}Generer une synthese - Veille perso{% endblock %}
 
 {% block body %}
     <section class="page-heading">
         <div>
-            <h1>Générer une synthèse</h1>
-            <p>Inclut uniquement les entrées pertinentes qui n'ont pas encore été rattachées à une synthèse.</p>
+            <h1>Generer une synthese</h1>
+            <p>Inclut uniquement les entrees pertinentes qui n'ont pas encore ete rattachees a une synthese.</p>
         </div>
         <a class="button button-secondary" href="{{ path('app_synthesis_report_index') }}">Retour</a>
+    </section>
+
+    <section class="content-block">
+        <h2>Options</h2>
+        <p class="muted">La previsualisation ne marque aucune entree comme synthetisee. La generation cree le rapport et consomme le differentiel.</p>
     </section>
 
     {{ form_start(form) }}
         {{ form_widget(form) }}
         <div class="actions">
-            <button class="button">Générer</button>
+            <button class="button button-secondary" name="mode" value="preview">Previsualiser</button>
+            <button class="button" name="mode" value="generate">Generer</button>
             <a class="button button-secondary" href="{{ path('app_synthesis_report_index') }}">Annuler</a>
         </div>
     {{ form_end(form) }}
+
+    {% if preview_entries is defined and preview_entries is not empty %}
+        <section class="section-block">
+            <div class="section-title">
+                <h2>Previsualisation</h2>
+                <span class="muted">{{ preview_entries|length }} entree(s)</span>
+            </div>
+            {% for media, entries in preview_groups %}
+                <section class="content-block">
+                    <h2>{{ media }}</h2>
+                    <div class="list">
+                        {% for entry in entries %}
+                            <article class="list-row report-entry">
+                                <div>
+                                    <strong>{{ entry.title }}</strong>
+                                    <small>{{ entry.source.name }} - {{ entry.publishedAt ? entry.publishedAt|date('d/m/Y') : (entry.importedAt ? entry.importedAt|date('d/m/Y') : entry.createdAt|date('d/m/Y')) }}</small>
+                                    <p>{{ entry.rawContent ? entry.rawContent|striptags|slice(0, 220) : entry.decisionReason }}</p>
+                                    {% for tag in entry.detectedTags|slice(0, 6) %}
+                                        <span class="badge badge-muted">{{ tag }}</span>
+                                    {% endfor %}
+                                </div>
+                            </article>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endfor %}
+        </section>
+    {% endif %}
 {% endblock %}

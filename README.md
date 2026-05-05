@@ -570,11 +570,15 @@ La page `Synthèses` permet de générer manuellement une fiche récapitulative 
 Logique de sélection :
 
 - inclut les Entry dont `decision` vaut `relevant` ;
-- peut inclure aussi `maybe_relevant` via la case du formulaire ;
+- peut inclure aussi `maybe_relevant` via la case du formulaire, avec un score minimum optionnel ;
 - exclut toujours `ignored` et `clickbait` ;
-- ne reprend que les Entry dont `lastSynthesizedAt` est nul.
+- ne reprend que les Entry dont `lastSynthesizedAt` est nul ;
+- peut limiter la période avec `Depuis` / `Jusqu a` ;
+- peut limiter à certains médias finaux ;
+- peut imposer un `interestLevel` minimum ;
+- peut exclure les contenus commerciaux repérés par signaux simples : promo, précommande, bon plan, battle pass, discount, offre, etc.
 
-Logique de différentiel : au moment où une Entry est ajoutée à une synthèse, son champ `lastSynthesizedAt` est renseigné. Elle ne ressort donc pas dans les synthèses suivantes. Le rapport conserve aussi sa période avec `fromDate` = date de la synthèse précédente et `toDate` = date de génération.
+Logique de différentiel : la prévisualisation ne modifie rien. Au moment où une Entry est ajoutée à une synthèse générée, son champ `lastSynthesizedAt` est renseigné. Elle ne ressort donc pas dans les synthèses suivantes. Le rapport conserve sa période avec `fromDate` / `toDate`, depuis les critères saisis ou, par défaut, depuis la synthèse précédente jusqu'à la date de génération.
 
 Chaque `SynthesisReport` garde :
 
@@ -583,10 +587,25 @@ Chaque `SynthesisReport` garde :
 - période couverte ;
 - notes ;
 - option d'inclusion des `maybe_relevant` ;
+- critères de génération dans `criteria` ;
 - relation avec les Entry incluses ;
+- relation avec les Review liées aux Entry incluses, quand une fiche enrichie existe ;
 - contenu texte généré pour trace simple.
 
 Le rendu regroupe les Entry par type média détecté si disponible, sinon par type manuel. Pour chaque Entry, la synthèse affiche titre, source, date, lien, extrait, tags détectés, score et raison de décision.
+
+Deux blocs d'exploitation sont ajoutés quand ils sont utiles :
+
+- `Signaux faibles a surveiller` pour les `maybe_relevant` inclus ;
+- `Bruit editorial detecte` pour les contenus pertinents mais marques `suspicious`.
+
+Actions disponibles :
+
+- `Previsualiser` depuis le formulaire : affiche le résultat attendu sans consommer les Entry ;
+- `Generer` : crée le rapport et marque les Entry comme synthétisées ;
+- `Regenerer` depuis un rapport : crée une nouvelle synthèse avec les mêmes critères ;
+- export Markdown ;
+- export HTML autonome imprimable.
 
 ## Consultation quotidienne
 

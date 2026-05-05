@@ -139,21 +139,27 @@ Etat :
 - detection des flux RSS qui changent d'URL canonique avec le meme GUID, avec rafraichissement de l'URL et signal d'analyse ;
 - correction CSS de la cellule `table-actions` de la liste Entry pour conserver l'alignement vertical des boutons et des bordures de ligne.
 
-## Priorite 8 - Syntheses
+## Priorite 8 - Finalisee
 
-- Ajouter un formulaire de generation de synthese avec periode personnalisable.
-- Ajouter une option d'inclusion par media final.
-- Ajouter une option d'exclusion des contenus commerciaux.
-- Ajouter une option d'inclusion des `maybe_relevant` avec seuil minimal de score ou d'`interest_level`.
-- Ajouter une previsualisation de synthese avant validation.
-- Ajouter un bouton "Regenerer cette synthese" avec les memes criteres.
-- Ajouter un export Markdown.
-- Ajouter un export HTML autonome imprimable.
-- Ajouter un export PDF uniquement si la generation reste simple et fiable.
-- Ajouter un sommaire automatique par media final.
-- Ajouter une section "Signaux faibles a surveiller" pour les contenus `maybe_relevant` proches du seuil.
-- Ajouter une section "Bruit editorial detecte" pour conserver les tendances clickbait hors recommandations.
-- Ajouter une relation claire entre Review et SynthesisReport si une fiche enrichie remplace une Entry brute dans les syntheses futures.
+Syntheses manuelles enrichies.
+
+Etat :
+
+- formulaire de generation de synthese avec periode personnalisable ;
+- option d'inclusion par media final ;
+- option d'exclusion des contenus commerciaux ;
+- option d'inclusion des `maybe_relevant` avec seuil minimal de score ;
+- seuil minimal d'`interest_level` ajoute ;
+- previsualisation de synthese avant validation, sans marquer les Entry comme synthetisees ;
+- bouton "Regenerer" avec les memes criteres ;
+- export Markdown ajoute ;
+- export HTML autonome imprimable ajoute ;
+- export PDF garde hors perimetre volontaire pour eviter une dependance lourde ;
+- sommaire automatique par media final conserve via regroupement par media ;
+- section "Signaux faibles a surveiller" ajoutee pour les contenus `maybe_relevant` inclus ;
+- section "Bruit editorial detecte" ajoutee pour les contenus pertinents mais suspects ;
+- les contenus commerciaux sont exclus des recommandations si l'option est cochee, a partir de signaux simples documentes ;
+- relation `SynthesisReport` -> `Review` ajoutee pour tracer les fiches enrichies liees aux Entry synthetisees.
 
 ## Priorite 9 - Recherche et consultation
 

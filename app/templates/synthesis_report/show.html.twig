@@ -8,19 +8,39 @@
             <div>
                 <h1>{{ report.title }}</h1>
                 <p>
-                    Générée le {{ report.createdAt|date('d/m/Y H:i') }}
-                    · période :
-                    {{ report.fromDate ? report.fromDate|date('d/m/Y H:i') : 'début' }}
-                    →
+                    Generee le {{ report.createdAt|date('d/m/Y H:i') }}
+                    - periode :
+                    {{ report.fromDate ? report.fromDate|date('d/m/Y H:i') : 'debut' }}
+                    ->
                     {{ report.toDate|date('d/m/Y H:i') }}
-                    · {{ report.entries|length }} entrée(s)
+                    - {{ report.entries|length }} entree(s)
+                    - {{ report.reviews|length }} fiche(s)
                 </p>
             </div>
             <div class="actions no-print">
                 <button class="button button-secondary" onclick="window.print()">Imprimer</button>
+                <a class="button button-secondary" href="{{ path('app_synthesis_report_export_markdown', {id: report.id}) }}">Markdown</a>
+                <a class="button button-secondary" href="{{ path('app_synthesis_report_export_html', {id: report.id}) }}">HTML autonome</a>
+                <form method="post" action="{{ path('app_synthesis_report_regenerate', {id: report.id}) }}" class="inline-form" onsubmit="return confirm('Regenerer une nouvelle synthese avec les memes criteres ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('regenerate_synthesis_report_' ~ report.id) }}">
+                    <button class="button button-secondary">Regenerer</button>
+                </form>
                 <a class="button button-secondary" href="{{ path('app_synthesis_report_index') }}">Historique</a>
             </div>
         </section>
+
+        {% if report.criteria %}
+            <section class="section-block content-block">
+                <h2>Criteres</h2>
+                <p>
+                    Medias : {{ report.criteria.mediaTypes is defined and report.criteria.mediaTypes is not empty ? report.criteria.mediaTypes|join(', ') : 'tous' }}
+                    - maybe_relevant : {{ report.criteria.includeMaybeRelevant ? 'oui' : 'non' }}
+                    - interet min : {{ report.criteria.minimumInterestLevel is defined and report.criteria.minimumInterestLevel is not null ? report.criteria.minimumInterestLevel ~ '/5' : 'aucun' }}
+                    - score maybe min : {{ report.criteria.maybeMinimumScore is defined and report.criteria.maybeMinimumScore is not null ? report.criteria.maybeMinimumScore ~ '/100' : 'aucun' }}
+                    - commercial exclu : {{ report.criteria.excludeCommercial ? 'oui' : 'non' }}
+                </p>
+            </section>
+        {% endif %}
 
         {% if report.notes %}
             <section class="section-block">
@@ -30,8 +50,42 @@
         {% endif %}
 
         {% if report.entries is empty %}
-            <p class="empty">Aucune nouvelle entrée pertinente n'était disponible au moment de la génération.</p>
+            <p class="empty">Aucune nouvelle entree pertinente n'etait disponible au moment de la generation.</p>
         {% else %}
+            {% set weak_signals = report.entries|filter(entry => entry.decision and entry.decision.value == 'maybe_relevant') %}
+            {% if weak_signals is not empty %}
+                <section class="section-block content-block">
+                    <h2>Signaux faibles a surveiller</h2>
+                    <div class="list">
+                        {% for entry in weak_signals %}
+                            <div class="list-row">
+                                <div>
+                                    <strong><a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a></strong>
+                                    <small>{{ entry.source.name }} - score {{ entry.relevanceScore ?? '-' }}/100 - interet {{ entry.interestLevel }}/5</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
+            {% set noisy_entries = report.entries|filter(entry => entry.clickbaitLevel and entry.clickbaitLevel.value == 'suspicious') %}
+            {% if noisy_entries is not empty %}
+                <section class="section-block content-block">
+                    <h2>Bruit editorial detecte</h2>
+                    <div class="list">
+                        {% for entry in noisy_entries %}
+                            <div class="list-row">
+                                <div>
+                                    <strong><a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a></strong>
+                                    <small>{{ entry.clickbaitScore ?? '-' }}/100 - {{ entry.decisionReason|default('Signal editorial a verifier') }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            {% endif %}
+
             {% for media, entries in groups %}
                 <section class="section-block report-section">
                     <h2>{{ media }}</h2>
@@ -42,18 +96,23 @@
                                     <strong><a href="{{ path('app_entry_show', {id: entry.id}) }}">{{ entry.title }}</a></strong>
                                     <small>
                                         {{ entry.source.name }}
-                                        · {{ entry.publishedAt ? entry.publishedAt|date('d/m/Y') : (entry.importedAt ? entry.importedAt|date('d/m/Y') : entry.createdAt|date('d/m/Y')) }}
-                                        · {{ entry.finalMediaType.label() }}
+                                        - {{ entry.publishedAt ? entry.publishedAt|date('d/m/Y') : (entry.importedAt ? entry.importedAt|date('d/m/Y') : entry.createdAt|date('d/m/Y')) }}
+                                        - {{ entry.finalMediaType.label() }}
+                                        - score {{ entry.relevanceScore ?? '-' }}/100
+                                        - interet {{ entry.interestLevel }}/5
                                     </small>
+                                    {% if entry.review %}
+                                        <p><a href="{{ path('app_review_show', {id: entry.review.id}) }}">Fiche enrichie liee</a></p>
+                                    {% endif %}
                                     {% if entry.rawContent %}
-                                        <p>{{ entry.rawContent|striptags|slice(0, 260) }}{{ entry.rawContent|length > 260 ? '…' : '' }}</p>
+                                        <p>{{ entry.rawContent|striptags|slice(0, 260) }}{{ entry.rawContent|length > 260 ? '...' : '' }}</p>
                                     {% endif %}
                                     <p>
                                         {% for tag in entry.detectedTags|slice(0, 8) %}
                                             <span class="badge badge-muted">{{ tag }}</span>
                                         {% endfor %}
                                     </p>
-                                    <small>{{ entry.decisionReason|default('Aucune raison enregistrée') }}</small>
+                                    <small>{{ entry.decisionReason|default('Aucune raison enregistree') }}</small>
                                 </div>
                                 <div class="actions no-print">
                                     {% if entry.originalUrl %}

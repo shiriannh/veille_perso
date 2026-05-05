@@ -45,19 +45,33 @@ class SynthesisReport
     private bool $includeMaybeRelevant = false;
 
     /**
+     * @var array<string, mixed>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $criteria = null;
+
+    /**
      * @var Collection<int, Entry>
      */
     #[ORM\ManyToMany(targetEntity: Entry::class, inversedBy: 'synthesisReports')]
     #[ORM\JoinTable(name: 'synthesis_report_entry')]
     private Collection $entries;
 
+    /**
+     * @var Collection<int, Review>
+     */
+    #[ORM\ManyToMany(targetEntity: Review::class)]
+    #[ORM\JoinTable(name: 'synthesis_report_review')]
+    private Collection $reviews;
+
     public function __construct()
     {
         $now = new \DateTimeImmutable();
         $this->createdAt = $now;
         $this->toDate = $now;
-        $this->title = 'Synthèse du '.$now->format('d/m/Y H:i');
+        $this->title = 'Synthese du '.$now->format('d/m/Y H:i');
         $this->entries = new ArrayCollection();
+        $this->reviews = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -155,6 +169,24 @@ class SynthesisReport
     }
 
     /**
+     * @return array<string, mixed>|null
+     */
+    public function getCriteria(): ?array
+    {
+        return $this->criteria;
+    }
+
+    /**
+     * @param array<string, mixed>|null $criteria
+     */
+    public function setCriteria(?array $criteria): self
+    {
+        $this->criteria = $criteria;
+
+        return $this;
+    }
+
+    /**
      * @return Collection<int, Entry>
      */
     public function getEntries(): Collection
@@ -166,6 +198,23 @@ class SynthesisReport
     {
         if (!$this->entries->contains($entry)) {
             $this->entries->add($entry);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Review>
+     */
+    public function getReviews(): Collection
+    {
+        return $this->reviews;
+    }
+
+    public function addReview(Review $review): self
+    {
+        if (!$this->reviews->contains($review)) {
+            $this->reviews->add($review);
         }
 
         return $this;
