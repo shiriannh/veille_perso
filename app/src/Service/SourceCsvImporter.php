@@ -238,6 +238,10 @@ class SourceCsvImporter
                 $lineErrors[] = 'feedUrl est obligatoire quand fetchMode vaut rss';
             }
 
+            if ($fetchMode === FetchMode::LesLibrairesCatalog && $values['url'] === '') {
+                $lineErrors[] = 'url est obligatoire quand fetchMode vaut leslibraires_catalog';
+            }
+
             if ($lineErrors !== []) {
                 $errors[] = sprintf('Ligne %d : %s.', $line, implode('; ', $lineErrors));
                 continue;

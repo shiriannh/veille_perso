@@ -36,6 +36,7 @@ class SourceType extends AbstractType
             ->add('url', UrlType::class, [
                 'label' => 'URL',
                 'required' => false,
+                'help' => 'Pour leslibraires.fr, renseigner l URL du rayon science-fiction / fantastique / fantasy.',
             ])
             ->add('isActive', CheckboxType::class, [
                 'label' => 'Source active',

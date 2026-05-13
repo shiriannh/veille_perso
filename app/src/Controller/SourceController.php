@@ -10,6 +10,7 @@ use App\Repository\ImportRunRepository;
 use App\Repository\SourceRepository;
 use App\Service\DatabaseResetter;
 use App\Service\ArrayPaginator;
+use App\Service\LesLibrairesImporter;
 use App\Service\ReferenceFieldSynchronizer;
 use App\Service\RssFeedInspector;
 use App\Service\RssImporter;
@@ -176,6 +177,7 @@ class SourceController extends AbstractController
             'import_runs' => $importRunRepository->findLatestForSource($source),
             'rss_test' => null,
             'rss_preview' => null,
+            'leslibraires_preview' => null,
         ]);
     }
 
@@ -196,6 +198,7 @@ class SourceController extends AbstractController
             'import_runs' => $importRunRepository->findLatestForSource($source),
             'rss_test' => $result,
             'rss_preview' => null,
+            'leslibraires_preview' => null,
         ]);
     }
 
@@ -215,6 +218,33 @@ class SourceController extends AbstractController
             'import_runs' => $importRunRepository->findLatestForSource($source),
             'rss_test' => null,
             'rss_preview' => $result,
+            'leslibraires_preview' => null,
+        ]);
+    }
+
+    #[Route('/{id}/preview-leslibraires', name: 'app_source_preview_leslibraires', methods: ['POST'])]
+    public function previewLesLibraires(Request $request, Source $source, ImportRunRepository $importRunRepository, LesLibrairesImporter $lesLibrairesImporter): Response
+    {
+        if (!$this->isCsrfTokenValid('preview_leslibraires_'.$source->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, previsualisation annulee.');
+
+            return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
+        }
+
+        try {
+            $window = trim((string) $request->request->get('window', '')) ?: null;
+            $preview = $lesLibrairesImporter->preview($source, $window, 10);
+        } catch (\Throwable $exception) {
+            $preview = ['window' => null, 'candidates' => [], 'books' => [], 'errors' => [$exception->getMessage()]];
+            $this->addFlash('error', 'Previsualisation leslibraires.fr impossible.');
+        }
+
+        return $this->render('source/show.html.twig', [
+            'source' => $source,
+            'import_runs' => $importRunRepository->findLatestForSource($source),
+            'rss_test' => null,
+            'rss_preview' => null,
+            'leslibraires_preview' => $preview,
         ]);
     }
 
@@ -238,6 +268,40 @@ class SourceController extends AbstractController
         } else {
             $this->addFlash('success', sprintf(
                 'Import terminé : %d créée(s), %d ignorée(s).',
+                $run->getCreatedCount(),
+                $run->getSkippedCount(),
+            ));
+        }
+
+        return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
+    }
+
+    #[Route('/{id}/import-leslibraires', name: 'app_source_import_leslibraires', methods: ['POST'])]
+    public function importLesLibraires(Request $request, Source $source, LesLibrairesImporter $lesLibrairesImporter): Response
+    {
+        if (!$this->isCsrfTokenValid('import_leslibraires_'.$source->getId(), (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Jeton CSRF invalide, collecte annulee.');
+
+            return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
+        }
+
+        if ($source->getFetchMode() !== FetchMode::LesLibrairesCatalog) {
+            $this->addFlash('error', 'Cette source n est pas configuree en connecteur leslibraires.fr.');
+
+            return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
+        }
+
+        $run = $lesLibrairesImporter->import(
+            $source,
+            trim((string) $request->request->get('window', '')) ?: null,
+            $request->request->getBoolean('analyze', true),
+        );
+
+        if ($run->getStatus()->value === 'failed') {
+            $this->addFlash('error', 'Collecte echouee : '.$run->getErrorMessage());
+        } else {
+            $this->addFlash('success', sprintf(
+                'Collecte terminee : %d creee(s), %d ignoree(s).',
                 $run->getCreatedCount(),
                 $run->getSkippedCount(),
             ));

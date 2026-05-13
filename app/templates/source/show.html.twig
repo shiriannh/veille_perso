@@ -30,6 +30,29 @@
                     <button class="button button-secondary">Previsualiser</button>
                 </form>
             {% endif %}
+            {% if source.fetchMode.value == 'leslibraires_catalog' %}
+                <form method="post" action="{{ path('app_source_import_leslibraires', {id: source.id}) }}" class="inline-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('import_leslibraires_' ~ source.id) }}">
+                    <input type="hidden" name="analyze" value="1">
+                    <select name="window" aria-label="Fenetre leslibraires">
+                        <option value="">Auto</option>
+                        <option value="7d">7 jours</option>
+                        <option value="1m">1 mois</option>
+                        <option value="3m">3 mois</option>
+                    </select>
+                    <button class="button button-secondary">Collecter puis analyser</button>
+                </form>
+                <form method="post" action="{{ path('app_source_preview_leslibraires', {id: source.id}) }}" class="inline-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('preview_leslibraires_' ~ source.id) }}">
+                    <select name="window" aria-label="Fenetre previsualisation leslibraires">
+                        <option value="">Auto</option>
+                        <option value="7d">7 jours</option>
+                        <option value="1m">1 mois</option>
+                        <option value="3m">3 mois</option>
+                    </select>
+                    <button class="button button-secondary">Previsualiser leslibraires</button>
+                </form>
+            {% endif %}
             <a class="button button-secondary" href="{{ path('app_source_index') }}">Retour</a>
         </div>
     </section>
@@ -82,6 +105,13 @@
         <section class="content-block">
             <h2>Aide Source RSS</h2>
             <p>Teste le flux avant un premier import, puis utilise la previsualisation pour verifier les titres, dates et categories. L'import sans analyse sert aux lots que tu veux analyser plus tard.</p>
+        </section>
+    {% endif %}
+
+    {% if source.fetchMode.value == 'leslibraires_catalog' %}
+        <section class="content-block">
+            <h2>Aide connecteur leslibraires.fr</h2>
+            <p>Le connecteur cible le rayon science-fiction / fantastique / fantasy. En mode Auto, il utilise le dernier succes pour choisir 7 jours, 1 mois ou 3 mois. La fiche ouvrage reste prioritaire, Google Books complete seulement les champs manquants.</p>
         </section>
     {% endif %}
 
@@ -146,6 +176,52 @@
                         {% endfor %}
                     </ul>
                 </div>
+            {% endif %}
+        </section>
+    {% endif %}
+
+    {% if leslibraires_preview %}
+        <section class="section-block">
+            <div class="section-title">
+                <h2>Previsualisation leslibraires.fr</h2>
+                <span class="muted">Fenetre {{ leslibraires_preview.window|default('auto') }}</span>
+            </div>
+            {% if leslibraires_preview.errors is not empty %}
+                <div class="empty">
+                    <ul>
+                        {% for error in leslibraires_preview.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            {% if leslibraires_preview.books is empty %}
+                <p class="empty">Aucun ouvrage previsualise.</p>
+            {% else %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Titre</th>
+                            <th>Auteur</th>
+                            <th>ISBN/EAN</th>
+                            <th>Editeur</th>
+                            <th>Date</th>
+                            <th>URL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in leslibraires_preview.books %}
+                            <tr>
+                                <td>{{ book.title }}</td>
+                                <td>{{ book.authors is empty ? '-' : book.authors|join(', ') }}</td>
+                                <td>{{ book.isbn|default(book.ean13)|default('-') }}</td>
+                                <td>{{ book.publisher|default('-') }}</td>
+                                <td>{{ book.publishedAt ? book.publishedAt|date('d/m/Y') : '-' }}</td>
+                                <td><a href="{{ book.url }}" rel="noreferrer">Fiche</a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             {% endif %}
         </section>
     {% endif %}

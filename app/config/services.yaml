@@ -44,6 +44,7 @@ parameters:
     app.analysis.minimum_relevance_score: 45
     app.analysis.clickbait_suspicion_threshold: 35
     app.analysis.clickbait_threshold: 60
+    app.google_books.api_key: '%env(GOOGLE_BOOKS_API_KEY)%'
     app.retention.import_run_days: '%env(int:IMPORT_RUN_RETENTION_DAYS)%'
     app.retention.ignored_entry_days: '%env(int:IGNORED_ENTRY_RETENTION_DAYS)%'
 
@@ -80,3 +81,7 @@ services:
     App\Command\PruneIgnoredEntriesCommand:
         arguments:
             $ignoredEntryRetentionDays: '%app.retention.ignored_entry_days%'
+
+    App\Service\GoogleBooksEnricher:
+        arguments:
+            $apiKey: '%app.google_books.api_key%'

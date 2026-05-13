@@ -260,6 +260,9 @@ Etat :
 - Nouveaux compteurs dashboard d'exploitation quotidienne.
 - Marges `.page` reduites et recentrees.
 - Workflow Review : statuts, prochaine action, date de decision et traitement des brouillons auto-crees.
+- Connecteur dedie leslibraires.fr pour le rayon science-fiction / fantastique / fantasy.
+- Commande `app:import-leslibraires` avec dry-run et fenetre `7d|1m|3m`.
+- Enrichissement optionnel Google Books via ISBN, sans cle commitee.
 
 ## Hors perimetre volontaire
 

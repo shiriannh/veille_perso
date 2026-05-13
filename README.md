@@ -61,6 +61,8 @@ docker compose exec app php bin/console app:import-source 1 --dry-run
 docker compose exec app php bin/console app:import-source 1 --limit=10
 docker compose exec app php bin/console app:import-sources
 docker compose exec app php bin/console app:import-sources --limit=5
+docker compose exec app php bin/console app:import-leslibraires 1 --dry-run --window=7d
+docker compose exec app php bin/console app:import-leslibraires 1 --window=1m
 docker compose exec app php bin/console app:analyze-new-entries
 docker compose exec app php bin/console app:reanalyze-entries --all
 docker compose exec app php bin/console app:detect-entry-tags
@@ -154,6 +156,54 @@ docker compose exec app php bin/console app:prune-ignored-entries --force
 ```
 
 La retention des Entry ignorees ne cible que des Entry importees, anciennes, sans Review et sans synthese associee.
+
+## Connecteur leslibraires.fr
+
+Le mode d'import `leslibraires_catalog` ajoute une collecte ciblee du rayon science-fiction / fantastique / fantasy de leslibraires.fr. Ce n'est pas un scraper generique : le connecteur ne vise que les URLs du type :
+
+```text
+https://www.leslibraires.fr/rayon/science-fiction-fantastique-fantasy/?f_release_date=-7d
+https://www.leslibraires.fr/rayon/science-fiction-fantastique-fantasy/?f_release_date=-1m
+https://www.leslibraires.fr/rayon/science-fiction-fantastique-fantasy/?f_release_date=-3m
+```
+
+Configuration conseillee d'une Source :
+
+- mode d'import : `Catalogue leslibraires.fr` ;
+- URL : `https://www.leslibraires.fr/rayon/science-fiction-fantastique-fantasy/` ;
+- profil de source : `Livres SFF` ;
+- flux RSS vide.
+
+Differenciel :
+
+- si une fenetre est fournie (`7d`, `1m`, `3m`), elle est utilisee telle quelle ;
+- sinon, si la Source n'a jamais eu de collecte reussie, la fenetre par defaut est `3m` ;
+- sinon, `lastSuccessAt` choisit automatiquement `7d`, `1m` ou `3m` selon l'anciennete de la derniere collecte reussie.
+
+La collecte lit la page liste, dedoublonne les liens `/livre/`, ouvre chaque fiche ouvrage, puis extrait les signaux serveur disponibles : titre, auteurs, URL canonique, format, EAN13, ISBN, editeur, date de publication, collection, pages, langue et resume. Les champs microdata `itemprop` sont privilegies quand ils existent.
+
+Deduplication :
+
+1. ISBN / EAN13 stocke dans `externalId` (`isbn:<valeur>` ou `ean13:<valeur>`) ;
+2. URL canonique ;
+3. hash stable titre + auteurs + date + URL.
+
+Google Books est optionnel et complete seulement les champs manquants. Les donnees leslibraires.fr restent prioritaires. La cle ne doit jamais etre committee :
+
+```dotenv
+GOOGLE_BOOKS_API_KEY=
+```
+
+Commandes :
+
+```bash
+docker compose exec app php bin/console app:seed-reference-data
+docker compose exec app php bin/console app:import-leslibraires <sourceId> --dry-run --window=7d
+docker compose exec app php bin/console app:import-leslibraires <sourceId> --window=1m
+docker compose exec app php bin/console app:import-leslibraires <sourceId> --window=3m --no-analysis
+```
+
+Limites connues : le parsing est HTML serveur et depend donc de la stabilite des balises de leslibraires.fr ; Google Books est ignore silencieusement en cas d'absence de cle, timeout, erreur HTTP ou quota 429 ; aucun navigateur headless n'est utilise.
 
 ## Media final 1.6
 
