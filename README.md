@@ -69,8 +69,91 @@ docker compose exec app php bin/console app:generate-draft-reviews
 docker compose exec app php bin/console app:media-type-report
 docker compose exec app php bin/console app:promote-media-types --dry-run
 docker compose exec app php bin/console app:export-analysis-corrections
+docker compose exec app php bin/console app:healthcheck
+docker compose exec app php bin/console app:stats
+docker compose exec app php bin/console app:prune-import-runs
+docker compose exec app php bin/console app:prune-import-runs --force
+docker compose exec app php bin/console app:prune-ignored-entries
+docker compose exec app php bin/console app:prune-ignored-entries --force
 docker compose exec app vendor/bin/phpunit
 ```
+
+## Donnees de demonstration
+
+Les fixtures chargent un jeu anonyme et local : sources fictives, entrees RSS representatives, tags, imports, reviews et une synthese demo.
+
+```bash
+docker compose exec app php bin/console doctrine:fixtures:load
+```
+
+Elles ne dependent d'aucun flux externe et servent a tester l'interface ou les workflows sans utiliser de donnees personnelles.
+
+## Exploitation locale
+
+Deux commandes donnent une vue rapide de l'etat local :
+
+```bash
+docker compose exec app php bin/console app:healthcheck
+docker compose exec app php bin/console app:stats
+```
+
+`app:healthcheck` verifie la base, la derniere migration connue, les references critiques, les sources actives, le dernier import, les Entry non analysees et les Entry encore en media `other`.
+
+`app:stats` resume les volumes : Source, Entry, Review, brouillons, erreurs d'import recentes, repartition par media final et repartition par decision.
+
+L'interface expose aussi `Admin > Statut local` avec les memes indicateurs utiles : version locale, schema, dernier import, derniere analyse, dernier rapport de synthese et dernier import en erreur.
+
+## Sauvegarde et restauration PostgreSQL
+
+Sauvegarde locale simple depuis Docker Compose :
+
+```bash
+mkdir -p backups
+docker compose exec database pg_dump -U veille -d veille_perso --clean --if-exists > backups/veille_perso_$(date +%Y%m%d_%H%M%S).sql
+```
+
+Sous PowerShell, exemple equivalent :
+
+```powershell
+New-Item -ItemType Directory -Force backups
+docker compose exec database pg_dump -U veille -d veille_perso --clean --if-exists | Out-File -Encoding utf8 backups\veille_perso_$(Get-Date -Format yyyyMMdd_HHmmss).sql
+```
+
+Restauration locale :
+
+```bash
+docker compose exec -T database psql -U veille -d veille_perso < backups/veille_perso.sql
+docker compose exec app php bin/console doctrine:migrations:migrate
+```
+
+Avant restauration, verifier le fichier cible : cette operation remplace l'etat courant de la base.
+
+## Retention locale
+
+Aucune suppression n'est automatique.
+
+Les seuils sont configurables dans `.env` :
+
+```dotenv
+IMPORT_RUN_RETENTION_DAYS=90
+IGNORED_ENTRY_RETENTION_DAYS=180
+```
+
+Les commandes de nettoyage sont manuelles et en dry-run par defaut :
+
+```bash
+docker compose exec app php bin/console app:prune-import-runs
+docker compose exec app php bin/console app:prune-ignored-entries
+```
+
+Pour appliquer reellement :
+
+```bash
+docker compose exec app php bin/console app:prune-import-runs --force
+docker compose exec app php bin/console app:prune-ignored-entries --force
+```
+
+La retention des Entry ignorees ne cible que des Entry importees, anciennes, sans Review et sans synthese associee.
 
 ## Media final 1.6
 

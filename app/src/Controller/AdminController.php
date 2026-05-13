@@ -13,6 +13,7 @@ use App\Entity\ReferenceEntityInterface;
 use App\Entity\SourceTypeReference;
 use App\Entity\Tag;
 use App\Repository\AnalysisCorrectionRepository;
+use App\Service\LocalStatusReporter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -38,7 +39,17 @@ class AdminController extends AbstractController
                 ['label' => 'Diagnostic media final', 'route' => 'app_admin_media_diagnostic', 'params' => [], 'class' => Entry::class],
                 ['label' => 'Mappings media actifs', 'route' => 'app_admin_media_mappings', 'params' => [], 'class' => MediaTypeReference::class],
                 ['label' => 'Corrections analyse', 'route' => 'app_admin_analysis_corrections', 'params' => [], 'class' => Entry::class],
+                ['label' => 'Statut local', 'route' => 'app_admin_status', 'params' => [], 'class' => Entry::class],
             ],
+        ]);
+    }
+
+    #[Route('/status', name: 'app_admin_status', methods: ['GET'])]
+    public function status(LocalStatusReporter $statusReporter): Response
+    {
+        return $this->render('admin/status.html.twig', [
+            'status' => $statusReporter->status(),
+            'stats' => $statusReporter->stats(),
         ]);
     }
 

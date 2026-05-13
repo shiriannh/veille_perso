@@ -44,6 +44,8 @@ parameters:
     app.analysis.minimum_relevance_score: 45
     app.analysis.clickbait_suspicion_threshold: 35
     app.analysis.clickbait_threshold: 60
+    app.retention.import_run_days: '%env(int:IMPORT_RUN_RETENTION_DAYS)%'
+    app.retention.ignored_entry_days: '%env(int:IGNORED_ENTRY_RETENTION_DAYS)%'
 
 services:
     _defaults:
@@ -70,3 +72,11 @@ services:
             $clickbaitSuspicionThreshold: '%app.analysis.clickbait_suspicion_threshold%'
             $clickbaitThreshold: '%app.analysis.clickbait_threshold%'
             $ruleRepository: '@App\Repository\InterestProfileRuleRepository'
+
+    App\Command\PruneImportRunsCommand:
+        arguments:
+            $importRunRetentionDays: '%app.retention.import_run_days%'
+
+    App\Command\PruneIgnoredEntriesCommand:
+        arguments:
+            $ignoredEntryRetentionDays: '%app.retention.ignored_entry_days%'

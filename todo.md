@@ -181,23 +181,24 @@ Etat :
 - categories RSS visibles dans la liste Entry quand elles existent ;
 - indicateur "source neuve / fiable / mixte / bruyante" calcule depuis l'historique des decisions et affiche sur la liste Entry.
 
-## Priorite 10 - Donnees, maintenance et robustesse
+## Priorite 10 - Finalisee
 
-- Ajouter des fixtures de demonstration anonymes pour tester l'interface sans importer de vraies sources.
-- Ajouter un jeu de tests fonctionnels pour les routes principales : Source, Entry, Review, ImportRun, SynthesisReport, Admin.
-- Ajouter des tests de repository pour les filtres Entry et Review.
-- Ajouter des tests unitaires pour `RssCategoryMapper`.
-- Ajouter des tests unitaires pour `EntryTagDetector`.
-- Ajouter des tests unitaires pour `EntryAnalyzer`.
-- Ajouter des tests unitaires pour `InterestLevelCalculator`.
-- Ajouter des tests unitaires pour `DraftReviewCreator`.
-- Ajouter une commande `app:healthcheck` qui verifie base, migrations, sources actives et dernier import.
-- Ajouter une commande `app:stats` pour resumer sources, entries, reviews, medias, decisions, erreurs d'import.
-- Ajouter une commande de sauvegarde locale documentee pour PostgreSQL.
-- Ajouter une commande de restauration locale documentee.
-- Ajouter une page Admin locale listant version app, version schema, dernier import, dernier rapport et derniere analyse.
-- Ajouter une politique de retention configurable pour les ImportRun anciens.
-- Ajouter une politique de retention configurable pour les Entry ignorees, sans suppression automatique par defaut.
+Donnees, maintenance et robustesse ajoutees.
+
+Etat :
+
+- fixtures de demonstration anonymes enrichies : sources fictives, entries, reviews, ImportRun, tags, references et synthese demo ;
+- tests fonctionnels des routes principales ajoutes : Source, Entry, Review, ImportRun, SynthesisReport, Admin et Statut local ;
+- tests repository ajoutes pour les filtres Entry et Review ;
+- tests unitaires ajoutes ou completes pour `RssCategoryMapper`, `EntryTagDetector`, `EntryAnalyzer`, `InterestLevelCalculator` et `DraftReviewCreator` ;
+- commande `app:healthcheck` ajoutee : base, derniere migration, references critiques, sources actives, dernier import, entries non analysees et media `other` ;
+- commande `app:stats` ajoutee : volumes locaux, repartition media final et repartition par decision ;
+- page Admin `Statut local` ajoutee avec version, schema, dernier import, derniere analyse, dernier rapport et dernier import en erreur ;
+- retention ImportRun configurable via `IMPORT_RUN_RETENTION_DAYS`, commande manuelle `app:prune-import-runs`, dry-run par defaut ;
+- retention Entry ignorees configurable via `IGNORED_ENTRY_RETENTION_DAYS`, commande manuelle `app:prune-ignored-entries`, dry-run par defaut ;
+- suppression Entry ignorees volontairement prudente : seulement importees, anciennes, sans Review et sans synthese associee ;
+- sauvegarde et restauration PostgreSQL documentees pour Docker Compose ;
+- README mis a jour avec les commandes d'exploitation locales.
 
 ## Priorite 11 - Finalisee
 

@@ -1,0 +1,95 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statut local - Veille perso{% endblock %}
+
+{% block body %}
+    <section class="page-heading">
+        <div>
+            <h1>Statut local</h1>
+            <p>Vue courte de sante et d'exploitation de l'application locale.</p>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_admin_index') }}">Retour Admin</a>
+        </div>
+    </section>
+
+    <div class="metric-grid section-block">
+        <div class="metric">
+            <span>Sources actives</span>
+            <strong>{{ status.activeSourceCount }}</strong>
+        </div>
+        <div class="metric">
+            <span>Entrees non analysees</span>
+            <strong>{{ status.pendingAnalysisCount }}</strong>
+        </div>
+        <div class="metric">
+            <span>Media other</span>
+            <strong>{{ status.otherMediaCount }}</strong>
+        </div>
+        <div class="metric">
+            <span>Reviews brouillon</span>
+            <strong>{{ stats.reviews_drafts }}</strong>
+        </div>
+    </div>
+
+    <table>
+        <tbody>
+            <tr>
+                <th>Version application</th>
+                <td>{{ status.appVersion }}</td>
+            </tr>
+            <tr>
+                <th>Base de donnees</th>
+                <td>{{ status.databaseOk ? 'OK' : 'Erreur' }}</td>
+            </tr>
+            <tr>
+                <th>Derniere migration</th>
+                <td>{{ status.latestMigration ?? 'Non disponible' }}</td>
+            </tr>
+            <tr>
+                <th>References critiques</th>
+                <td>{{ status.missingReferences is empty ? 'OK' : status.missingReferences|join(', ') }}</td>
+            </tr>
+            <tr>
+                <th>Dernier import</th>
+                <td>
+                    {% if status.lastImportRun %}
+                        {{ status.lastImportRun.startedAt|date('d/m/Y H:i') }}
+                        - {{ status.lastImportRun.status.label() }}
+                        - {{ status.lastImportRun.source.name }}
+                    {% else %}
+                        Aucun
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Dernier import en erreur</th>
+                <td>
+                    {% if status.lastFailedImportRun %}
+                        {{ status.lastFailedImportRun.startedAt|date('d/m/Y H:i') }}
+                        - {{ status.lastFailedImportRun.source.name }}
+                        {% if status.lastFailedImportRun.errorMessage %}
+                            <small>{{ status.lastFailedImportRun.errorMessage }}</small>
+                        {% endif %}
+                    {% else %}
+                        Aucun
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Derniere analyse</th>
+                <td>{{ status.lastAnalysisAt ? status.lastAnalysisAt|date('d/m/Y H:i') : 'Aucune' }}</td>
+            </tr>
+            <tr>
+                <th>Derniere synthese</th>
+                <td>
+                    {% if status.lastSynthesisReport %}
+                        <a href="{{ path('app_synthesis_report_show', {id: status.lastSynthesisReport.id}) }}">{{ status.lastSynthesisReport.title }}</a>
+                    {% else %}
+                        Aucune
+                    {% endif %}
+                </td>
+            </tr>
+        </tbody>
+    </table>
+{% endblock %}
