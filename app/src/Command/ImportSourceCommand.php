@@ -76,6 +76,7 @@ class ImportSourceCommand extends Command
             $run->getCreatedCount(),
             $run->getSkippedCount(),
         ]]);
+        $this->renderAdmissionSummary($io, $run->getDetails()['admission'] ?? null);
 
         if ($run->getErrorMessage() !== null) {
             $io->error($run->getErrorMessage());
@@ -86,5 +87,19 @@ class ImportSourceCommand extends Command
         $io->success('Import termine.');
 
         return Command::SUCCESS;
+    }
+
+    private function renderAdmissionSummary(SymfonyStyle $io, mixed $admission): void
+    {
+        if (!is_array($admission)) {
+            return;
+        }
+
+        $io->table(['Collectes', 'Admis', 'Quarantaine', 'Rejetes'], [[
+            (int) ($admission['collected'] ?? 0),
+            (int) ($admission['admitted'] ?? 0),
+            (int) ($admission['quarantined'] ?? 0),
+            (int) ($admission['rejected'] ?? 0),
+        ]]);
     }
 }

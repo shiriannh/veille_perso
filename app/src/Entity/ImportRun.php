@@ -40,6 +40,12 @@ class ImportRun
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $errorMessage = null;
 
+    /**
+     * @var array<string, mixed>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $details = null;
+
     public function __construct()
     {
         $this->startedAt = new \DateTimeImmutable();
@@ -142,6 +148,24 @@ class ImportRun
     public function setErrorMessage(?string $errorMessage): self
     {
         $this->errorMessage = $errorMessage;
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getDetails(): ?array
+    {
+        return $this->details;
+    }
+
+    /**
+     * @param array<string, mixed>|null $details
+     */
+    public function setDetails(?array $details): self
+    {
+        $this->details = $details;
 
         return $this;
     }

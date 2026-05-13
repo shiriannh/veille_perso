@@ -24,7 +24,7 @@
             </article>
             <article>
                 <strong>2. Import</strong>
-                <p>L'import dedoublonne, garde l'historique et cree des entrees candidates.</p>
+                <p>L'import dedoublonne, passe par le sas d'admission, puis cree seulement les entrees admises.</p>
             </article>
             <article>
                 <strong>3. Analyse</strong>
@@ -38,6 +38,34 @@
                 <strong>5. Synthese</strong>
                 <p>Une synthese regroupe les contenus pertinents non encore repris.</p>
             </article>
+        </div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <h2>Sas d'admission</h2>
+        </div>
+        <div class="content-block">
+            <p>Avant de creer une Entry, le contenu collecte passe par un sas metier. La collecte peut detecter large, mais l'application ne persiste pas large : un contenu doit presenter un media plausible, des pivots coherents ou un contexte source suffisamment fort.</p>
+            <div class="workflow-steps">
+                <article>
+                    <strong>Collecte brute</strong>
+                    <p>RSS ou connecteur cible lit titre, resume, URL, categories et metadonnees.</p>
+                </article>
+                <article>
+                    <strong>Admission</strong>
+                    <p>Le profil de source apporte des hints : medias attendus, pivots, bruit, signaux declassants et biais plus strict ou plus permissif.</p>
+                </article>
+                <article>
+                    <strong>Issue</strong>
+                    <p>Admis cree une Entry ; quarantaine garde une trace legere dans l'historique d'import ; rejet ne cree pas d'Entry.</p>
+                </article>
+                <article>
+                    <strong>Analyse detaillee</strong>
+                    <p>Seules les Entry admises poursuivent vers tags valides, scoring, interest level, brouillon et synthese.</p>
+                </article>
+            </div>
+            <p>Les termes faibles ou neutralises comme nouveau, actualites, podcast, interview, festival, nos-conseils, blockbuster ou download ne suffisent pas a faire entrer un contenu. Pour faire passer plus ou moins de contenus, ajuster d'abord le profil de source, puis les tags pivots et le profil d'interet.</p>
         </div>
     </section>
 

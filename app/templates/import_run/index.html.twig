@@ -57,6 +57,7 @@
                     <th>Recuperes</th>
                     <th>Crees</th>
                     <th>Ignores</th>
+                    <th>Admission</th>
                     <th>Erreur</th>
                 </tr>
             </thead>
@@ -70,6 +71,16 @@
                         <td>{{ run.fetchedCount }}</td>
                         <td>{{ run.createdCount }}</td>
                         <td>{{ run.skippedCount }}</td>
+                        <td>
+                            {% set admission = run.details.admission|default(null) %}
+                            {% if admission %}
+                                <span class="score">{{ admission.admitted|default(0) }} admis</span>
+                                <span class="score">{{ admission.quarantined|default(0) }} quarantaine</span>
+                                <span class="score">{{ admission.rejected|default(0) }} rejetes</span>
+                            {% else %}
+                                <span class="muted">-</span>
+                            {% endif %}
+                        </td>
                         <td>{{ run.errorMessage ? run.errorMessage : '-' }}</td>
                     </tr>
                 {% endfor %}

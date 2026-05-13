@@ -276,6 +276,13 @@ class SourceController extends AbstractController
             ));
         }
 
+        if ($run->getStatus()->value !== 'failed') {
+            $summary = $this->formatAdmissionSummary($run->getDetails()['admission'] ?? null);
+            if ($summary !== '') {
+                $this->addFlash('info', 'Sas admission : '.$summary.'.');
+            }
+        }
+
         return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
     }
 
@@ -312,6 +319,13 @@ class SourceController extends AbstractController
                 $run->getCreatedCount(),
                 $run->getSkippedCount(),
             ));
+        }
+
+        if ($run->getStatus()->value !== 'failed') {
+            $summary = $this->formatAdmissionSummary($run->getDetails()['admission'] ?? null);
+            if ($summary !== '') {
+                $this->addFlash('info', 'Sas admission : '.$summary.'.');
+            }
         }
 
         return $this->redirectToRoute('app_source_show', ['id' => $source->getId()]);
@@ -358,5 +372,19 @@ class SourceController extends AbstractController
         $this->addFlash('success', 'Source supprimée.');
 
         return $this->redirectToRoute('app_source_index', $request->query->all());
+    }
+
+    private function formatAdmissionSummary(mixed $admission): string
+    {
+        if (!is_array($admission)) {
+            return '';
+        }
+
+        return sprintf(
+            '%d admis, %d en quarantaine, %d rejetes',
+            (int) ($admission['admitted'] ?? 0),
+            (int) ($admission['quarantined'] ?? 0),
+            (int) ($admission['rejected'] ?? 0),
+        );
     }
 }

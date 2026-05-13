@@ -59,15 +59,24 @@ class ImportRunController extends AbstractController
         $pagesVisited = 0;
         $candidatesCount = 0;
         $detailsOpened = 0;
+        $admittedCount = 0;
+        $quarantinedCount = 0;
+        $rejectedCount = 0;
 
         foreach ($sources as $source) {
             $run = $lesLibrairesImporter->import($source);
             $summary = $lesLibrairesImporter->lastSummary();
+            $admission = $run->getDetails()['admission'] ?? null;
             $createdCount += $run->getCreatedCount();
             $skippedCount += $run->getSkippedCount();
             $pagesVisited += $summary['pagesVisited'];
             $candidatesCount += $summary['candidatesCount'];
             $detailsOpened += $summary['detailsOpened'];
+            if (is_array($admission)) {
+                $admittedCount += (int) ($admission['admitted'] ?? 0);
+                $quarantinedCount += (int) ($admission['quarantined'] ?? 0);
+                $rejectedCount += (int) ($admission['rejected'] ?? 0);
+            }
 
             if ($run->getStatus()->value === 'failed') {
                 ++$errorCount;
@@ -85,6 +94,12 @@ class ImportRunController extends AbstractController
         );
 
         $this->addFlash($errorCount > 0 ? 'error' : 'success', $errorCount > 0 ? $message.' '.$errorCount.' erreur(s).' : $message);
+        $this->addFlash('info', sprintf(
+            'Sas admission : %d admis, %d en quarantaine, %d rejetes.',
+            $admittedCount,
+            $quarantinedCount,
+            $rejectedCount,
+        ));
 
         return $this->redirectToRoute('app_import_run_index', $request->query->all());
     }
@@ -107,11 +122,20 @@ class ImportRunController extends AbstractController
         $createdCount = 0;
         $skippedCount = 0;
         $errorCount = 0;
+        $admittedCount = 0;
+        $quarantinedCount = 0;
+        $rejectedCount = 0;
 
         foreach ($sources as $source) {
             $run = $rssImporter->import($source);
+            $admission = $run->getDetails()['admission'] ?? null;
             $createdCount += $run->getCreatedCount();
             $skippedCount += $run->getSkippedCount();
+            if (is_array($admission)) {
+                $admittedCount += (int) ($admission['admitted'] ?? 0);
+                $quarantinedCount += (int) ($admission['quarantined'] ?? 0);
+                $rejectedCount += (int) ($admission['rejected'] ?? 0);
+            }
 
             if ($run->getErrorMessage() !== null) {
                 ++$errorCount;
@@ -133,6 +157,13 @@ class ImportRunController extends AbstractController
                 $skippedCount,
             ));
         }
+
+        $this->addFlash('info', sprintf(
+            'Sas admission : %d admis, %d en quarantaine, %d rejetes.',
+            $admittedCount,
+            $quarantinedCount,
+            $rejectedCount,
+        ));
 
         return $this->redirectToRoute('app_import_run_index', $request->query->all());
     }

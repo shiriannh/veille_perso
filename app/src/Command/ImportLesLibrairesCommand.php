@@ -78,6 +78,7 @@ class ImportLesLibrairesCommand extends Command
             $run->getCreatedCount(),
             $run->getSkippedCount(),
         ]]);
+        $this->renderAdmissionSummary($io, $run->getDetails()['admission'] ?? null);
         $io->writeln(sprintf(
             'Fenetre: %s | Pages parcourues: %d | Candidats: %d | Fiches ouvertes: %d',
             $summary['window'] ?? '-',
@@ -99,5 +100,19 @@ class ImportLesLibrairesCommand extends Command
         $io->success('Collecte leslibraires.fr terminee.');
 
         return Command::SUCCESS;
+    }
+
+    private function renderAdmissionSummary(SymfonyStyle $io, mixed $admission): void
+    {
+        if (!is_array($admission)) {
+            return;
+        }
+
+        $io->table(['Collectes', 'Admis', 'Quarantaine', 'Rejetes'], [[
+            (int) ($admission['collected'] ?? 0),
+            (int) ($admission['admitted'] ?? 0),
+            (int) ($admission['quarantined'] ?? 0),
+            (int) ($admission['rejected'] ?? 0),
+        ]]);
     }
 }

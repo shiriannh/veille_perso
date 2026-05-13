@@ -22,8 +22,7 @@ class RssImporter
         private readonly EntityManagerInterface $entityManager,
         private readonly EntryRepository $entryRepository,
         private readonly EntryAnalyzer $entryAnalyzer,
-        private readonly EntryTagDetector $entryTagDetector,
-        private readonly RssCategoryMapper $rssCategoryMapper,
+        private readonly ContentAdmissionPolicy $contentAdmissionPolicy,
     ) {
     }
 
@@ -54,6 +53,7 @@ class RssImporter
 
             $createdCount = 0;
             $skippedCount = 0;
+            $admission = $this->emptyAdmissionSummary();
 
             foreach ($items as $item) {
                 if ($item['title'] === '') {
@@ -93,8 +93,13 @@ class RssImporter
                     ->setStatus(EntryStatus::ToWatch)
                     ->setPersonalTags(['rss']);
 
-                $this->entryTagDetector->detect($entry);
-                $this->rssCategoryMapper->enrich($entry, $item['categories']);
+                $admissionResult = $this->contentAdmissionPolicy->evaluate($entry, $item['categories']);
+                $this->recordAdmission($admission, $admissionResult, $item['title']);
+                if (!$admissionResult->isAdmitted()) {
+                    ++$skippedCount;
+                    continue;
+                }
+
                 if ($analyze) {
                     $this->entryAnalyzer->analyze($entry);
                 }
@@ -107,7 +112,8 @@ class RssImporter
                 ->setFinishedAt(new \DateTimeImmutable())
                 ->setFetchedCount(count($items))
                 ->setCreatedCount($createdCount)
-                ->setSkippedCount($skippedCount);
+                ->setSkippedCount($skippedCount)
+                ->setDetails(['admission' => $admission]);
 
             $source
                 ->setLastSuccessAt($run->getFinishedAt())
@@ -141,6 +147,49 @@ class RssImporter
 
         if ($source->getFeedUrl() === null || trim($source->getFeedUrl()) === '') {
             throw new \RuntimeException('La source n’a pas d’URL de flux RSS.');
+        }
+    }
+
+    /**
+     * @return array{collected: int, admitted: int, quarantined: int, rejected: int, samples: array<int, array<string, mixed>>}
+     */
+    private function emptyAdmissionSummary(): array
+    {
+        return [
+            'collected' => 0,
+            'admitted' => 0,
+            'quarantined' => 0,
+            'rejected' => 0,
+            'samples' => [],
+        ];
+    }
+
+    /**
+     * @param array{collected: int, admitted: int, quarantined: int, rejected: int, samples: array<int, array<string, mixed>>} $summary
+     */
+    private function recordAdmission(array &$summary, ContentAdmissionResult $result, string $title): void
+    {
+        ++$summary['collected'];
+        if ($result->outcome === ContentAdmissionResult::ADMIT) {
+            ++$summary['admitted'];
+
+            return;
+        }
+
+        if ($result->outcome === ContentAdmissionResult::QUARANTINE) {
+            ++$summary['quarantined'];
+        } else {
+            ++$summary['rejected'];
+        }
+
+        if (count($summary['samples']) < 12) {
+            $summary['samples'][] = [
+                'title' => $title,
+                'outcome' => $result->outcome,
+                'score' => $result->score,
+                'reason' => $result->reason,
+                'signals' => array_slice($result->signals, 0, 5),
+            ];
         }
     }
 

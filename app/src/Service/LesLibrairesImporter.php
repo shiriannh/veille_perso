@@ -30,8 +30,7 @@ class LesLibrairesImporter
         private readonly EntityManagerInterface $entityManager,
         private readonly EntryRepository $entryRepository,
         private readonly EntryAnalyzer $entryAnalyzer,
-        private readonly EntryTagDetector $entryTagDetector,
-        private readonly RssCategoryMapper $rssCategoryMapper,
+        private readonly ContentAdmissionPolicy $contentAdmissionPolicy,
     ) {
     }
 
@@ -84,6 +83,7 @@ class LesLibrairesImporter
             $created = 0;
             $skipped = 0;
             $detailsOpened = 0;
+            $admission = $this->emptyAdmissionSummary();
             $errors = [];
 
             foreach ($candidates as $candidate) {
@@ -98,8 +98,12 @@ class LesLibrairesImporter
                     }
 
                     $entry = $this->createEntry($source, $book, $now, $sourceHash);
-                    $this->entryTagDetector->detect($entry);
-                    $this->rssCategoryMapper->enrich($entry, $book->categories);
+                    $admissionResult = $this->contentAdmissionPolicy->evaluate($entry, $book->categories);
+                    $this->recordAdmission($admission, $admissionResult, $book->title);
+                    if (!$admissionResult->isAdmitted()) {
+                        ++$skipped;
+                        continue;
+                    }
 
                     if ($analyze) {
                         $this->entryAnalyzer->analyze($entry);
@@ -119,6 +123,7 @@ class LesLibrairesImporter
                 ->setFetchedCount(count($candidates))
                 ->setCreatedCount($created)
                 ->setSkippedCount($skipped)
+                ->setDetails(['admission' => $admission])
                 ->setErrorMessage($errors === [] ? null : implode("\n", array_slice($errors, 0, 20)));
 
             $source
@@ -191,6 +196,49 @@ class LesLibrairesImporter
 
         if ($source->getFetchMode() !== FetchMode::LesLibrairesCatalog) {
             throw new \RuntimeException('La source n est pas configuree en connecteur leslibraires.fr.');
+        }
+    }
+
+    /**
+     * @return array{collected: int, admitted: int, quarantined: int, rejected: int, samples: array<int, array<string, mixed>>}
+     */
+    private function emptyAdmissionSummary(): array
+    {
+        return [
+            'collected' => 0,
+            'admitted' => 0,
+            'quarantined' => 0,
+            'rejected' => 0,
+            'samples' => [],
+        ];
+    }
+
+    /**
+     * @param array{collected: int, admitted: int, quarantined: int, rejected: int, samples: array<int, array<string, mixed>>} $summary
+     */
+    private function recordAdmission(array &$summary, ContentAdmissionResult $result, string $title): void
+    {
+        ++$summary['collected'];
+        if ($result->outcome === ContentAdmissionResult::ADMIT) {
+            ++$summary['admitted'];
+
+            return;
+        }
+
+        if ($result->outcome === ContentAdmissionResult::QUARANTINE) {
+            ++$summary['quarantined'];
+        } else {
+            ++$summary['rejected'];
+        }
+
+        if (count($summary['samples']) < 12) {
+            $summary['samples'][] = [
+                'title' => $title,
+                'outcome' => $result->outcome,
+                'score' => $result->score,
+                'reason' => $result->reason,
+                'signals' => array_slice($result->signals, 0, 5),
+            ];
         }
     }
 

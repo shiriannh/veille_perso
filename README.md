@@ -204,6 +204,43 @@ docker compose exec app php bin/console app:tag-noise-report --apply
 
 La commande est en dry-run par defaut. Avec `--apply`, elle marque seulement les stop-tags auto-generes connus comme `noise`, inactifs et non lies aux centres d'interet. Elle ne supprime pas de donnees.
 
+## Sas d'admission avant Entry
+
+Les imports ne creent plus une Entry pour chaque item collecte. Le pipeline applique maintenant une etape d'admission avant persistance :
+
+1. collecte brute RSS ou connecteur ;
+2. detection large des termes, categories et signaux ;
+3. sas d'admission metier dans `ContentAdmissionPolicy` ;
+4. creation d'une Entry seulement si le contenu est admis ;
+5. analyse detaillee, interest level et brouillon seulement sur les Entry admises.
+
+Le sas peut produire trois issues :
+
+- `admit` : le contenu devient une vraie Entry et continue le pipeline habituel ;
+- `quarantine` : aucune Entry normale n'est creee ; une trace legere est conservee dans `ImportRun.details.admission.samples` pour diagnostic ;
+- `reject` : aucune Entry n'est creee, avec compteur et raison dans l'historique d'import.
+
+Le profil de source est un signal majeur. Les hints structures sont centralises par profil :
+
+- `Livres SFF` : medias attendus `book`, romans SF/fantasy/space opera ; pivots `science-fiction`, `sf`, `fantasy`, `fantastique`, `space-opera`, `cyberpunk` ; biais permissif si media livre + pivot coherent ;
+- `Jeux video` : media attendu `video_game` ; pivots jeux et licences suivies ; les signaux commerciaux restent declassants ;
+- `BD / manga / comics` : medias attendus `bd`, `manga`, `comics`, `anime` ;
+- `Manga` : medias attendus `manga`, `anime` ;
+- `JDR` : media attendu `ttrpg` avec pivots JDR et univers compatibles ;
+- `Figurines` : media attendu `figurines` avec pivots hobby et univers compatibles ;
+- `Generaliste bruyant` : biais strict, exige des signaux forts avant admission ;
+- `Aucun` : comportement neutre ; les signaux forts media + pivot peuvent passer, mais les signaux faibles restent bloques.
+
+Regle d'admission simplifiee :
+
+- media attendu + pivot attendu + source specialisee => `admit` ;
+- media reconnu ou pivot reconnu avec score intermediaire => `quarantine` ;
+- source generaliste sans pivot fort, ou seulement des termes faibles / neutralises => `reject`.
+
+Les termes comme `nouvelle`, `nouvelles`, `novella`, `essai`, `preface`, `postface`, `interview`, `podcast`, `actualites`, `nouveau`, `nos-conseils`, `festival`, `prix-litteraire`, `evenement`, `blockbuster` et `download` ne peuvent pas admettre seuls un contenu.
+
+Les commandes et l'historique d'import affichent les compteurs du sas : collectes, admis, quarantaine, rejetes. La quarantaine reste volontairement legere dans cette iteration ; une entite dediee `CandidateImport` pourra etre ajoutee plus tard si la revue manuelle devient necessaire.
+
 ## Connecteur leslibraires.fr
 
 Le mode d'import `leslibraires_catalog` ajoute une collecte ciblee du rayon science-fiction / fantastique / fantasy de leslibraires.fr. Ce n'est pas un scraper generique : le connecteur ne vise que les URLs du type :

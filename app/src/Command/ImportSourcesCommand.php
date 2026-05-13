@@ -47,6 +47,7 @@ class ImportSourcesCommand extends Command
         foreach ($sources as $source) {
             $run = $this->rssImporter->import($source);
             $hasError = $hasError || $run->getErrorMessage() !== null;
+            $admission = $run->getDetails()['admission'] ?? [];
 
             $rows[] = [
                 $source->getId(),
@@ -55,11 +56,14 @@ class ImportSourcesCommand extends Command
                 $run->getFetchedCount(),
                 $run->getCreatedCount(),
                 $run->getSkippedCount(),
+                is_array($admission) ? (int) ($admission['admitted'] ?? 0) : 0,
+                is_array($admission) ? (int) ($admission['quarantined'] ?? 0) : 0,
+                is_array($admission) ? (int) ($admission['rejected'] ?? 0) : 0,
                 $run->getErrorMessage() ?? '',
             ];
         }
 
-        $io->table(['ID', 'Source', 'Statut', 'Recuperes', 'Crees', 'Ignores', 'Erreur'], $rows);
+        $io->table(['ID', 'Source', 'Statut', 'Recuperes', 'Crees', 'Ignores', 'Admis', 'Quarantaine', 'Rejetes', 'Erreur'], $rows);
 
         return $hasError ? Command::FAILURE : Command::SUCCESS;
     }
