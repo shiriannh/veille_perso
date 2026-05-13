@@ -5,6 +5,8 @@ namespace App\Tests\Service;
 use App\Entity\Entry;
 use App\Enum\MediaType;
 use App\Service\RssCategoryMapper;
+use App\Service\Slugger;
+use App\Service\TagGovernance;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +16,7 @@ class RssCategoryMapperTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->mapper = new RssCategoryMapper();
+        $this->mapper = new RssCategoryMapper(new TagGovernance(new Slugger()));
     }
 
     #[DataProvider('mediaCategoryProvider')]

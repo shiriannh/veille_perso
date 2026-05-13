@@ -6,7 +6,7 @@
     <section class="page-heading">
         <div>
             <h1>Aide rapide</h1>
-            <p>Le chemin simple pour passer d'un flux RSS a une fiche exploitable.</p>
+            <p>Comprendre le chemin entre une source importee, une analyse et une fiche exploitable.</p>
         </div>
         <div class="actions">
             <a class="button button-secondary" href="{{ path('app_source_index') }}">Sources</a>
@@ -20,35 +20,119 @@
         <div class="workflow-steps">
             <article>
                 <strong>1. Source</strong>
-                <p>Créer une source, renseigner son flux RSS, tester le flux puis importer.</p>
+                <p>Creer une source, tester son import, puis lancer RSS ou connecteur cible.</p>
             </article>
             <article>
                 <strong>2. Import</strong>
-                <p>L'import crée des entrées, déduplique et conserve l'historique d'exécution.</p>
+                <p>L'import dedoublonne, garde l'historique et cree des entrees candidates.</p>
             </article>
             <article>
-                <strong>3. Entrée</strong>
-                <p>L'entrée est analysée : média, tags, pertinence, bruit éditorial et décision.</p>
+                <strong>3. Analyse</strong>
+                <p>Le moteur detecte les signaux, valide les tags, calcule pertinence et bruit.</p>
             </article>
             <article>
                 <strong>4. Fiche</strong>
-                <p>Les entrées intéressantes deviennent des fiches à compléter, lire, tester ou ignorer.</p>
+                <p>Les entrees a fort interet peuvent devenir des brouillons a enrichir.</p>
             </article>
             <article>
-                <strong>5. Synthèse</strong>
-                <p>Une synthèse regroupe les entrées pertinentes non encore synthétisées.</p>
+                <strong>5. Synthese</strong>
+                <p>Une synthese regroupe les contenus pertinents non encore repris.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <h2>Comprendre l'analyse</h2>
+        </div>
+        <div class="content-block">
+            <p>L'analyse suit un sas d'entree : detection brute large, validation metier stricte, puis persistance et scoring seulement des signaux retenus. Un mot trouve dans un titre ne devient pas automatiquement un tag exploitable.</p>
+            <div class="workflow-steps">
+                <article>
+                    <strong>Detecter</strong>
+                    <p>Titre, resume, URL, source et categories RSS produisent des termes bruts.</p>
+                </article>
+                <article>
+                    <strong>Valider</strong>
+                    <p>Les stop-tags et signaux faibles sont neutralises avant d'entrer dans les champs metier.</p>
+                </article>
+                <article>
+                    <strong>Persister</strong>
+                    <p>Seuls les tags utiles restent dans les tags detectes ou peuvent creer un tag a valider.</p>
+                </article>
+                <article>
+                    <strong>Decider</strong>
+                    <p>Media, tags, source, categories, clickbait et profil d'interet produisent la decision finale.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <h2>Roles des tags</h2>
+        </div>
+        <div class="metric-grid">
+            <article class="metric">
+                <span>Pivot</span>
+                <strong>Structure fortement le perimetre : science-fiction, fantasy, manga, jdr, figurines.</strong>
+            </article>
+            <article class="metric">
+                <span>Contextuel</span>
+                <strong>Utile seulement avec un bon contexte : fps avec jeu video et pivot fort.</strong>
+            </article>
+            <article class="metric">
+                <span>Declassant</span>
+                <strong>Reduit la priorite sans supprimer : battle-pass, monetisation, crowdfunding.</strong>
+            </article>
+            <article class="metric">
+                <span>Bruit</span>
+                <strong>Detecte mais neutralise : nouveau, nos-conseils, festival, download.</strong>
+            </article>
+            <article class="metric">
+                <span>Entite</span>
+                <strong>Nom propre utile seulement s'il est connu ou lie au bon media.</strong>
+            </article>
+            <article class="metric">
+                <span>Format editorial</span>
+                <strong>Type d'article rarement utile seul : trailer, festival, interview.</strong>
             </article>
         </div>
     </section>
 
     <section class="two-columns section-block">
         <div class="content-block">
-            <h2>Filtres</h2>
-            <p>Les filtres sont conservés dans l'URL. Quand une page affiche des filtres actifs, le bloc de résumé permet de copier le lien exact de la vue.</p>
+            <h2>Validation des tags</h2>
+            <p>On detecte large mais on persiste etroit. Un candidat faible reste brut si aucune cooccurrence forte ne le valide. Exemple : `fps` a besoin d'un contexte jeu video et d'un pivot ; `festival` seul est neutralise ; `crowdfunding` ne compte que dans un contexte figurines, JDR ou jeu.</p>
         </div>
         <div class="content-block">
-            <h2>Actions sûres</h2>
-            <p>Les suppressions et actions massives demandent confirmation. Les règles métier empêchent les suppressions destructrices silencieuses.</p>
+            <h2>Que modifier et ou ?</h2>
+            <p>Tags : role et validation. Profil d'interet : bonus et malus thematiques. Types de media et mappings : classement et syntheses. Diagnostic media final et corrections analyse : comprendre les cas rates.</p>
+        </div>
+    </section>
+
+    <section class="section-block">
+        <div class="section-title">
+            <h2>Impacts des modifications</h2>
+        </div>
+        <div class="content-block">
+            <ul>
+                <li>Modifier un tag peut changer la detection, la pertinence, l'interest level, les brouillons et les syntheses futures.</li>
+                <li>Modifier le profil d'interet agit sur le scoring thematique et peut faire remonter ou descendre des contenus.</li>
+                <li>Modifier un media ou un mapping agit sur les filtres, les regroupements et le classement des syntheses.</li>
+                <li>Corriger manuellement une Entry ajuste ce cas localement et sert de retour d'experience pour améliorer les regles.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="two-columns section-block">
+        <div class="content-block">
+            <h2>Filtres</h2>
+            <p>Les filtres restent dans l'URL. Le bloc de resume permet de copier une vue precise pour revenir au meme diagnostic.</p>
+        </div>
+        <div class="content-block">
+            <h2>Actions sures</h2>
+            <p>Les suppressions et actions massives demandent confirmation. Les nettoyages de tags bruit sont desactivants, pas destructifs par defaut.</p>
         </div>
     </section>
 {% endblock %}

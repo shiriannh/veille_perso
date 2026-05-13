@@ -6,7 +6,7 @@
     <section class="page-heading">
         <div>
             <h1>{{ entry.title }}</h1>
-            <p>{{ entry.finalMediaType.label() }} · {{ entry.status.label() }} · intérêt {{ entry.interestLevel }}/5</p>
+            <p>{{ entry.finalMediaType.label() }} - {{ entry.status.label() }} - interet {{ entry.interestLevel }}/5</p>
         </div>
         <div class="actions">
             <a class="button" href="{{ path('app_entry_edit', {id: entry.id}) }}">Modifier</a>
@@ -22,48 +22,70 @@
                 <a class="button button-secondary" href="{{ path('app_review_show', {id: entry.review.id}) }}">Voir la fiche</a>
                 <a class="button button-secondary" href="{{ path('app_review_edit', {id: entry.review.id}) }}">Modifier la fiche</a>
             {% else %}
-                <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Créer une fiche</a>
+                <a class="button button-secondary" href="{{ path('app_review_new', {entry: entry.id}) }}">Creer une fiche</a>
             {% endif %}
         </div>
     </section>
 
     <section class="content-block">
-        <h2>Aide Analyse</h2>
-        <p>La decision finale combine media, source, tags, categories RSS, pertinence et bruit editorial. Les corrections manuelles sont tracees et protegent les choix metier explicites.</p>
+        <h2>Lecture rapide de l'analyse</h2>
+        <p>Le moteur detecte large, valide strictement, puis ne persiste que les signaux utiles. Les termes faibles restent bruts : ils n'entrent pas comme tags metier.</p>
+        <div class="analysis-summary">
+            <span class="badge">Media final : {{ entry.finalMediaType.label() }}</span>
+            <span class="badge {{ entry.decision ? 'badge-decision-' ~ entry.decision.value : 'badge-muted' }}">{{ entry.decision ? entry.decision.label() : 'Non analysee' }}</span>
+            <span class="score">Interet {{ entry.interestLevel }}/5</span>
+            <span class="score">Pertinence {{ entry.relevanceScore ?? 0 }}/100</span>
+            <span class="score">Putaclic {{ entry.clickbaitScore ?? 0 }}/100</span>
+        </div>
     </section>
 
     <dl class="details">
         <dt>Source</dt>
         <dd><a href="{{ path('app_source_show', {id: entry.source.id}) }}">{{ entry.source.name }}</a></dd>
+
         <dt>Auteur / studio</dt>
-        <dd>{{ entry.authorOrStudio|default('Non renseigné') }}</dd>
+        <dd>{{ entry.authorOrStudio|default('Non renseigne') }}</dd>
+
         <dt>URL originale</dt>
         <dd>
             {% if entry.originalUrl %}
                 <a href="{{ entry.originalUrl }}" rel="noreferrer">{{ entry.originalUrl }}</a>
             {% else %}
-                <span class="muted">Non renseignée</span>
+                <span class="muted">Non renseignee</span>
             {% endif %}
         </dd>
-        <dt>Tags</dt>
-        <dd>
-            {% if entry.personalTags is empty %}
-                <span class="muted">Aucun tag</span>
-            {% else %}
-                {{ entry.personalTags|join(', ') }}
-            {% endif %}
-        </dd>
-        <dt>Tags détectés</dt>
+
+        <dt>Tags personnels</dt>
+        <dd>{{ entry.personalTags is empty ? 'Aucun tag personnel' : entry.personalTags|join(', ') }}</dd>
+
+        <dt>Tags detectes retenus</dt>
         <dd>
             {% if entry.detectedTags is empty %}
-                <span class="muted">Aucun tag détecté</span>
+                <span class="muted">Aucun tag metier valide</span>
             {% else %}
                 {% for tag in entry.detectedTags %}
-                    <span class="badge badge-muted">{{ tag }}</span>
+                    {% set role = tag_roles[tag]|default(null) %}
+                    <span class="badge badge-muted" title="{{ role ? role.label() : 'Tag valide' }}">{{ tag }}{% if role %} - {{ role.label() }}{% endif %}</span>
                 {% endfor %}
             {% endif %}
         </dd>
-        <dt>Média final</dt>
+
+        <dt>Termes bruts rejetes</dt>
+        <dd>
+            {% set rejected_terms = entry.rawDetectedTerms|filter(term => term not in entry.detectedTags) %}
+            {% if rejected_terms is empty %}
+                <span class="muted">Aucun terme brut rejete enregistre</span>
+            {% else %}
+                {% for term in rejected_terms|slice(0, 20) %}
+                    <span class="badge badge-muted">{{ term }}</span>
+                {% endfor %}
+                {% if rejected_terms|length > 20 %}
+                    <span class="score">+{{ rejected_terms|length - 20 }}</span>
+                {% endif %}
+            {% endif %}
+        </dd>
+
+        <dt>Media final</dt>
         <dd>
             <span class="badge {{ entry.finalMediaType.value == 'other' ? 'badge-muted' : '' }}">{{ entry.finalMediaType.label() }}</span>
             <span class="score">Origine {{ entry.mediaTypeOrigin|default('unknown') }}</span>
@@ -71,89 +93,109 @@
                 <span class="score">Confiance {{ entry.mediaDetectionConfidence }}/100</span>
             {% endif %}
         </dd>
-        <dt>Média détecté</dt>
+
+        <dt>Media detecte</dt>
         <dd>
             {% if entry.detectedMediaType %}
                 <span class="badge {{ entry.detectedMediaType.value == 'other' ? 'badge-muted' : '' }}">{{ entry.detectedMediaType.label() }}</span>
             {% else %}
-                <span class="badge badge-muted">Non détecté</span>
+                <span class="badge badge-muted">Non detecte</span>
             {% endif %}
-            <span class="score">Stocké final {{ entry.mediaType.label() }}</span>
+            <span class="score">Valeur finale stockee : {{ entry.mediaType.label() }}</span>
         </dd>
-        <dt>Catégories RSS</dt>
+
+        <dt>Categories RSS exploitees</dt>
         <dd>
             {% set rss_categories = entry.rawPayload.categories|default([]) %}
             {% if rss_categories is empty %}
-                <span class="muted">Aucune catégorie RSS enregistrée</span>
+                <span class="muted">Aucune categorie RSS enregistree</span>
             {% else %}
                 {% for category in rss_categories %}
                     <span class="badge badge-muted">{{ category }}</span>
                 {% endfor %}
             {% endif %}
         </dd>
-        <dt>Repéré le</dt>
-        <dd>{{ entry.spottedAt|date('d/m/Y H:i') }}</dd>
-        <dt>Publié le</dt>
-        <dd>{{ entry.publishedAt ? entry.publishedAt|date('d/m/Y H:i') : 'Non renseigné' }}</dd>
-        <dt>Importé le</dt>
-        <dd>{{ entry.importedAt ? entry.importedAt|date('d/m/Y H:i') : 'Saisie manuelle' }}</dd>
-        <dt>ID externe</dt>
-        <dd>{{ entry.externalId|default('Non renseigné') }}</dd>
-        <dt>URL canonique</dt>
-        <dd>
-            {% if entry.canonicalUrl %}
-                <a href="{{ entry.canonicalUrl }}" rel="noreferrer">{{ entry.canonicalUrl }}</a>
-            {% else %}
-                <span class="muted">Non renseignée</span>
-            {% endif %}
-        </dd>
-        <dt>Hash source</dt>
-        <dd>{{ entry.sourceHash|default('Non renseigné') }}</dd>
-        <dt>Décision</dt>
+
+        <dt>Decision</dt>
         <dd>
             {% if entry.decision %}
                 <span class="badge badge-decision-{{ entry.decision.value }}">{{ entry.decision.label() }}</span>
                 <span class="score">Pertinence {{ entry.relevanceScore ?? 0 }}/100</span>
             {% else %}
-                <span class="badge badge-muted">Non analysée</span>
+                <span class="badge badge-muted">Non analysee</span>
             {% endif %}
         </dd>
-        <dt>Scores détaillés</dt>
+
+        <dt>Scores detailles</dt>
         <dd>
-            <span class="score">Thématique {{ entry.thematicScore ?? 0 }}/100</span>
-            <span class="score">Qualité {{ entry.editorialQualityScore ?? 0 }}/100</span>
+            <span class="score">Thematique {{ entry.thematicScore ?? 0 }}/100</span>
+            <span class="score">Qualite {{ entry.editorialQualityScore ?? 0 }}/100</span>
             <span class="score">Langue {{ entry.analysisLanguage|default('n/a')|upper }}</span>
         </dd>
+
+        <dt>Signaux positifs principaux</dt>
+        <dd>{{ entry.matchedPositiveKeywords is empty ? 'Aucun' : entry.matchedPositiveKeywords|slice(0, 12)|join(', ') }}</dd>
+
+        <dt>Signaux negatifs principaux</dt>
+        <dd>{{ entry.matchedNegativeKeywords is empty ? 'Aucun' : entry.matchedNegativeKeywords|slice(0, 12)|join(', ') }}</dd>
+
         <dt>Signaux d'analyse</dt>
-        <dd>{{ entry.analysisSignals is empty ? 'Aucun' : entry.analysisSignals|join(', ') }}</dd>
+        <dd>
+            {% if entry.analysisSignals is empty %}
+                <span class="muted">Aucun</span>
+            {% else %}
+                <ul class="signal-list">
+                    {% for signal in entry.analysisSignals|slice(0, 12) %}
+                        <li>{{ signal }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </dd>
+
         <dt>Putaclic</dt>
         <dd>
             {% if entry.clickbaitLevel %}
                 <span class="badge badge-clickbait-{{ entry.clickbaitLevel.value }}">{{ entry.clickbaitLevel.label() }}</span>
                 <span class="score">{{ entry.clickbaitScore ?? 0 }}/100</span>
             {% else %}
-                <span class="muted">Non analysé</span>
+                <span class="muted">Non analyse</span>
             {% endif %}
         </dd>
+
         <dt>Raison d'analyse</dt>
-        <dd>{{ entry.decisionReason|default('Aucune raison enregistrée') }}</dd>
-        <dt>Mots-clés positifs</dt>
-        <dd>{{ entry.matchedPositiveKeywords is empty ? 'Aucun' : entry.matchedPositiveKeywords|join(', ') }}</dd>
-        <dt>Mots-clés négatifs</dt>
-        <dd>{{ entry.matchedNegativeKeywords is empty ? 'Aucun' : entry.matchedNegativeKeywords|join(', ') }}</dd>
+        <dd>{{ entry.decisionReason|default('Aucune raison enregistree') }}</dd>
+
         <dt>Signaux putaclic</dt>
         <dd>{{ entry.clickbaitSignals is empty ? 'Aucun' : entry.clickbaitSignals|join(', ') }}</dd>
+
+        <dt>Dates</dt>
+        <dd>
+            Repere le {{ entry.spottedAt|date('d/m/Y H:i') }} -
+            publie le {{ entry.publishedAt ? entry.publishedAt|date('d/m/Y H:i') : 'n/a' }} -
+            importe le {{ entry.importedAt ? entry.importedAt|date('d/m/Y H:i') : 'saisie manuelle' }}
+        </dd>
+
+        <dt>Identifiants</dt>
+        <dd>
+            ID externe : {{ entry.externalId|default('n/a') }} -
+            hash source : {{ entry.sourceHash|default('n/a') }}
+            {% if entry.canonicalUrl %}
+                - <a href="{{ entry.canonicalUrl }}" rel="noreferrer">URL canonique</a>
+            {% endif %}
+        </dd>
+
         <dt>Analyse</dt>
         <dd>
-            {{ entry.analysisStatus.label() }}{% if entry.analysisVersion %} · {{ entry.analysisVersion }}{% endif %}
-            {% if entry.analyzedAt %} · {{ entry.analyzedAt|date('d/m/Y H:i') }}{% endif %}
+            {{ entry.analysisStatus.label() }}{% if entry.analysisVersion %} - {{ entry.analysisVersion }}{% endif %}
+            {% if entry.analyzedAt %} - {{ entry.analyzedAt|date('d/m/Y H:i') }}{% endif %}
         </dd>
+
         <dt>Analyse IA</dt>
         <dd>
             {% if entry.aiAnalyzedAt %}
-                {{ entry.aiModel|default('Modèle non renseigné') }} · {{ entry.aiAnalyzedAt|date('d/m/Y H:i') }}
+                {{ entry.aiModel|default('Modele non renseigne') }} - {{ entry.aiAnalyzedAt|date('d/m/Y H:i') }}
             {% else %}
-                <span class="muted">Non utilisée</span>
+                <span class="muted">Non utilisee</span>
             {% endif %}
         </dd>
     </dl>
@@ -162,7 +204,7 @@
         <div class="section-title">
             <div>
                 <h2>Corrections manuelles</h2>
-                <p class="muted">Ces corrections sont tracees et protegent les choix manuels des promotions automatiques.</p>
+                <p class="muted">Une correction change le comportement local de cette Entry et peut aider a recalibrer les regles ensuite.</p>
             </div>
         </div>
 
@@ -176,6 +218,7 @@
                             <option value="{{ media_type.value }}" {{ entry.mediaType.value == media_type.value ? 'selected' : '' }}>{{ media_type.label() }}</option>
                         {% endfor %}
                     </select>
+                    <small>Influe sur les filtres, la pertinence, l'interest level, les brouillons et les syntheses.</small>
                 </div>
                 <div>
                     <label for="correct-media-reason">Raison</label>
@@ -193,6 +236,7 @@
                             <option value="{{ decision.value }}" {{ entry.decision and entry.decision.value == decision.value ? 'selected' : '' }}>{{ decision.label() }}</option>
                         {% endfor %}
                     </select>
+                    <small>Influe sur la selection, les brouillons auto et les syntheses futures.</small>
                 </div>
                 <div>
                     <label for="correct-decision-reason">Raison</label>
@@ -204,9 +248,9 @@
             <form method="post" action="{{ path('app_entry_correct_detected_tags', {id: entry.id}) }}" class="compact-form compact-form-wide">
                 <input type="hidden" name="_token" value="{{ csrf_token('correct_entry_detected_tags_' ~ entry.id) }}">
                 <div>
-                    <label for="correct-tags">Tags detectes</label>
+                    <label for="correct-tags">Tags detectes retenus</label>
                     <textarea id="correct-tags" name="detectedTags" rows="3">{{ entry.detectedTags|join(', ') }}</textarea>
-                    <small>Liste separee par des virgules. Supprimer un tag ici revient a le masquer pour cette Entry.</small>
+                    <small>Ces tags sont les signaux metier retenus, pas les termes bruts rejetes.</small>
                 </div>
                 <div>
                     <label for="correct-tags-reason">Raison</label>

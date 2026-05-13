@@ -7,6 +7,10 @@ use App\Enum\MediaType;
 
 class RssCategoryMapper
 {
+    public function __construct(private readonly TagGovernance $tagGovernance)
+    {
+    }
+
     /**
      * @return array<string, string>
      */
@@ -98,6 +102,7 @@ class RssCategoryMapper
     public function enrich(Entry $entry, array $categories): void
     {
         $tags = $entry->getDetectedTags();
+        $rawTerms = $entry->getRawDetectedTerms();
 
         foreach ($categories as $category) {
             $slug = $this->slug($category);
@@ -105,16 +110,21 @@ class RssCategoryMapper
                 continue;
             }
 
+            $rawTerms[] = $slug;
+
             if ($entry->getDetectedMediaType() === null && isset(self::MEDIA_BY_CATEGORY[$slug])) {
                 $entry->setDetectedMediaType(self::MEDIA_BY_CATEGORY[$slug]);
             }
 
             foreach ($this->tagsForCategory($slug) as $tag) {
                 $tags[] = $tag;
+                $rawTerms[] = $tag;
             }
         }
 
-        $entry->setDetectedTags($tags);
+        $entry
+            ->setRawDetectedTerms($rawTerms)
+            ->setDetectedTags($this->tagGovernance->validDetectedTags($entry, $tags));
     }
 
     public function mediaTypeForCategory(string $category): ?MediaType

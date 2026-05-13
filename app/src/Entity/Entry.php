@@ -183,6 +183,15 @@ class Entry
     #[ORM\Column(type: Types::JSON)]
     private array $detectedTags = [];
 
+    /**
+     * Termes detectes avant validation metier. Ils servent au diagnostic, mais
+     * ne sont pas consideres comme tags metier persistants.
+     *
+     * @var array<int, string>
+     */
+    #[ORM\Column(type: Types::JSON)]
+    private array $rawDetectedTerms = [];
+
     #[ORM\Column(enumType: MediaType::class, nullable: true)]
     private ?MediaType $detectedMediaType = null;
 
@@ -804,6 +813,24 @@ class Entry
     public function setDetectedTags(array $detectedTags): self
     {
         $this->detectedTags = array_values(array_unique(array_filter(array_map('trim', $detectedTags))));
+
+        return $this;
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public function getRawDetectedTerms(): array
+    {
+        return $this->rawDetectedTerms;
+    }
+
+    /**
+     * @param array<int, string> $rawDetectedTerms
+     */
+    public function setRawDetectedTerms(array $rawDetectedTerms): self
+    {
+        $this->rawDetectedTerms = array_values(array_unique(array_filter(array_map('trim', $rawDetectedTerms))));
 
         return $this;
     }

@@ -16,6 +16,8 @@ class TagGovernanceTest extends TestCase
         $governance = new TagGovernance(new Slugger());
 
         self::assertTrue($governance->isStopTag('Festival de Cannes'));
+        self::assertTrue($governance->isStopTag('interview'));
+        self::assertTrue($governance->isStopTag('download'));
         self::assertSame(TagRole::Noise, $governance->roleFor('nos-conseils'));
     }
 

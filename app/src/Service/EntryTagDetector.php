@@ -85,6 +85,7 @@ class EntryTagDetector
     public function detect(Entry $entry): void
     {
         $tags = $this->detectTags($entry);
+        $entry->setRawDetectedTerms(array_values(array_unique(array_merge($entry->getRawDetectedTerms(), $tags))));
         $tags = $this->tagGovernance->validDetectedTags($entry, $tags);
         $entry
             ->setDetectedTags($tags)

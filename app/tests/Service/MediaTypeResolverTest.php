@@ -7,6 +7,8 @@ use App\Entity\Source;
 use App\Enum\MediaType;
 use App\Service\MediaTypeResolver;
 use App\Service\RssCategoryMapper;
+use App\Service\Slugger;
+use App\Service\TagGovernance;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -16,7 +18,7 @@ class MediaTypeResolverTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->resolver = new MediaTypeResolver(new RssCategoryMapper());
+        $this->resolver = new MediaTypeResolver(new RssCategoryMapper(new TagGovernance(new Slugger())));
     }
 
     /**

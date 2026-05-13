@@ -163,6 +163,14 @@ La retention des Entry ignorees ne cible que des Entry importees, anciennes, san
 
 La detection distingue maintenant les termes bruts trouves dans les titres, contenus, URLs et categories des tags metier réellement exploitables. Un terme detecte ne devient un tag persistant que s'il passe une validation contextuelle.
 
+Pipeline applique avant la persistance metier :
+
+1. detection brute large dans `rawDetectedTerms` ;
+2. sas metier strict dans `TagGovernance` ;
+3. persistance et scoring seulement dans `detectedTags` pour les termes valides.
+
+La regle produit est volontairement stricte : on ne rentre pas en baskets ici. Les termes faibles comme `nouvelle`, `nouvelles`, `novella`, `essai`, `preface`, `postface`, `interview`, `podcast`, `actualites`, `nouveau`, `nos-conseils`, `festival`, `prix-litteraire`, `evenement`, `blockbuster` ou `download` restent des signaux bruts ou sont ignores, mais ne deviennent pas des tags metier.
+
 Roles de tags :
 
 - `pivot` : signal fort du perimetre de veille, par exemple `science-fiction`, `fantasy`, `space-opera`, `manga`, `jdr`, `figurines`, `jeu-video` ;
@@ -174,7 +182,7 @@ Roles de tags :
 
 Validation contextuelle :
 
-- les stop-tags centraux ne sont plus crees automatiquement ;
+- les stop-tags centraux ne sont plus crees automatiquement et ne sont plus gardes dans `detectedTags` ;
 - un pivot est accepte directement ;
 - un tag contextuel doit cooccurrer avec un pivot ou etre coherent avec le media final/detecte ;
 - `fps` exige par exemple un contexte `jeu-video` et un pivot comme `science-fiction`, `fantasy`, `warhammer-40k` ou une licence compatible ;

@@ -6,21 +6,31 @@
     <section class="page-heading">
         <div>
             <h1>Admin</h1>
-            <p>Tables de reference utilisees par l'analyse et les formulaires.</p>
+            <p>Configuration, surveillance et corrections du moteur de veille.</p>
+        </div>
+        <div class="actions">
+            <a class="button button-secondary" href="{{ path('app_help') }}">Comprendre l'analyse</a>
         </div>
     </section>
 
     <section class="content-block">
         <h2>Aide Admin</h2>
-        <p>Les referentiels et profils servent a guider l'analyse sans changer le code. Desactive une valeur plutot que la supprimer quand elle peut deja etre liee a des donnees.</p>
+        <p>Configurez les referentiels et profils ici. Pour comprendre les regles d'analyse et leurs impacts, consultez l'ecran Aide.</p>
     </section>
 
-    <div class="metric-grid section-block">
-        {% for section in sections %}
-            <a class="metric" href="{{ path(section.route, section.params) }}">
-                <span>{{ section.class|split('\\\\')|last }}</span>
-                <strong>{{ section.label }}</strong>
-            </a>
-        {% endfor %}
-    </div>
+    {% for group, sections in groups %}
+        <section class="section-block">
+            <div class="section-title">
+                <h2>{{ group }}</h2>
+            </div>
+            <div class="metric-grid admin-grid">
+                {% for section in sections %}
+                    <a class="metric {{ section.featured|default(false) ? 'metric-featured' : '' }}" href="{{ path(section.route, section.params) }}">
+                        <span>{{ section.label }}</span>
+                        <strong>{{ section.description }}</strong>
+                    </a>
+                {% endfor %}
+            </div>
+        </section>
+    {% endfor %}
 {% endblock %}

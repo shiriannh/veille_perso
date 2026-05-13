@@ -16,6 +16,7 @@ use App\Service\EntryTagDetector;
 use App\Service\MediaTypeResolver;
 use App\Service\ReferenceFieldSynchronizer;
 use App\Service\SourceQualityReporter;
+use App\Service\TagGovernance;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -190,12 +191,18 @@ class EntryController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_entry_show', methods: ['GET'])]
-    public function show(Entry $entry): Response
+    public function show(Entry $entry, TagGovernance $tagGovernance): Response
     {
+        $tagRoles = [];
+        foreach ($entry->getDetectedTags() as $tag) {
+            $tagRoles[$tag] = $tagGovernance->roleFor($tag);
+        }
+
         return $this->render('entry/show.html.twig', [
             'entry' => $entry,
             'media_types' => MediaType::cases(),
             'decisions' => AnalysisDecision::cases(),
+            'tag_roles' => $tagRoles,
         ]);
     }
 

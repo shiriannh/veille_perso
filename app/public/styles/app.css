@@ -124,6 +124,30 @@ p {
     gap: 10px;
 }
 
+.analysis-summary,
+.signal-list {
+    margin-top: 12px;
+}
+
+.analysis-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.signal-list {
+    padding-left: 18px;
+}
+
+.signal-list li + li {
+    margin-top: 4px;
+}
+
+.admin-grid .metric-featured {
+    border-color: #8bb7a3;
+    background: #f2faf6;
+}
+
 .filter-status {
     display: flex;
     align-items: center;

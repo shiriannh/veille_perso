@@ -26,20 +26,28 @@ class AdminController extends AbstractController
     public function index(): Response
     {
         return $this->render('admin/index.html.twig', [
-            'sections' => [
-                ['label' => 'Media types', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'media-types'], 'class' => MediaTypeReference::class],
-                ['label' => 'Profil d interet', 'route' => 'app_admin_interest_profile_index', 'params' => [], 'class' => InterestProfileRule::class],
-                ['label' => 'Tags', 'route' => 'app_admin_tag_index', 'params' => [], 'class' => Tag::class],
-                ['label' => 'Source types', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'source-types'], 'class' => SourceTypeReference::class],
-                ['label' => 'Fetch modes', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'fetch-modes'], 'class' => FetchModeReference::class],
-                ['label' => 'Decision types', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'decision-types'], 'class' => DecisionTypeReference::class],
-                ['label' => 'Clickbait levels', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'clickbait-levels'], 'class' => ClickbaitLevelReference::class],
-                ['label' => 'Analysis languages', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'analysis-languages'], 'class' => AnalysisLanguageReference::class],
-                ['label' => 'References inactives', 'route' => 'app_admin_inactive_references', 'params' => [], 'class' => ReferenceEntityInterface::class],
-                ['label' => 'Diagnostic media final', 'route' => 'app_admin_media_diagnostic', 'params' => [], 'class' => Entry::class],
-                ['label' => 'Mappings media actifs', 'route' => 'app_admin_media_mappings', 'params' => [], 'class' => MediaTypeReference::class],
-                ['label' => 'Corrections analyse', 'route' => 'app_admin_analysis_corrections', 'params' => [], 'class' => Entry::class],
-                ['label' => 'Statut local', 'route' => 'app_admin_status', 'params' => [], 'class' => Entry::class],
+            'groups' => [
+                'Configuration' => [
+                    ['label' => 'Tags', 'route' => 'app_admin_tag_index', 'params' => [], 'description' => "Gerer les tags utiles a l'analyse, leur role et leur validation.", 'featured' => true],
+                    ['label' => 'Profil d interet', 'route' => 'app_admin_interest_profile_index', 'params' => [], 'description' => 'Definir ce qui augmente ou reduit la pertinence.', 'featured' => true],
+                    ['label' => 'Types de media', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'media-types'], 'description' => 'Maintenir les medias utilises par les filtres et syntheses.'],
+                    ['label' => 'Types de source', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'source-types'], 'description' => 'Classer les sources selon leur nature editoriale.'],
+                    ['label' => 'Modes d import', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'fetch-modes'], 'description' => 'Piloter les modes RSS, manuel et connecteurs cibles.'],
+                    ['label' => 'Types de decision', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'decision-types'], 'description' => 'Administrer les decisions finales de l analyse.'],
+                    ['label' => 'Niveaux clickbait', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'clickbait-levels'], 'description' => 'Nommer les niveaux de bruit editorial.'],
+                    ['label' => 'Langues d analyse', 'route' => 'app_admin_reference_index', 'params' => ['type' => 'analysis-languages'], 'description' => 'Suivre les langues reconnues par les regles.'],
+                ],
+                'Surveillance' => [
+                    ['label' => 'Statut local', 'route' => 'app_admin_status', 'params' => [], 'description' => "Voir rapidement l'etat de la base locale."],
+                    ['label' => 'Diagnostic media final', 'route' => 'app_admin_media_diagnostic', 'params' => [], 'description' => 'Reperer les entrees encore mal classees.', 'featured' => true],
+                    ['label' => 'References inactives', 'route' => 'app_admin_inactive_references', 'params' => [], 'description' => 'Controler les valeurs desactivees mais conservees.'],
+                ],
+                'Corrections' => [
+                    ['label' => 'Corrections analyse', 'route' => 'app_admin_analysis_corrections', 'params' => [], 'description' => 'Suivre les corrections manuelles appliquees aux Entry.'],
+                ],
+                'References avancees' => [
+                    ['label' => 'Mappings media actifs', 'route' => 'app_admin_media_mappings', 'params' => [], 'description' => 'Comprendre comment les tags et categories promeuvent un media.'],
+                ],
             ],
         ]);
     }
