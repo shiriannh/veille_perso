@@ -180,7 +180,9 @@ Differenciel :
 - sinon, si la Source n'a jamais eu de collecte reussie, la fenetre par defaut est `3m` ;
 - sinon, `lastSuccessAt` choisit automatiquement `7d`, `1m` ou `3m` selon l'anciennete de la derniere collecte reussie.
 
-La collecte lit la page liste, dedoublonne les liens `/livre/`, ouvre chaque fiche ouvrage, puis extrait les signaux serveur disponibles : titre, auteurs, URL canonique, format, EAN13, ISBN, editeur, date de publication, collection, pages, langue et resume. Les champs microdata `itemprop` sont privilegies quand ils existent.
+La collecte lit les pages liste via une pagination HTTP simple : page 1 sans parametre explicite, puis `page=2`, `page=3`, etc. Elle s'arrete quand une page ne remonte plus de nouvelle fiche, ou quand la limite de securite interne est atteinte. Les liens `/livre/` sont dedoublonnes avant ouverture des fiches.
+
+Chaque fiche ouvrage est ensuite ouverte pour extraire les signaux serveur disponibles : titre, auteurs, URL canonique, format, EAN13, ISBN, editeur, date de publication, collection, pages, langue et resume. Les champs microdata `itemprop` sont privilegies quand ils existent.
 
 Deduplication :
 
@@ -204,6 +206,8 @@ docker compose exec app php bin/console app:import-leslibraires <sourceId> --win
 ```
 
 Limites connues : le parsing est HTML serveur et depend donc de la stabilite des balises de leslibraires.fr ; Google Books est ignore silencieusement en cas d'absence de cle, timeout, erreur HTTP ou quota 429 ; aucun navigateur headless n'est utilise.
+
+Depuis l'ecran `Imports`, le bouton `Importer les connecteurs` lance les sources actives hors RSS actuellement supportees, dont leslibraires.fr. Le resume affiche les pages parcourues, les candidats trouves, les fiches ouvertes, les creations et les doublons ignores.
 
 ## Media final 1.6
 

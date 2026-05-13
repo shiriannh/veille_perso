@@ -155,10 +155,13 @@ class SourceController extends AbstractController
             return $this->redirectToRoute('app_source_index', $request->query->all());
         }
 
-        $counts = $databaseResetter->reset();
+        $selectedScopes = array_map('strval', $request->request->all('scopes'));
+        $counts = $databaseResetter->reset($selectedScopes);
+        $scopeLabel = $selectedScopes === [] ? 'tout' : implode(', ', $selectedScopes);
 
         $this->addFlash('success', sprintf(
-            'Base videe : %d source(s), %d entree(s), %d fiche(s), %d synthese(s), %d import(s) supprime(s).',
+            'RAZ terminee (%s) : %d source(s), %d entree(s), %d fiche(s), %d synthese(s), %d import(s) supprime(s).',
+            $scopeLabel,
             $counts['sources'],
             $counts['entries'],
             $counts['reviews'],
@@ -235,7 +238,7 @@ class SourceController extends AbstractController
             $window = trim((string) $request->request->get('window', '')) ?: null;
             $preview = $lesLibrairesImporter->preview($source, $window, 10);
         } catch (\Throwable $exception) {
-            $preview = ['window' => null, 'candidates' => [], 'books' => [], 'errors' => [$exception->getMessage()]];
+            $preview = ['window' => null, 'pagesVisited' => 0, 'candidates' => [], 'books' => [], 'errors' => [$exception->getMessage()]];
             $this->addFlash('error', 'Previsualisation leslibraires.fr impossible.');
         }
 
@@ -300,8 +303,12 @@ class SourceController extends AbstractController
         if ($run->getStatus()->value === 'failed') {
             $this->addFlash('error', 'Collecte echouee : '.$run->getErrorMessage());
         } else {
+            $summary = $lesLibrairesImporter->lastSummary();
             $this->addFlash('success', sprintf(
-                'Collecte terminee : %d creee(s), %d ignoree(s).',
+                'Collecte terminee : %d page(s), %d candidat(s), %d fiche(s) ouverte(s), %d creee(s), %d ignoree(s).',
+                $summary['pagesVisited'],
+                $summary['candidatesCount'],
+                $summary['detailsOpened'],
                 $run->getCreatedCount(),
                 $run->getSkippedCount(),
             ));

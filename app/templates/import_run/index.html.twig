@@ -6,12 +6,18 @@
     <section class="page-heading">
         <div>
             <h1>Imports</h1>
-            <p>Historique des imports RSS lancés manuellement.</p>
+            <p>Historique des imports RSS et connecteurs lances manuellement.</p>
         </div>
-        <form method="post" action="{{ path('app_import_run_import_sources', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Importer maintenant toutes les sources RSS actives ? Un historique sera cree pour chaque source traitee.');">
-            <input type="hidden" name="_token" value="{{ csrf_token('import_sources') }}">
-            <button class="button">Importer les sources RSS</button>
-        </form>
+        <div class="actions">
+            <form method="post" action="{{ path('app_import_run_import_sources', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Importer maintenant toutes les sources RSS actives ? Un historique sera cree pour chaque source traitee.');">
+                <input type="hidden" name="_token" value="{{ csrf_token('import_sources') }}">
+                <button class="button">Importer les sources RSS</button>
+            </form>
+            <form method="post" action="{{ path('app_import_run_import_connectors', app.request.query.all) }}" class="inline-form" onsubmit="return confirm('Importer maintenant les connecteurs actifs hors RSS ?');">
+                <input type="hidden" name="_token" value="{{ csrf_token('import_connectors') }}">
+                <button class="button button-secondary">Importer les connecteurs</button>
+            </form>
+        </div>
     </section>
 
     <form method="get" class="filter-form filter-form-small">
@@ -26,7 +32,7 @@
         </div>
         <div class="filter-actions">
             <button class="button">Filtrer</button>
-            <a class="button button-secondary" href="{{ path('app_import_run_index') }}">Réinitialiser</a>
+            <a class="button button-secondary" href="{{ path('app_import_run_index') }}">Reinitialiser</a>
         </div>
     </form>
 
@@ -44,13 +50,13 @@
         <table>
             <thead>
                 <tr>
-                    <th>Démarré</th>
-                    <th>Terminé</th>
+                    <th>Demarre</th>
+                    <th>Termine</th>
                     <th>Source</th>
                     <th>Statut</th>
-                    <th>Récupérés</th>
-                    <th>Créés</th>
-                    <th>Ignorés</th>
+                    <th>Recuperes</th>
+                    <th>Crees</th>
+                    <th>Ignores</th>
                     <th>Erreur</th>
                 </tr>
             </thead>

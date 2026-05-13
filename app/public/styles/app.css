@@ -540,6 +540,23 @@ form[name="tag"],
     display: inline-flex;
 }
 
+.reset-scope-form {
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--surface);
+}
+
+.reset-scope-form label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .82rem;
+    color: var(--muted);
+}
+
 .table-actions .button {
     min-height: 30px;
     padding: 5px 10px;

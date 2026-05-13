@@ -11,8 +11,13 @@
         <div class="actions">
             <a class="button button-secondary" href="{{ path('app_source_import_csv') }}">Importer un CSV</a>
             <a class="button" href="{{ path('app_source_new') }}">Nouvelle source</a>
-            <form method="post" action="{{ path('app_source_reset_database') }}" class="inline-form" onsubmit="return confirm('RAZ complete : supprimer toutes les sources, entrees, fiches, syntheses et historiques d import ? Cette action vide la base metier locale.');">
+            <form method="post" action="{{ path('app_source_reset_database') }}" class="inline-form reset-scope-form" onsubmit="return confirm('RAZ : si aucune case n est cochee, toute la base metier locale sera videe. Continuer ?');">
                 <input type="hidden" name="_token" value="{{ csrf_token('reset_database') }}">
+                <label><input type="checkbox" name="scopes[]" value="sources"> Sources</label>
+                <label><input type="checkbox" name="scopes[]" value="entries"> Entrees</label>
+                <label><input type="checkbox" name="scopes[]" value="reviews"> Fiches</label>
+                <label><input type="checkbox" name="scopes[]" value="reports"> Syntheses</label>
+                <label><input type="checkbox" name="scopes[]" value="importRuns"> Imports</label>
                 <button class="button button-danger">Raz</button>
             </form>
         </div>

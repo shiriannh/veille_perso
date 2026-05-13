@@ -19,14 +19,16 @@ class DatabaseResetter
     /**
      * @return array{reports: int, reviews: int, entries: int, importRuns: int, sources: int}
      */
-    public function reset(): array
+    public function reset(array $scopes = []): array
     {
-        return $this->entityManager->wrapInTransaction(function (): array {
-            $reports = $this->deleteAll(SynthesisReport::class);
-            $reviews = $this->deleteAll(Review::class);
-            $entries = $this->deleteAll(Entry::class);
-            $importRuns = $this->deleteAll(ImportRun::class);
-            $sources = $this->deleteAll(Source::class);
+        $scopes = $this->normalizeScopes($scopes);
+
+        return $this->entityManager->wrapInTransaction(function () use ($scopes): array {
+            $reports = in_array('reports', $scopes, true) ? $this->deleteAll(SynthesisReport::class) : 0;
+            $reviews = in_array('reviews', $scopes, true) ? $this->deleteAll(Review::class) : 0;
+            $entries = in_array('entries', $scopes, true) ? $this->deleteAll(Entry::class) : 0;
+            $importRuns = in_array('importRuns', $scopes, true) ? $this->deleteAll(ImportRun::class) : 0;
+            $sources = in_array('sources', $scopes, true) ? $this->deleteAll(Source::class) : 0;
 
             return [
                 'reports' => $reports,
@@ -36,6 +38,35 @@ class DatabaseResetter
                 'sources' => $sources,
             ];
         });
+    }
+
+    /**
+     * @param array<int, string> $scopes
+     *
+     * @return array<int, string>
+     */
+    private function normalizeScopes(array $scopes): array
+    {
+        $allowed = ['sources', 'entries', 'reviews', 'reports', 'importRuns'];
+        $scopes = array_values(array_intersect($allowed, $scopes));
+
+        if ($scopes === []) {
+            return $allowed;
+        }
+
+        if (in_array('sources', $scopes, true)) {
+            $scopes = array_merge($scopes, ['entries', 'importRuns']);
+        }
+
+        if (in_array('entries', $scopes, true)) {
+            $scopes = array_merge($scopes, ['reviews', 'reports']);
+        }
+
+        if (in_array('reviews', $scopes, true)) {
+            $scopes[] = 'reports';
+        }
+
+        return array_values(array_unique($scopes));
     }
 
     /**

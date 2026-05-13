@@ -49,6 +49,12 @@ class ImportLesLibrairesCommand extends Command
             $preview = $this->importer->preview($source, $window, $limit ?? 10);
             $io->title('Previsualisation leslibraires.fr');
             $io->writeln('Fenetre: '.$preview['window']);
+            $io->writeln(sprintf(
+                'Pages parcourues: %d | Candidats: %d | Fiches ouvertes: %d',
+                $preview['pagesVisited'],
+                count($preview['candidates']),
+                count($preview['books']),
+            ));
             $io->table(['Titre', 'Auteur(s)', 'ISBN/EAN', 'Date', 'URL'], array_map(static fn ($book): array => [
                 $book->title,
                 implode(', ', $book->authors) ?: '-',
@@ -65,12 +71,20 @@ class ImportLesLibrairesCommand extends Command
         }
 
         $run = $this->importer->import($source, $window, !(bool) $input->getOption('no-analysis'), $limit);
+        $summary = $this->importer->lastSummary();
         $io->table(['Statut', 'Recuperes', 'Crees', 'Ignores'], [[
             $run->getStatus()->label(),
             $run->getFetchedCount(),
             $run->getCreatedCount(),
             $run->getSkippedCount(),
         ]]);
+        $io->writeln(sprintf(
+            'Fenetre: %s | Pages parcourues: %d | Candidats: %d | Fiches ouvertes: %d',
+            $summary['window'] ?? '-',
+            $summary['pagesVisited'],
+            $summary['candidatesCount'],
+            $summary['detailsOpened'],
+        ));
 
         if ($run->getStatus()->value === 'failed') {
             $io->error((string) $run->getErrorMessage());

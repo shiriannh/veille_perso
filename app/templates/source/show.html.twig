@@ -184,7 +184,7 @@
         <section class="section-block">
             <div class="section-title">
                 <h2>Previsualisation leslibraires.fr</h2>
-                <span class="muted">Fenetre {{ leslibraires_preview.window|default('auto') }}</span>
+                <span class="muted">Fenetre {{ leslibraires_preview.window|default('auto') }} - {{ leslibraires_preview.pagesVisited|default(0) }} page(s) parcourue(s) - {{ leslibraires_preview.candidates|length }} candidat(s)</span>
             </div>
             {% if leslibraires_preview.errors is not empty %}
                 <div class="empty">

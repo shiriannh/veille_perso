@@ -14,6 +14,16 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class LesLibrairesImporter
 {
+    /**
+     * @var array{window: ?string, pagesVisited: int, candidatesCount: int, detailsOpened: int}
+     */
+    private array $lastSummary = [
+        'window' => null,
+        'pagesVisited' => 0,
+        'candidatesCount' => 0,
+        'detailsOpened' => 0,
+    ];
+
     public function __construct(
         private readonly LesLibrairesConnector $connector,
         private readonly GoogleBooksEnricher $googleBooksEnricher,
@@ -26,13 +36,14 @@ class LesLibrairesImporter
     }
 
     /**
-     * @return array{window: string, candidates: array<int, array<string, mixed>>, books: array<int, LesLibrairesBook>, errors: array<int, string>}
+     * @return array{window: string, pagesVisited: int, candidates: array<int, array<string, mixed>>, books: array<int, LesLibrairesBook>, errors: array<int, string>}
      */
     public function preview(Source $source, ?string $window = null, int $limit = 10): array
     {
         $this->assertImportable($source);
         $window = $this->resolveWindow($source, $window);
-        $candidates = array_slice($this->connector->candidates($window, $source->getUrl()), 0, max(1, $limit));
+        $collection = $this->connector->collectCandidates($window, $source->getUrl());
+        $candidates = array_slice($collection['candidates'], 0, max(1, $limit));
         $books = [];
         $errors = [];
 
@@ -46,6 +57,7 @@ class LesLibrairesImporter
 
         return [
             'window' => $window,
+            'pagesVisited' => $collection['pagesVisited'],
             'candidates' => $candidates,
             'books' => $books,
             'errors' => $errors,
@@ -63,17 +75,20 @@ class LesLibrairesImporter
         try {
             $this->assertImportable($source);
             $window = $this->resolveWindow($source, $window);
-            $candidates = $this->connector->candidates($window, $source->getUrl());
+            $collection = $this->connector->collectCandidates($window, $source->getUrl());
+            $candidates = $collection['candidates'];
             if ($limit !== null) {
                 $candidates = array_slice($candidates, 0, max(1, $limit));
             }
 
             $created = 0;
             $skipped = 0;
+            $detailsOpened = 0;
             $errors = [];
 
             foreach ($candidates as $candidate) {
                 try {
+                    ++$detailsOpened;
                     $book = $this->mergeGoogleBooks($this->connector->detail($candidate['url']));
                     $sourceHash = $this->sourceHash($book);
                     $duplicate = $this->entryRepository->findImportedDuplicate($source, $book->mainIdentifier(), $book->url, $sourceHash);
@@ -110,6 +125,13 @@ class LesLibrairesImporter
                 ->setLastSuccessAt($run->getFinishedAt())
                 ->setLastErrorAt(null)
                 ->setLastErrorMessage(null);
+
+            $this->lastSummary = [
+                'window' => $window,
+                'pagesVisited' => $collection['pagesVisited'],
+                'candidatesCount' => count($candidates),
+                'detailsOpened' => $detailsOpened,
+            ];
         } catch (\Throwable $exception) {
             $run
                 ->setStatus(ImportRunStatus::Failed)
@@ -119,11 +141,26 @@ class LesLibrairesImporter
             $source
                 ->setLastErrorAt($run->getFinishedAt())
                 ->setLastErrorMessage($exception->getMessage());
+
+            $this->lastSummary = [
+                'window' => $window,
+                'pagesVisited' => 0,
+                'candidatesCount' => 0,
+                'detailsOpened' => 0,
+            ];
         }
 
         $this->entityManager->flush();
 
         return $run;
+    }
+
+    /**
+     * @return array{window: ?string, pagesVisited: int, candidatesCount: int, detailsOpened: int}
+     */
+    public function lastSummary(): array
+    {
+        return $this->lastSummary;
     }
 
     public function resolveWindow(Source $source, ?string $window = null): string

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\ImportRunRepository;
 use App\Repository\SourceRepository;
 use App\Service\ArrayPaginator;
+use App\Service\LesLibrairesImporter;
 use App\Service\RssImporter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -35,6 +36,57 @@ class ImportRunController extends AbstractController
                 'source' => $source?->getId(),
             ],
         ]);
+    }
+
+    #[Route('/import-connectors', name: 'app_import_run_import_connectors', methods: ['POST'])]
+    public function importConnectors(Request $request, SourceRepository $sourceRepository, LesLibrairesImporter $lesLibrairesImporter): Response
+    {
+        if (!$this->isCsrfTokenValid('import_connectors', (string) $request->request->get('_token'))) {
+            return $this->redirectToRoute('app_import_run_index', $request->query->all());
+        }
+
+        $sources = $sourceRepository->findActiveLesLibrairesSources();
+
+        if ($sources === []) {
+            $this->addFlash('error', 'Aucune source connecteur active a importer.');
+
+            return $this->redirectToRoute('app_import_run_index', $request->query->all());
+        }
+
+        $createdCount = 0;
+        $skippedCount = 0;
+        $errorCount = 0;
+        $pagesVisited = 0;
+        $candidatesCount = 0;
+        $detailsOpened = 0;
+
+        foreach ($sources as $source) {
+            $run = $lesLibrairesImporter->import($source);
+            $summary = $lesLibrairesImporter->lastSummary();
+            $createdCount += $run->getCreatedCount();
+            $skippedCount += $run->getSkippedCount();
+            $pagesVisited += $summary['pagesVisited'];
+            $candidatesCount += $summary['candidatesCount'];
+            $detailsOpened += $summary['detailsOpened'];
+
+            if ($run->getStatus()->value === 'failed') {
+                ++$errorCount;
+            }
+        }
+
+        $message = sprintf(
+            'Connecteurs importes : %d source(s), %d page(s), %d candidat(s), %d fiche(s) ouverte(s), %d creee(s), %d ignoree(s).',
+            count($sources),
+            $pagesVisited,
+            $candidatesCount,
+            $detailsOpened,
+            $createdCount,
+            $skippedCount,
+        );
+
+        $this->addFlash($errorCount > 0 ? 'error' : 'success', $errorCount > 0 ? $message.' '.$errorCount.' erreur(s).' : $message);
+
+        return $this->redirectToRoute('app_import_run_index', $request->query->all());
     }
 
     #[Route('/import-sources', name: 'app_import_run_import_sources', methods: ['POST'])]

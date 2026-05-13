@@ -52,10 +52,26 @@ class SourceRepository extends ServiceEntityRepository
      */
     public function findActiveRssSources(): array
     {
+        return $this->findActiveByFetchMode(FetchMode::Rss);
+    }
+
+    /**
+     * @return Source[]
+     */
+    public function findActiveLesLibrairesSources(): array
+    {
+        return $this->findActiveByFetchMode(FetchMode::LesLibrairesCatalog);
+    }
+
+    /**
+     * @return Source[]
+     */
+    public function findActiveByFetchMode(FetchMode $fetchMode): array
+    {
         return $this->createQueryBuilder('source')
             ->andWhere('source.isActive = true')
             ->andWhere('source.fetchMode = :fetchMode')
-            ->setParameter('fetchMode', FetchMode::Rss)
+            ->setParameter('fetchMode', $fetchMode)
             ->orderBy('source.importPriority', 'DESC')
             ->addOrderBy('source.name', 'ASC')
             ->getQuery()

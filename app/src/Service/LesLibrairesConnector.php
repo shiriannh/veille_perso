@@ -20,14 +20,25 @@ class LesLibrairesConnector
      */
     public function candidates(string $window = '3m', ?string $sourceUrl = null): array
     {
-        $url = $this->listUrl($window, $sourceUrl);
+        return $this->collectCandidates($window, $sourceUrl)['candidates'];
+    }
+
+    /**
+     * @return array{candidates: array<int, array{title: string, url: string, author: ?string, publishedAt: ?\DateTimeImmutable}>, pagesVisited: int}
+     */
+    public function collectCandidates(string $window = '3m', ?string $sourceUrl = null): array
+    {
         $seen = [];
         $candidates = [];
+        $pagesVisited = 0;
 
-        for ($page = 1; $page <= self::MAX_LIST_PAGES && $url !== null; ++$page) {
+        for ($page = 1; $page <= self::MAX_LIST_PAGES; ++$page) {
+            $url = $this->listPageUrl($window, $sourceUrl, $page);
             $html = $this->fetch($url);
             $document = $this->document($html);
             $xpath = new \DOMXPath($document);
+            $newOnPage = 0;
+            ++$pagesVisited;
 
             foreach ($xpath->query('//a[contains(@href, "/livre/")]') as $link) {
                 if (!$link instanceof \DOMElement) {
@@ -57,12 +68,18 @@ class LesLibrairesConnector
                     'author' => $container !== null ? $this->firstItemProp($container, 'author') : null,
                     'publishedAt' => $container !== null ? $this->parseDate($this->firstItemProp($container, 'datePublished')) : null,
                 ];
+                ++$newOnPage;
             }
 
-            $url = $this->nextPageUrl($xpath);
+            if ($newOnPage === 0) {
+                break;
+            }
         }
 
-        return $candidates;
+        return [
+            'candidates' => $candidates,
+            'pagesVisited' => $pagesVisited,
+        ];
     }
 
     public function detail(string $url): LesLibrairesBook
@@ -113,10 +130,19 @@ class LesLibrairesConnector
 
     public function listUrl(string $window, ?string $sourceUrl = null): string
     {
+        return $this->listPageUrl($window, $sourceUrl, 1);
+    }
+
+    public function listPageUrl(string $window, ?string $sourceUrl = null, int $page = 1): string
+    {
         $window = in_array($window, ['7d', '1m', '3m'], true) ? $window : '3m';
         $baseUrl = $this->normalizedRayonUrl($sourceUrl) ?? self::BASE_URL.self::RAYON_PATH;
+        $parameters = ['f_release_date' => '-'.$window];
+        if ($page > 1) {
+            $parameters['page'] = (string) $page;
+        }
 
-        return $baseUrl.'?f_release_date=-'.$window;
+        return $baseUrl.'?'.http_build_query($parameters);
     }
 
     private function normalizedRayonUrl(?string $sourceUrl): ?string
@@ -184,15 +210,6 @@ class LesLibrairesConnector
         }
 
         return null;
-    }
-
-    private function nextPageUrl(\DOMXPath $xpath): ?string
-    {
-        $href = $this->firstAttribute($xpath, '//a[@rel="next"]', 'href')
-            ?? $this->firstAttribute($xpath, '//a[contains(translate(normalize-space(.), "SUIVANTNEXT", "suivantnext"), "suivant")]', 'href')
-            ?? $this->firstAttribute($xpath, '//a[contains(translate(normalize-space(.), "SUIVANTNEXT", "suivantnext"), "next")]', 'href');
-
-        return $href !== null ? $this->absoluteUrl($href) : null;
     }
 
     private function absoluteUrl(string $href): ?string
