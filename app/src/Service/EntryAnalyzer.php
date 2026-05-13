@@ -123,6 +123,7 @@ class EntryAnalyzer
         private readonly RssCategoryMapper $rssCategoryMapper,
         private readonly MediaTypeResolver $mediaTypeResolver,
         private readonly AutoTagEnricher $autoTagEnricher,
+        private readonly TagGovernance $tagGovernance,
         private readonly InterestLevelCalculator $interestLevelCalculator,
         private readonly DraftReviewCreator $draftReviewCreator,
         private readonly ReferenceFieldSynchronizer $referenceFieldSynchronizer,
@@ -368,6 +369,23 @@ class EntryAnalyzer
                 $negative[] = $needle;
                 $signals[] = 'declassement leger: '.$needle;
                 $score -= 5;
+            }
+        }
+
+        foreach ($detectedTags as $tag) {
+            $weight = $this->tagGovernance->scoringWeight($tag);
+            if ($weight === 0) {
+                continue;
+            }
+
+            if ($weight > 0) {
+                $positive[] = $tag;
+                $signals[] = 'tag '.$this->tagGovernance->roleFor($tag)->label().': '.$tag;
+                $score += $weight;
+            } else {
+                $negative[] = $tag;
+                $signals[] = 'tag declassant: '.$tag;
+                $score += $weight;
             }
         }
 

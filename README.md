@@ -77,6 +77,8 @@ docker compose exec app php bin/console app:prune-import-runs
 docker compose exec app php bin/console app:prune-import-runs --force
 docker compose exec app php bin/console app:prune-ignored-entries
 docker compose exec app php bin/console app:prune-ignored-entries --force
+docker compose exec app php bin/console app:tag-noise-report
+docker compose exec app php bin/console app:tag-noise-report --apply
 docker compose exec app vendor/bin/phpunit
 ```
 
@@ -156,6 +158,43 @@ docker compose exec app php bin/console app:prune-ignored-entries --force
 ```
 
 La retention des Entry ignorees ne cible que des Entry importees, anciennes, sans Review et sans synthese associee.
+
+## Gouvernance des tags V1.7
+
+La detection distingue maintenant les termes bruts trouves dans les titres, contenus, URLs et categories des tags metier réellement exploitables. Un terme detecte ne devient un tag persistant que s'il passe une validation contextuelle.
+
+Roles de tags :
+
+- `pivot` : signal fort du perimetre de veille, par exemple `science-fiction`, `fantasy`, `space-opera`, `manga`, `jdr`, `figurines`, `jeu-video` ;
+- `contextual` : utile seulement avec contexte, par exemple `fps`, `interview`, `adaptation` ;
+- `noise` : bruit editorial ou commercial sans valeur metier, par exemple `nos-conseils`, `nouveau`, `festival-de-cannes` ;
+- `deprioritize` : signal de declassement, par exemple `battle-pass`, `microtransaction`, `crowdfunding` ;
+- `entity` : nom propre ou entite isolee, bonus faible sauf contexte metier clair ;
+- `editorial_format` : format de contenu comme `festival` ou `trailer`.
+
+Validation contextuelle :
+
+- les stop-tags centraux ne sont plus crees automatiquement ;
+- un pivot est accepte directement ;
+- un tag contextuel doit cooccurrer avec un pivot ou etre coherent avec le media final/detecte ;
+- `fps` exige par exemple un contexte `jeu-video` et un pivot comme `science-fiction`, `fantasy`, `warhammer-40k` ou une licence compatible ;
+- `crowdfunding` ou `gamefound` ne sont utiles que dans un contexte figurines / JDR / jeu video ;
+- un terme d'entite isole ne suffit pas a creer un tag metier.
+
+Creation automatique en base :
+
+- seuil de confiance minimal : 75/100 ;
+- le tag auto-cree reste inactif et non lie aux centres d'interet tant qu'il n'est pas valide dans l'Admin ;
+- l'Admin affiche le role, les tags auto-generes a valider et les tags marques comme bruit.
+
+Diagnostic du stock existant :
+
+```bash
+docker compose exec app php bin/console app:tag-noise-report
+docker compose exec app php bin/console app:tag-noise-report --apply
+```
+
+La commande est en dry-run par defaut. Avec `--apply`, elle marque seulement les stop-tags auto-generes connus comme `noise`, inactifs et non lies aux centres d'interet. Elle ne supprime pas de donnees.
 
 ## Connecteur leslibraires.fr
 

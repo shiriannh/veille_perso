@@ -6,6 +6,8 @@ use App\Entity\Entry;
 use App\Entity\Source;
 use App\Enum\MediaType;
 use App\Service\EntryTagDetector;
+use App\Service\Slugger;
+use App\Service\TagGovernance;
 use PHPUnit\Framework\TestCase;
 
 class EntryTagDetectorTest extends TestCase
@@ -18,7 +20,7 @@ class EntryTagDetectorTest extends TestCase
             ->setTitle('Incroyable mais vrai : EA propose Battlefield 6 en precommande')
             ->setRawContent('Jeu video avec gameplay FPS, battle pass, live service et monetisation.');
 
-        (new EntryTagDetector())->detect($entry);
+        (new EntryTagDetector(new TagGovernance(new Slugger())))->detect($entry);
 
         self::assertSame(MediaType::VideoGame, $entry->getDetectedMediaType());
         self::assertContains('jeu-video', $entry->getDetectedTags());

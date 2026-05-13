@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Tag;
+use App\Enum\TagRole;
 use App\Form\TagType;
 use App\Repository\TagRepository;
 use App\Service\ArrayPaginator;
@@ -54,6 +55,20 @@ class AdminTagController extends AbstractController
             'pager_route' => 'app_admin_tag_auto_generated',
             'title' => 'Tags auto-generes a valider',
             'intro' => "Tags proposes automatiquement, inactifs tant qu'ils ne sont pas valides.",
+        ]);
+    }
+
+    #[Route('/noise', name: 'app_admin_tag_noise', methods: ['GET'])]
+    public function noise(Request $request, TagRepository $tagRepository, ArrayPaginator $arrayPaginator): Response
+    {
+        [$tags, $pagination] = $arrayPaginator->paginate($request, $tagRepository->findByRole(TagRole::Noise), '25');
+
+        return $this->render('admin/tag/index.html.twig', [
+            'tags' => $tags,
+            'pagination' => $pagination,
+            'pager_route' => 'app_admin_tag_noise',
+            'title' => 'Tags bruit',
+            'intro' => "Tags identifies comme bruit editorial ou contexte non exploitable.",
         ]);
     }
 
@@ -116,6 +131,7 @@ class AdminTagController extends AbstractController
             $tag
                 ->setIsActive(true)
                 ->setIsInterestRelated(true)
+                ->setRole(TagRole::Pivot)
                 ->setNotes(trim(((string) $tag->getNotes())."\nValide depuis l'Admin comme tag lie au profil d'interet."));
             $entityManager->flush();
             $this->addFlash('success', 'Tag valide et rattache au profil d interet.');

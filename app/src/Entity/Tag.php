@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\TagRole;
 use App\Repository\TagRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -44,6 +45,9 @@ class Tag
 
     #[ORM\Column(nullable: true)]
     private ?int $confidence = null;
+
+    #[ORM\Column(enumType: TagRole::class)]
+    private TagRole $role = TagRole::Contextual;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $notes = null;
@@ -156,6 +160,18 @@ class Tag
     public function setConfidence(?int $confidence): self
     {
         $this->confidence = $confidence;
+
+        return $this;
+    }
+
+    public function getRole(): TagRole
+    {
+        return $this->role;
+    }
+
+    public function setRole(TagRole $role): self
+    {
+        $this->role = $role;
 
         return $this;
     }

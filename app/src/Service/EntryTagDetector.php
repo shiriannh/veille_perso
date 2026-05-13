@@ -78,9 +78,14 @@ class EntryTagDetector
         'fantasy' => MediaType::FantasyNovel,
     ];
 
+    public function __construct(private readonly TagGovernance $tagGovernance)
+    {
+    }
+
     public function detect(Entry $entry): void
     {
         $tags = $this->detectTags($entry);
+        $tags = $this->tagGovernance->validDetectedTags($entry, $tags);
         $entry
             ->setDetectedTags($tags)
             ->setDetectedMediaType($this->detectMediaType($tags));

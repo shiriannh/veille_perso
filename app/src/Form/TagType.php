@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\MediaTypeReference;
 use App\Entity\Tag;
+use App\Enum\TagRole;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -36,6 +37,13 @@ class TagType extends AbstractType
                 'class' => MediaTypeReference::class,
                 'choice_label' => 'name',
                 'required' => false,
+            ])
+            ->add('role', ChoiceType::class, [
+                'label' => 'Role',
+                'choices' => array_combine(
+                    array_map(static fn (TagRole $role): string => $role->label(), TagRole::cases()),
+                    TagRole::cases(),
+                ),
             ])
             ->add('isInterestRelated', CheckboxType::class, [
                 'label' => "Lie a mes centres d'interet",
